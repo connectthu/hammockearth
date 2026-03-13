@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hammock Earth — Hillsdale, Ontario</title>
+  <link rel="icon" type="image/svg+xml" href="bowl.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design tokens ── */
+    :root {
+      --green-deep:   #4a5838;
+      --green-sage:   #7a8f6a;
+      --green-light:  #a8bb96;
+      --green-pale:   #dce8d2;
+      --teal:         #5d7575;
+      --cream:        #f7f3ec;
+      --cream-dark:   #ede8df;
+      --text:         #2e2e2a;
+      --text-muted:   #5c5c50;
+    }
+
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 400; line-height: 1.25; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(247, 243, 236, 0.93);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--green-pale);
+    }
+    .nav-logo img { height: 44px; width: auto; }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--green-deep);
+    }
+    .nav-links a:hover { color: var(--green-sage); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 6rem;
+      background: url('images/IMG_7042.jpg') center center / cover no-repeat;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(247, 243, 236, 0.78);
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 120px;
+      background: linear-gradient(to bottom, transparent, var(--cream));
+      z-index: 1;
+    }
+    .hero-eyebrow {
+      font-size: 0.78rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+      color: var(--green-deep);
+      max-width: 860px;
+      margin-bottom: 1.75rem;
+    }
+    .hero h1 em { color: var(--green-sage); font-style: italic; }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin-bottom: 3rem;
+      font-weight: 300;
+      line-height: 1.8;
+    }
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      border-radius: 2px;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--green-deep); color: var(--cream); border: 2px solid var(--green-deep); }
+    .btn-primary:hover { background: var(--green-sage); border-color: var(--green-sage); }
+    .btn-outline { background: transparent; color: var(--green-deep); border: 2px solid var(--green-deep); }
+    .btn-outline:hover { background: var(--green-pale); }
+    .btn-light { background: transparent; color: var(--cream); border: 2px solid rgba(247,243,236,0.5); }
+    .btn-light:hover { background: rgba(247,243,236,0.12); border-color: var(--cream); }
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      color: var(--green-sage);
+      font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+      animation: bob 2.8s ease-in-out infinite;
+    }
+    .scroll-hint svg { width: 18px; height: 18px; }
+    @keyframes bob { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(7px)} }
+
+    /* ── Shared section styles ── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      color: var(--green-deep); margin-bottom: 1.25rem;
+    }
+    .divider { width: 56px; height: 2px; background: var(--green-sage); margin: 0 0 1.75rem; }
+    .divider-center { margin: 0 auto 1.75rem; }
+
+    /* ── About ── */
+    .about { background: var(--cream); }
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 5rem; align-items: center; margin-top: 4rem;
+    }
+    .about-image {
+      aspect-ratio: 4/5;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    .about-image img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      display: block;
+    }
+    .about-image-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 1.5rem;
+      font-size: 0.75rem; color: var(--cream);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      background: linear-gradient(to top, rgba(74,88,56,0.6), transparent);
+    }
+    .about-text p { color: var(--text-muted); margin-bottom: 1.1rem; font-weight: 300; }
+    .about-text p:last-of-type { margin-bottom: 2rem; }
+
+    /* ── Photo strip ── */
+    .photo-strip {
+      display: flex; gap: 4px; overflow: hidden; height: 280px;
+    }
+    .photo-strip img {
+      flex: 1; min-width: 0;
+      object-fit: cover;
+      filter: brightness(0.9) saturate(1.05);
+      transition: flex 0.5s ease, filter 0.3s ease;
+    }
+    .photo-strip img:hover { flex: 3; filter: brightness(1) saturate(1.1); }
+
+    /* ── Gallery ── */
+    .gallery { background: var(--cream-dark); }
+    .gallery-grid {
+      columns: 3; column-gap: 0.75rem;
+      margin-top: 3rem;
+    }
+    .gallery-item {
+      break-inside: avoid;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      border-radius: 2px;
+      cursor: zoom-in;
+    }
+    .gallery-item img {
+      width: 100%; display: block;
+      transition: transform 0.4s ease, filter 0.3s ease;
+      filter: brightness(0.95) saturate(1.05);
+    }
+    .gallery-item:hover img { transform: scale(1.03); filter: brightness(1) saturate(1.1); }
+    /* Lightbox */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(30,30,24,0.92);
+      align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 90vw; max-height: 90vh;
+      object-fit: contain; border-radius: 2px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+      position: absolute; top: 1.5rem; right: 2rem;
+      color: rgba(255,255,255,0.7); font-size: 2rem;
+      background: none; border: none; cursor: pointer; line-height: 1;
+    }
+    .lightbox-close:hover { color: #fff; }
+    @media (max-width: 860px) { .gallery-grid { columns: 2; } }
+    @media (max-width: 480px) { .gallery-grid { columns: 1; } }
+
+    /* ── Vision ── */
+    .vision {
+      background: var(--green-deep);
+      color: var(--cream);
+      text-align: center;
+      padding: 7rem 2rem;
+    }
+    .vision .section-label { color: var(--green-light); }
+    .vision-quote {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+      line-height: 1.4;
+      color: var(--cream);
+      max-width: 800px;
+      margin: 0 auto 2.5rem;
+    }
+    .vision-quote em { color: var(--green-light); font-style: italic; }
+    .vision-body {
+      font-size: 1rem;
+      color: rgba(247,243,236,0.72);
+      max-width: 660px;
+      margin: 0 auto;
+      font-weight: 300;
+      line-height: 1.85;
+    }
+    .vision .divider { background: var(--green-light); margin: 1.75rem auto 2.5rem; }
+
+    /* ── Mission & Values ── */
+    .values { background: var(--cream-dark); }
+    .values-top {
+      max-width: 720px;
+      margin: 0 auto 4rem;
+      text-align: center;
+    }
+    .values-top .section-title { margin-bottom: 0.75rem; }
+    .mission-statement {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.85;
+    }
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .value-card {
+      background: var(--cream);
+      padding: 2.5rem 2rem;
+      border-radius: 2px;
+      border-top: 3px solid var(--green-sage);
+    }
+    .value-icon { font-size: 1.6rem; margin-bottom: 1rem; }
+    .value-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--green-deep);
+      margin-bottom: 0.75rem;
+    }
+    .value-card p { font-size: 0.9rem; color: var(--text-muted); font-weight: 300; line-height: 1.75; }
+
+    /* ── Membership ── */
+    .membership { background: var(--cream-dark); }
+    .membership-intro { font-size: 1rem; color: var(--text-muted); font-weight: 300; max-width: 620px; line-height: 1.8; }
+    .membership-countdown {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: var(--green-pale); border: 1.5px solid var(--green-sage);
+      border-radius: 2px; padding: 0.6rem 1.1rem; margin: 1.5rem 0 3rem;
+      font-size: 0.78rem; letter-spacing: 0.06em; color: var(--green-deep);
+    }
+    .countdown-dot { width: 7px; height: 7px; background: var(--green-sage); border-radius: 50%; animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+    .countdown-timer { font-weight: 500; }
+
+    /* Tier progression */
+    .tiers-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--green-pale);
+      border: 1.5px solid var(--green-pale); border-radius: 2px;
+      overflow: hidden; margin-bottom: 3.5rem;
+    }
+    .tier-card {
+      background: var(--cream); padding: 2rem 1.75rem;
+      position: relative; display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .tier-card.open { background: #fff; }
+    .tier-card.locked { background: var(--cream-dark); opacity: 0.72; }
+    .tier-status {
+      font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
+      margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .tier-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .tier-card.open .tier-status { color: var(--green-sage); }
+    .tier-card.open .tier-status-dot { background: var(--green-sage); animation: pulse 2s ease-in-out infinite; }
+    .tier-card.next .tier-status { color: var(--teal); }
+    .tier-card.next .tier-status-dot { background: var(--teal); }
+    .tier-card.locked .tier-status { color: var(--text-muted); }
+    .tier-card.locked .tier-status-dot { background: #ccc; }
+    .tier-icon { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    .tier-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; color: var(--green-deep);
+    }
+    .tier-card.locked .tier-name { color: var(--text-muted); }
+    .tier-sub {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 0.75rem;
+    }
+    .tier-card.locked .tier-sub { color: var(--text-muted); }
+    .tier-price .amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; color: var(--green-deep); line-height: 1;
+    }
+    .tier-card.locked .tier-price .amount { color: var(--text-muted); }
+    .tier-price .period { font-size: 0.8rem; color: var(--text-muted); }
+    .tier-note {
+      font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-top: 0.5rem;
+    }
+    .tier-spots {
+      display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.75rem;
+      background: var(--green-pale); padding: 0.35rem 0.75rem; border-radius: 20px;
+      font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--green-deep); font-weight: 500; width: fit-content;
+    }
+    .tier-cta {
+      display: block; text-align: center; margin-top: auto; padding-top: 1.25rem;
+      padding-bottom: 0.7rem; padding-left: 1rem; padding-right: 1rem;
+      border-radius: 2px; font-size: 0.75rem; letter-spacing: 0.1em;
+      text-transform: uppercase; font-weight: 500; transition: all 0.2s;
+      border: 1.5px solid var(--green-deep); color: var(--green-deep); background: transparent;
+    }
+    .tier-card.open .tier-cta { background: var(--green-deep); color: var(--cream); border-color: var(--green-deep); }
+    .tier-card.open .tier-cta:hover { background: var(--green-sage); border-color: var(--green-sage); }
+    .tier-card.next .tier-cta { border-color: var(--teal); color: var(--teal); }
+    .tier-card.locked .tier-cta { border-color: #ccc; color: #aaa; pointer-events: none; }
+
+    /* Perks */
+    .perks-block {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+      background: var(--cream); border-radius: 2px;
+      border: 1.5px solid var(--green-pale); padding: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .perks-block-header {
+      grid-column: 1 / -1;
+    }
+    .perks-block-header p {
+      font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 0.4rem;
+    }
+    .perks-block-header h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; color: var(--green-deep);
+    }
+    .perks-column h4 {
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--green-deep); font-weight: 500; margin-bottom: 1rem;
+      padding-bottom: 0.5rem; border-bottom: 1.5px solid var(--green-pale);
+    }
+    .perks-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+    .perks-list li {
+      font-size: 0.875rem; color: var(--text-muted); font-weight: 300;
+      padding-left: 1.2rem; position: relative; line-height: 1.5;
+    }
+    .perks-list li::before {
+      content: '✦'; position: absolute; left: 0;
+      color: var(--green-sage); font-size: 0.45rem; top: 0.38rem;
+    }
+    .perks-highlight {
+      grid-column: 1 / -1;
+      background: var(--green-pale); border-radius: 2px;
+      padding: 1rem 1.25rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .perks-highlight-item {
+      font-size: 0.88rem; color: var(--green-deep); font-weight: 500;
+      padding-left: 1.1rem; position: relative;
+    }
+    .perks-highlight-item::before {
+      content: '✦'; position: absolute; left: 0;
+      color: var(--green-sage); font-size: 0.45rem; top: 0.38rem;
+    }
+
+    /* Org card */
+    .org-card {
+      background: var(--green-deep); border-radius: 2px;
+      padding: 2.5rem; display: grid;
+      grid-template-columns: 1fr 1fr 1fr; gap: 2rem; align-items: center;
+    }
+    .org-card-label {
+      font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--green-light); margin-bottom: 0.5rem;
+    }
+    .org-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; color: var(--cream); margin-bottom: 0.5rem;
+    }
+    .org-card p { font-size: 0.88rem; color: rgba(247,243,236,0.65); font-weight: 300; }
+    .org-prices { display: flex; flex-direction: column; gap: 0.75rem; }
+    .org-price-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+    .org-price-name { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green-light); }
+    .org-price-amount { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--cream); }
+    .org-price-row.regular .org-price-name { color: rgba(247,243,236,0.5); }
+    .org-price-row.regular .org-price-amount { color: rgba(247,243,236,0.6); font-size: 1.1rem; }
+    .org-divider { border: none; border-top: 1px solid rgba(168,187,150,0.2); margin: 0.5rem 0; }
+    .org-perks-list { list-style: none; margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .org-perks-list li { font-size: 0.82rem; color: rgba(247,243,236,0.6); font-weight: 300; padding-left: 1rem; position: relative; }
+    .org-perks-list li::before { content: '✦'; position: absolute; left: 0; color: var(--green-light); font-size: 0.45rem; top: 0.35rem; }
+    .org-card-cta {
+      display: block; text-align: center;
+      padding: 0.9rem 1.5rem; border-radius: 2px;
+      font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase;
+      font-weight: 500; border: 1.5px solid rgba(168,187,150,0.4);
+      color: var(--cream); transition: all 0.2s;
+    }
+    .org-card-cta:hover { background: rgba(122,143,106,0.25); border-color: var(--green-light); }
+
+    /* ── Events ── */
+    .events { background: var(--cream); }
+    .events-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 3rem; gap: 2rem; flex-wrap: wrap;
+    }
+    .events-intro { font-size: 1rem; color: var(--text-muted); font-weight: 300; max-width: 420px; line-height: 1.8; }
+
+    /* Minimal cards */
+    .events-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 4rem; }
+    .event-card {
+      background: var(--cream-dark); border-radius: 2px;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .event-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(74,88,56,0.1); }
+    .event-card-date-badge {
+      background: var(--green-deep); color: var(--cream);
+      padding: 1rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .event-card-date-badge .day-month {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+    }
+    .event-card-date-badge .day-name {
+      font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
+      opacity: 0.7;
+    }
+    .event-card-body { padding: 1.5rem; display: flex; flex-direction: column; flex: 1; gap: 0.5rem; }
+    .event-card-tag {
+      font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--teal);
+    }
+    .event-card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem; color: var(--green-deep); line-height: 1.3;
+    }
+    .event-card-meta {
+      font-size: 0.82rem; color: var(--text-muted); font-weight: 300;
+    }
+    .event-card-price {
+      font-size: 0.85rem; color: var(--text);
+      margin-top: 0.25rem;
+    }
+    .event-card-price .member-price {
+      color: var(--green-sage); font-weight: 500;
+    }
+    .event-card-footer { padding: 0 1.5rem 1.5rem; display: flex; gap: 0.6rem; margin-top: auto; }
+    .event-btn {
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.55rem 1rem; border-radius: 2px; font-weight: 500; transition: all 0.2s;
+    }
+    .event-btn.primary { background: var(--green-deep); color: var(--cream); border: 1.5px solid var(--green-deep); }
+    .event-btn.primary:hover { background: var(--green-sage); border-color: var(--green-sage); }
+    .event-btn.secondary { background: transparent; color: var(--green-deep); border: 1.5px solid var(--green-pale); }
+    .event-btn.secondary:hover { border-color: var(--green-sage); background: var(--green-pale); }
+    .event-btn.muted { color: var(--text-muted); border: 1.5px solid var(--cream-dark); font-style: italic; font-size: 0.68rem; letter-spacing: 0; text-transform: none; }
+
+    /* Calendar */
+    .events-calendar { border: 1.5px solid var(--green-pale); border-radius: 2px; overflow: hidden; }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--green-deep); color: var(--cream);
+      padding: 1rem 1.5rem;
+    }
+    .cal-header h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; }
+    .cal-nav {
+      background: none; border: 1.5px solid rgba(247,243,236,0.3); color: var(--cream);
+      width: 32px; height: 32px; border-radius: 2px; cursor: pointer;
+      font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .cal-nav:hover { background: rgba(247,243,236,0.15); }
+    .cal-grid { background: var(--cream); }
+    .cal-weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      background: var(--green-pale);
+    }
+    .cal-weekdays span {
+      text-align: center; padding: 0.6rem 0;
+      font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--green-deep); font-weight: 500;
+    }
+    .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-day {
+      min-height: 52px; padding: 0.5rem;
+      border-top: 1px solid var(--green-pale);
+      border-right: 1px solid var(--green-pale);
+      font-size: 0.82rem; color: var(--text-muted);
+      position: relative; cursor: default;
+    }
+    .cal-day:nth-child(7n) { border-right: none; }
+    .cal-day.other-month { opacity: 0.3; }
+    .cal-day.today .day-num {
+      background: var(--teal); color: var(--cream);
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem;
+    }
+    .cal-day.has-event { cursor: pointer; background: var(--cream); }
+    .cal-day.has-event:hover { background: var(--green-pale); }
+    .cal-event-dot {
+      display: block; margin-top: 0.25rem;
+      font-size: 0.6rem; color: var(--green-deep);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      background: var(--green-pale); padding: 0.1rem 0.3rem; border-radius: 2px;
+      border-left: 2px solid var(--green-sage);
+    }
+    .cal-tooltip {
+      display: none; position: absolute; z-index: 10;
+      top: calc(100% + 4px); left: 0;
+      background: var(--green-deep); color: var(--cream);
+      padding: 0.75rem 1rem; border-radius: 2px;
+      font-size: 0.78rem; line-height: 1.6; min-width: 200px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .cal-day.has-event:hover .cal-tooltip { display: block; }
+    .cal-tooltip strong { display: block; font-family: 'Playfair Display', serif; font-size: 0.9rem; margin-bottom: 0.25rem; font-weight: 400; }
+
+    /* ── Online Programs ── */
+    .programs { background: var(--green-deep); color: var(--cream); }
+    .programs .section-label { color: var(--green-light); }
+    .programs .section-title { color: var(--cream); }
+    .programs .divider { background: var(--green-light); }
+    .programs-intro { font-size: 1rem; color: rgba(247,243,236,0.7); max-width: 560px; font-weight: 300; }
+    .programs-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem; margin-top: 3.5rem;
+    }
+    .program-card {
+      padding: 2.5rem;
+      border: 1px solid rgba(168,187,150,0.22);
+      border-radius: 2px;
+      transition: background 0.2s ease;
+    }
+    .program-card:hover { background: rgba(122,143,106,0.15); }
+    .program-icon { font-size: 1.6rem; margin-bottom: 1rem; }
+    .program-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; color: var(--cream); margin-bottom: 0.75rem;
+    }
+    .program-card p { font-size: 0.88rem; color: rgba(247,243,236,0.65); font-weight: 300; margin-bottom: 1.5rem; }
+    .program-link {
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--green-light); border-bottom: 1px solid var(--green-light);
+      padding-bottom: 1px; transition: color 0.2s;
+    }
+    .program-link:hover { color: var(--cream); border-color: var(--cream); }
+
+    /* ── Story ── */
+    .story { background: var(--cream-dark); }
+    .story-grid {
+      display: grid; grid-template-columns: 1fr 1.6fr;
+      gap: 5rem; align-items: start; margin-top: 3rem;
+    }
+    .story-sidebar {
+      position: sticky; top: 7rem;
+    }
+    .story-pull {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; line-height: 1.45;
+      color: var(--green-deep);
+      border-left: 3px solid var(--green-sage);
+      padding-left: 1.5rem;
+      margin-top: 2rem;
+      font-style: italic;
+    }
+    .story-body p { color: var(--text-muted); font-weight: 300; margin-bottom: 1.1rem; line-height: 1.85; }
+
+    /* ── Team ── */
+    .team { background: var(--cream); }
+    .team-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 3rem; margin-top: 3.5rem;
+    }
+    .team-card { display: flex; gap: 2rem; align-items: flex-start; }
+    .team-photo {
+      width: 110px; height: 110px; flex-shrink: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--green-pale);
+    }
+    .team-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      display: block;
+    }
+    .team-info h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; color: var(--green-deep); margin-bottom: 0.25rem;
+    }
+    .team-role {
+      font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 1rem;
+    }
+    .team-info p { font-size: 0.88rem; color: var(--text-muted); font-weight: 300; line-height: 1.8; margin-bottom: 0.75rem; }
+
+    /* ── Visit ── */
+    .visit { background: var(--cream-dark); }
+    .visit-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 5rem; align-items: center; margin-top: 4rem;
+    }
+    .visit-map {
+      aspect-ratio: 1;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(93,117,117,0.22) 0%, transparent 65%),
+        var(--green-pale);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 0.5rem; padding: 2rem; text-align: center;
+    }
+    .visit-map-pin { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .visit-map-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; color: var(--green-deep);
+    }
+    .visit-map-sub { font-size: 0.82rem; color: var(--text-muted); }
+    .visit-details p { color: var(--text-muted); font-weight: 300; margin-bottom: 1rem; }
+    .visit-info { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 2rem; }
+    .visit-info-item { display: flex; gap: 1rem; align-items: flex-start; }
+    .visit-info-item .icon {
+      width: 36px; height: 36px; background: var(--green-pale); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem;
+    }
+    .visit-info-item .label {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--teal); margin-bottom: 0.2rem;
+    }
+    .visit-info-item .value { font-size: 0.92rem; color: var(--text); }
+
+    /* ── Newsletter ── */
+    .newsletter {
+      background:
+        radial-gradient(ellipse at 50% 110%, rgba(122,143,106,0.22) 0%, transparent 65%),
+        var(--green-deep);
+      text-align: center;
+      padding: 7rem 2rem;
+      color: var(--cream);
+    }
+    .newsletter .section-label { color: var(--green-light); }
+    .newsletter h2 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--cream); margin-bottom: 1rem;
+    }
+    .newsletter p {
+      color: rgba(247,243,236,0.72); font-weight: 300; margin-bottom: 2.5rem;
+      max-width: 460px; margin-left: auto; margin-right: auto;
+    }
+    .newsletter-form {
+      display: flex; max-width: 420px; margin: 0 auto;
+      border: 1.5px solid rgba(168,187,150,0.5); border-radius: 2px; overflow: hidden;
+    }
+    .newsletter-form input {
+      flex: 1; padding: 0.9rem 1.25rem;
+      border: none; background: rgba(247,243,236,0.1);
+      font-family: 'Inter', sans-serif; font-size: 0.9rem;
+      color: var(--cream); outline: none;
+    }
+    .newsletter-form input::placeholder { color: rgba(247,243,236,0.4); }
+    .newsletter-form button {
+      padding: 0.9rem 1.5rem;
+      background: var(--green-sage); color: var(--cream); border: none;
+      font-family: 'Inter', sans-serif; font-size: 0.75rem;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+      transition: background 0.2s; white-space: nowrap;
+    }
+    .newsletter-form button:hover { background: var(--green-light); }
+
+    /* ── Land Acknowledgment ── */
+    .land-ack {
+      background: var(--cream); padding: 3.5rem 2rem;
+      border-top: 1px solid var(--green-pale);
+    }
+    .land-ack .container { max-width: 700px; text-align: center; }
+    .land-ack p { font-size: 0.88rem; color: var(--text-muted); font-weight: 300; line-height: 1.85; }
+    .land-ack strong { color: var(--green-deep); font-weight: 500; }
+
+    /* ── Footer ── */
+    footer { background: #2e3824; color: rgba(247,243,236,0.6); padding: 2.5rem 2rem; }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    .footer-logo img { height: 36px; width: auto; filter: brightness(0) invert(1) opacity(0.75); }
+    /* Closing logo above footer */
+    .footer-logo-closing {
+      background: var(--cream);
+      padding: 4rem 2rem 3rem;
+      text-align: center;
+      border-top: 1px solid var(--green-pale);
+    }
+    .footer-logo-closing img { height: 130px; width: auto; margin: 0 auto; }
+    .footer-logo-closing p {
+      margin-top: 0.75rem; font-size: 0.8rem;
+      color: var(--text-muted); letter-spacing: 0.08em;
+    }
+    .footer-links {
+      display: flex; gap: 1.75rem; list-style: none;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .footer-links a:hover { color: var(--cream); }
+    .footer-copy { font-size: 0.75rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.25rem; font-size: 0.75rem; }
+      .about-grid, .visit-grid, .story-grid, .team-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .tiers-row { grid-template-columns: 1fr; }
+      .perks-block { grid-template-columns: 1fr; gap: 1.5rem; }
+      .org-card { grid-template-columns: 1fr; }
+      .about-image { aspect-ratio: 16/9; }
+      .story-sidebar { position: static; }
+      .events-grid { grid-template-columns: 1fr; }
+      .programs-grid { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 560px) {
+      .nav-links { display: none; }
+      section { padding: 4.5rem 1.25rem; }
+      .team-card { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav>
+    <div class="nav-logo">
+      <img src="bowl.svg" alt="Hammock Earth" />
+    </div>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#values">Values</a></li>
+      <li><a href="#membership">Membership</a></li>
+      <li><a href="#events">Events</a></li>
+      <li><a href="#programs">Online</a></li>
+      <li><a href="#team">Team</a></li>
+      <li><a href="#visit">Visit</a></li>
+      <li><a href="#newsletter">Connect</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <p class="hero-eyebrow">Hammock Hills &nbsp;·&nbsp; Hillsdale, Ontario</p>
+    <h1>Cultivating fertile ground for <em>people, land,</em> and possibility.</h1>
+    <p class="hero-sub">A community dedicated to cultivating ecological belonging through shared experiences with land, food, and one another.</p>
+    <div class="hero-cta">
+      <a href="#events" class="btn btn-primary">Upcoming Events</a>
+      <a href="#about" class="btn btn-outline">About Us</a>
+    </div>
+    <div class="scroll-hint">
+      <span>Explore</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </section>
+
+  <!-- ── About ── -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-image">
+          <img src="images/IMG_7306.jpg" alt="Hammock Hills, Hillsdale Ontario" />
+          <p class="about-image-caption">Hammock Hills, Hillsdale Ontario</p>
+        </div>
+        <div class="about-text">
+          <p class="section-label">About Hammock Earth</p>
+          <h2 class="section-title">Hammock Earth is a community dedicated to cultivating ecological belonging through shared experiences with land, food, and one another.</h2>
+          <div class="divider"></div>
+          <p>We believe that human well-being and ecological health are inseparable. When we reconnect with the land that nourishes us—through food, seasons, soil, and community—we rediscover a deeper sense of belonging and responsibility for the living world.</p>
+          <p>Our work creates spaces where people can slow down, reconnect with their senses, and experience the culture that grows food: the relationships between farmers and land, the care behind regenerative practices, and the communities that gather around the table.</p>
+          <p>Through farm tours, communal meals, workshops, storytelling, and immersive gatherings, Hammock Earth invites people into a living relationship with the ecosystems that sustain us.</p>
+          <p>Our hope is to nurture a joyful and generous Canadian food culture that not only tastes delicious but also regenerates soil, strengthens communities, and supports climate resilience for generations to come.</p>
+          <a href="#events" class="btn btn-outline">See What's Coming</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Photo Strip ── -->
+  <div class="photo-strip">
+    <img src="images/IMG_7306.jpg" alt="Friends on the farm" />
+    <img src="images/Kune Kune kisses.jpg" alt="Kune Kune pigs" />
+    <img src="images/IMG_7522.jpg" alt="Farm baking with edible flowers" />
+    <img src="images/IMG_7479.jpg" alt="Saffron harvest" />
+    <img src="images/FullSizeRender.jpg" alt="Farm chickens" />
+    <img src="images/IMG_7489.jpg" alt="Fields at Hammock Hills" />
+  </div>
+
+  <!-- ── Vision ── -->
+  <section class="vision" id="vision">
+    <div class="container">
+      <p class="section-label">Our Vision</p>
+      <div class="divider" style="background: var(--green-light); margin: 1rem auto 2.5rem;"></div>
+      <p class="vision-quote">To grow global well-being through <em>ecological belonging.</em></p>
+      <p class="vision-body">Ecological belonging is remembering that we are part of nature, not separate from it. Our well-being is shaped by how we care for the land that sustains us—our food systems, animals, water, and one another across generations.<br><br>It is the lived experience of being in relationship with land, food, seasons, and community, where care for the earth and care for people are understood as the same act.</p>
+    </div>
+  </section>
+
+  <!-- ── Mission & Values ── -->
+  <section class="values" id="values">
+    <div class="container">
+      <div class="values-top">
+        <p class="section-label">Our Mission</p>
+        <h2 class="section-title">What We're Here to Do</h2>
+        <div class="divider divider-center"></div>
+        <p class="mission-statement">To create shared experiences that foster ecological belonging, cultivate a joyful and generous Canadian food culture, and strengthen relationships with land, food, and community across generations.</p>
+      </div>
+      <p class="section-label" style="text-align:center; margin-bottom:2rem;">Our Values</p>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon">🕊️</div>
+          <h3>Peace, Joy &amp; Kindness</h3>
+          <p>We believe that cultures of care and generosity create the conditions for thriving communities.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🌿</div>
+          <h3>Community &amp; Interconnectedness</h3>
+          <p>We recognize that people, land, and ecosystems are deeply interconnected, and that meaningful change happens through relationship.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">✦</div>
+          <h3>Excellence</h3>
+          <p>We strive to create experiences that are thoughtful, beautiful, and grounded in care for both people and the earth.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Events & Workshops ── -->
+  <section class="events" id="events">
+    <div class="container">
+      <div class="events-header">
+        <div>
+          <p class="section-label">On the Land</p>
+          <h2 class="section-title">Events &amp; Workshops</h2>
+          <div class="divider" style="margin-top:1rem;"></div>
+        </div>
+        <p class="events-intro">Seasonal gatherings, farm tours, communal meals, and immersive workshops at Hammock Hills in Hillsdale, Ontario.</p>
+      </div>
+
+      <!-- Minimal event cards -->
+      <div class="events-grid">
+
+        <div class="event-card">
+          <div class="event-card-date-badge">
+            <span class="day-month">Apr 18</span>
+            <span class="day-name">Saturday</span>
+          </div>
+          <div class="event-card-body">
+            <span class="event-card-tag">Full Day Retreat</span>
+            <div class="event-card-title">Embodiment Circle Retreat: Celebrating Our Becoming</div>
+            <div class="event-card-meta">11am – 6pm &nbsp;·&nbsp; Hammock Hills</div>
+            <div class="event-card-price">$177 + HST &nbsp;·&nbsp; <span class="member-price">Members $88.50</span></div>
+          </div>
+          <div class="event-card-footer">
+            <a href="https://next.waveapps.com/checkouts/2d106067f7944ef0bbb3c78d888df15a" target="_blank" rel="noopener" class="event-btn primary">Register</a>
+            <a href="https://nusqool.com/classes" target="_blank" rel="noopener" class="event-btn secondary">More Info</a>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-card-date-badge">
+            <span class="day-month">Apr 22</span>
+            <span class="day-name">Wednesday · Earth Day</span>
+          </div>
+          <div class="event-card-body">
+            <span class="event-card-tag">Workshop</span>
+            <div class="event-card-title">Earth Day Garden Workshop</div>
+            <div class="event-card-meta">10am – 3pm &nbsp;·&nbsp; Hammock Hills</div>
+            <div class="event-card-price">$149 + HST &nbsp;·&nbsp; <span class="member-price">Members $74.50</span></div>
+          </div>
+          <div class="event-card-footer">
+            <span class="event-btn muted">Registration opening soon</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-card-date-badge">
+            <span class="day-month">May 9</span>
+            <span class="day-name">Saturday</span>
+          </div>
+          <div class="event-card-body">
+            <span class="event-card-tag">Workshop</span>
+            <div class="event-card-title">Mushroom Log Inoculation Workshop</div>
+            <div class="event-card-meta">10am – 3pm &nbsp;·&nbsp; Hammock Hills</div>
+            <div class="event-card-price">$149 + HST &nbsp;·&nbsp; <span class="member-price">Members $74.50</span></div>
+          </div>
+          <div class="event-card-footer">
+            <span class="event-btn muted">Registration opening soon</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Calendar -->
+      <div class="events-calendar">
+        <div class="cal-header">
+          <button class="cal-nav" id="cal-prev">&#8592;</button>
+          <h3 id="cal-title"></h3>
+          <button class="cal-nav" id="cal-next">&#8594;</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-weekdays">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+            <span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="cal-days" id="cal-days"></div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top: 2.5rem;">
+        <a href="#newsletter" class="btn btn-outline">Get notified about upcoming events</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Membership ── -->
+  <section class="membership" id="membership">
+    <div class="container">
+      <p class="section-label">Become a Member</p>
+      <h2 class="section-title">Founding Membership</h2>
+      <div class="divider"></div>
+      <p class="membership-intro">Building Hammock Earth takes a village. As a small, community-rooted venture, we depend on the people closest to us — friends, family, and fellow travellers — to help us grow something real and lasting. Founding membership is our way of inviting you in early: in exchange for your support, you get a full season at the farm, discounted access to our dinners, workshops, and retreats, and a few gifts along the way.</p>
+      <p class="membership-intro">Membership unlocks in stages as our community grows. Right now, the founding Mycelium tier is open — limited to 22 people. When that fills, Dandelion opens. By June 21, membership is available to all at the regular rate. All individual tiers include the same perks.</p>
+      <div class="membership-countdown">
+        <span class="countdown-dot"></span>
+        <span>Regular rates begin June 21, 2026 &nbsp;·&nbsp; <span class="countdown-timer" id="countdown">calculating…</span> remaining</span>
+      </div>
+
+      <!-- Tier progression -->
+      <div class="tiers-row">
+
+        <div class="tier-card open">
+          <div class="tier-status"><span class="tier-status-dot"></span> Open now</div>
+          <div class="tier-icon">🍄</div>
+          <div class="tier-name">Mycelium</div>
+          <div class="tier-sub">Founding Rate</div>
+          <div class="tier-price"><span class="amount">$90</span><span class="period"> / month</span></div>
+          <p class="tier-note">First 22 founding members</p>
+          <div class="tier-spots">🌱 22 spots available</div>
+          <a href="#newsletter" class="tier-cta">Join as Mycelium</a>
+        </div>
+
+        <div class="tier-card next">
+          <div class="tier-status"><span class="tier-status-dot"></span> Opens when Mycelium fills</div>
+          <div class="tier-icon">🌼</div>
+          <div class="tier-name">Dandelion</div>
+          <div class="tier-sub">Early Bird</div>
+          <div class="tier-price"><span class="amount">$120</span><span class="period"> / month</span></div>
+          <p class="tier-note">Available before June 21, 2026</p>
+          <a href="#newsletter" class="tier-cta">Join the waitlist</a>
+        </div>
+
+        <div class="tier-card locked">
+          <div class="tier-status"><span class="tier-status-dot"></span> Opens June 21, 2026</div>
+          <div class="tier-icon">🌿</div>
+          <div class="tier-name">Member</div>
+          <div class="tier-sub">Regular Rate</div>
+          <div class="tier-price"><span class="amount">$150</span><span class="period"> / month</span></div>
+          <p class="tier-note">Standard rate, always available</p>
+          <a href="#newsletter" class="tier-cta">Join the waitlist</a>
+        </div>
+
+      </div>
+
+      <!-- Shared perks -->
+      <div class="perks-block">
+        <div class="perks-block-header">
+          <p>All Individual Members</p>
+          <h3>What's included</h3>
+        </div>
+        <div class="perks-highlight">
+          <div class="perks-highlight-item">Bring a friend for free</div>
+          <div class="perks-highlight-item">50% off all events &amp; workshops</div>
+          <div class="perks-highlight-item">A seasonal gift</div>
+        </div>
+        <div class="perks-column">
+          <h4>On the Land</h4>
+          <ul class="perks-list">
+            <li>Weekly members-only Farm Adventures</li>
+            <li>Care Tent visit</li>
+            <li>Farming &amp; homesteading workshops</li>
+            <li>Movement</li>
+            <li>Meditations</li>
+            <li>Nature art</li>
+            <li>Access bars</li>
+            <li>Digital detox</li>
+            <li>Snowshoeing</li>
+            <li>Farm visits</li>
+          </ul>
+        </div>
+        <div class="perks-column">
+          <h4>Online</h4>
+          <ul class="perks-list">
+            <li>Community Circles</li>
+            <li>Neurogenic dancing</li>
+            <li>Meditation</li>
+            <li>Collective presencing</li>
+            <li>Newsletter</li>
+            <li>Podcast</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Org Membership -->
+      <div class="org-card">
+        <div>
+          <div class="org-card-label">For Organizations</div>
+          <h3>Community Partner</h3>
+          <p>5 member seats for your team, organization, or collective. Bring your whole community into the work of ecological belonging.</p>
+        </div>
+        <div>
+          <div class="org-prices">
+            <div class="org-price-row">
+              <span class="org-price-name">Early Bird &nbsp;(until June 21)</span>
+              <span class="org-price-amount">$5,000</span>
+            </div>
+            <hr class="org-divider"/>
+            <div class="org-price-row regular">
+              <span class="org-price-name">Regular Rate</span>
+              <span class="org-price-amount">$9,000</span>
+            </div>
+            <p style="font-size:0.7rem; color:rgba(247,243,236,0.4); margin-top:0.5rem;">Annual · 5 seats included</p>
+          </div>
+          <ul class="org-perks-list">
+            <li>All individual member perks for 5 people</li>
+            <li>Logo on the Hammock Earth website</li>
+            <li>Co-branding opportunities</li>
+          </ul>
+        </div>
+        <a href="mailto:hello@hammock.earth" class="org-card-cta">Get in touch</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Online Programs ── -->
+  <section class="programs" id="programs">
+    <div class="container">
+      <p class="section-label">From Anywhere</p>
+      <h2 class="section-title">Online Programs</h2>
+      <div class="divider"></div>
+      <p class="programs-intro">Can't make it to the land? Our online offerings bring the spirit of Hammock Earth into homes and hearts wherever you are in the world.</p>
+      <div class="programs-grid">
+        <div class="program-card">
+          <div class="program-icon">🌿</div>
+          <h3>Ecological Belonging</h3>
+          <p>An immersive journey into what it means to live in relationship with land, seasons, and community. Practices, stories, and a framework for reconnection.</p>
+          <a href="#newsletter" class="program-link">Join the waitlist</a>
+        </div>
+        <div class="program-card">
+          <div class="program-icon">🌱</div>
+          <h3>Regenerative Food Culture</h3>
+          <p>Exploring the people, farms, and practices behind a generous Canadian food culture — and how we each play a role in making it real.</p>
+          <a href="#newsletter" class="program-link">Join the waitlist</a>
+        </div>
+        <div class="program-card">
+          <div class="program-icon">🌙</div>
+          <h3>Slow Living Circle</h3>
+          <p>A monthly online gathering for those called to live with more intention — stories, seasonal practices, and community woven across distances.</p>
+          <a href="#newsletter" class="program-link">Join the waitlist</a>
+        </div>
+        <div class="program-card">
+          <div class="program-icon">🔥</div>
+          <h3>Community by Design</h3>
+          <p>The principles of intentional community: communication, shared decision-making, land stewardship, and the art of gathering with purpose.</p>
+          <a href="#newsletter" class="program-link">Join the waitlist</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Our Story ── -->
+  <section class="story" id="story">
+    <div class="container">
+      <p class="section-label">Our Story</p>
+      <h2 class="section-title">How Hammock Earth Began</h2>
+      <div class="divider"></div>
+      <div class="story-grid">
+        <div class="story-sidebar">
+          <p class="story-pull">How do we care for the Heart and the Earth at the same time?</p>
+        </div>
+        <div class="story-body">
+          <p>Hammock Earth began as a shared inquiry between two experienced entrepreneurs asking the same question: <em>How do we care for the Heart and the Earth at the same time?</em></p>
+          <p>Thu Nguyen and Anahita first met through a Coralus community pod and later gathered in person at Nusqool. As their friendship deepened—through walks, meals, a spa day, and a temple sound bath—they realized their work had been evolving in parallel.</p>
+          <p>Thu had been building a global community of helpers, healers, facilitators, and educators through her coaching and healing work. At the same time, Anahita had been stewarding land as an organic grower, experimenting with regenerative approaches to farming and exploring new ways to cultivate healthier food systems.</p>
+          <p>Together they recognized a shared calling: to create fertile ground—both in soil and in community—where people can reconnect with land, actualize their gifts, and experience ecological belonging.</p>
+          <p>Hammock Earth grew from that vision. Today, it continues to bring people together through food, land, and community to nurture a culture of care for both people and planet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Team ── -->
+  <section class="team" id="team">
+    <div class="container">
+      <p class="section-label">Our Co-Founders</p>
+      <h2 class="section-title">The People Behind the Land</h2>
+      <div class="divider"></div>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-photo"><img src="images/Thu2.jpg" alt="Thu Nguyen" /></div>
+          <div class="team-info">
+            <h3>Thu Nguyen</h3>
+            <p class="team-role">Somatic Leadership Coach &amp; Community Builder</p>
+            <p>Thu Nguyen is an entrepreneur, somatic leadership coach, and community builder dedicated to cultivating spaces where people can reconnect with themselves, one another, and the living earth.</p>
+            <p>After two decades working in technology and startups, a series of life-altering health experiences led Thu to step away from the tech world and explore a deeper path of healing, embodiment, and nature connection. Along the way, she brought together a global community of helpers, healers, facilitators, and educators through retreats, circles, and shared learning experiences.</p>
+            <p>Through Nusqool, Thu discovered the power of bringing people into relationship with land, food, and one another. Today, with Hammock Earth, Thu focuses on creating experiences that cultivate ecological belonging: inviting people to slow down, reconnect with the natural world, and rediscover the joy of being part of a living ecosystem.</p>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-photo"><img src="images/Farm strawberries.jpg" alt="Anahita Belanger" /></div>
+          <div class="team-info">
+            <h3>Anahita Belanger</h3>
+            <p class="team-role">Regenerative Leader &amp; Organic Grower</p>
+            <p>Anahita Belanger is a regenerative leader and organic grower rooted in ecological connection and conscious food systems. She pasture-raises heritage hogs and hens and grows vegetables and medicinal plants on her certified organic farm, blending her reverence for nature with a commitment to nourish both people and planet.</p>
+            <p>Anahita's work bridges local food, farm experiences, and community engagement. She has curated food experiences that bring eaters into direct relationship with local farms and has supported small food and farm entrepreneurs as an advisor in mission-aligned finance. She is also a founding activator in a global network supporting women-led ventures.</p>
+            <p>Anahita is devoted to regenerating land, strengthening local food systems, and building community. Combining her experience in ecological agriculture, hospitality, and start-up operations, she creates hands-on land stewardship workshops, immersive local food experiences, and collaborative gatherings where people reconnect with nature and rediscover ecological belonging—remembering that human well-being and the planet's vitality are inseparable.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Gallery ── -->
+  <section class="gallery" id="gallery">
+    <div class="container">
+      <p class="section-label">Life on the Land</p>
+      <h2 class="section-title">From the Farm</h2>
+      <div class="divider"></div>
+      <div class="gallery-grid">
+        <div class="gallery-item"><img src="images/IMG_7484.jpg" alt="Trail through the fields" /></div>
+        <div class="gallery-item"><img src="images/IMG_7479.jpg" alt="Saffron crocus" /></div>
+        <div class="gallery-item"><img src="images/IMG_7522.jpg" alt="Farm baking with edible flowers" /></div>
+        <div class="gallery-item"><img src="images/IMG_7492.jpg" alt="Fall colours" /></div>
+        <div class="gallery-item"><img src="images/Farm strawberries.jpg" alt="Fresh strawberries" /></div>
+        <div class="gallery-item"><img src="images/IMG_7481.jpg" alt="Saffron crocuses" /></div>
+        <div class="gallery-item"><img src="images/IMG_7489.jpg" alt="Fields at Hammock Hills" /></div>
+        <div class="gallery-item"><img src="images/FullSizeRender.jpg" alt="Farm chickens" /></div>
+        <div class="gallery-item"><img src="images/IMG_7575.jpg" alt="Autumn leaves" /></div>
+        <div class="gallery-item"><img src="images/IMG_7636.jpg" alt="Meadow in autumn" /></div>
+        <div class="gallery-item"><img src="images/Sugar baby melon.jpg" alt="Melon on the vine" /></div>
+        <div class="gallery-item"><img src="images/IMG_7644.jpg" alt="Sky through the meadow" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <img src="" alt="" id="lightbox-img" />
+  </div>
+
+  <!-- ── Visit ── -->
+  <section class="visit" id="visit">
+    <div class="container">
+      <div class="visit-grid">
+        <div class="visit-map">
+          <div class="visit-map-pin">📍</div>
+          <div class="visit-map-name">Hammock Hills</div>
+          <div class="visit-map-sub">Hillsdale, Ontario &nbsp;·&nbsp; Simcoe County</div>
+        </div>
+        <div class="visit-details">
+          <p class="section-label">Find Us</p>
+          <h2 class="section-title">Come to the Land</h2>
+          <div class="divider"></div>
+          <p>Hammock Hills is located in Hillsdale, Ontario — about an hour north of Toronto in Simcoe County, nestled in the hills near Georgian Bay country. Easy to get to, easy to exhale once you arrive.</p>
+          <div class="visit-info">
+            <div class="visit-info-item">
+              <div class="icon">🌲</div>
+              <div>
+                <div class="label">Location</div>
+                <div class="value">Hillsdale, Ontario &nbsp;·&nbsp; Simcoe County</div>
+              </div>
+            </div>
+            <div class="visit-info-item">
+              <div class="icon">🚗</div>
+              <div>
+                <div class="label">Getting Here</div>
+                <div class="value">~1 hour north of Toronto. Exact address shared upon event registration.</div>
+              </div>
+            </div>
+            <div class="visit-info-item">
+              <div class="icon">✉️</div>
+              <div>
+                <div class="label">Contact</div>
+                <div class="value"><a href="mailto:hello@hammock.earth" style="color:var(--green-sage)">hello@hammock.earth</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Newsletter ── -->
+  <section class="newsletter" id="newsletter">
+    <div class="container">
+      <p class="section-label">Stay Connected</p>
+      <h2>Join the Hammock Earth community</h2>
+      <p>Be the first to hear about events, programs, and seasonal offerings from the land. No noise — just what matters.</p>
+      <form class="newsletter-form" onsubmit="return false;">
+        <input type="email" placeholder="Your email address" />
+        <button type="submit">Join</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── Closing Logo ── -->
+  <div class="footer-logo-closing">
+    <img src="bowl.svg" alt="Hammock Earth" />
+    <p>hammock.earth &nbsp;·&nbsp; Hillsdale, Ontario</p>
+  </div>
+
+  <!-- ── Land Acknowledgment ── -->
+  <div class="land-ack">
+    <div class="container">
+      <p><strong>Land Acknowledgment</strong> &nbsp;·&nbsp; Hammock Hills sits on the traditional territory of the Wendat, Haudenosaunee, and Anishinaabe peoples, including the Chippewas of Rama First Nation. We are grateful to live, work, and gather on this land, and we are committed to ongoing relationships of respect and reciprocity with Indigenous communities.</p>
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <img src="bowl.svg" alt="Hammock Earth" />
+      </div>
+      <ul class="footer-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#events">Events</a></li>
+        <li><a href="#programs">Online</a></li>
+        <li><a href="#team">Team</a></li>
+        <li><a href="#visit">Visit</a></li>
+        <li><a href="mailto:hello@hammock.earth">Contact</a></li>
+      </ul>
+      <p class="footer-copy">&copy; 2026 Hammock Earth &nbsp;·&nbsp; Hillsdale, Ontario</p>
+    </div>
+  </footer>
+
+  <script>
+    // ── Gallery lightbox ──
+    (function() {
+      var lb = document.getElementById('lightbox');
+      var lbImg = document.getElementById('lightbox-img');
+      document.querySelectorAll('.gallery-item img').forEach(function(img) {
+        img.addEventListener('click', function() {
+          lbImg.src = img.src;
+          lbImg.alt = img.alt;
+          lb.classList.add('open');
+        });
+      });
+      document.getElementById('lightbox-close').addEventListener('click', function() { lb.classList.remove('open'); });
+      lb.addEventListener('click', function(e) { if (e.target === lb) lb.classList.remove('open'); });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') lb.classList.remove('open'); });
+    })();
+
+    // ── Calendar ──
+    (function() {
+      var events = [
+        { year:2026, month:3, day:18, title:'Embodiment Circle Retreat', time:'11am – 6pm', price:'$177', tag:'Full Day Retreat', link:'https://next.waveapps.com/checkouts/2d106067f7944ef0bbb3c78d888df15a' },
+        { year:2026, month:3, day:22, title:'Earth Day Garden Workshop', time:'10am – 3pm', price:'$149', tag:'Workshop', link:null },
+        { year:2026, month:4, day:9,  title:'Mushroom Log Inoculation', time:'10am – 3pm', price:'$149', tag:'Workshop', link:null },
+      ];
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var cur = new Date(2026, 3, 1); // start on April 2026
+
+      function render() {
+        var y = cur.getFullYear(), m = cur.getMonth();
+        document.getElementById('cal-title').textContent = months[m] + ' ' + y;
+        var firstDay = new Date(y, m, 1).getDay();
+        var daysInMonth = new Date(y, m+1, 0).getDate();
+        var daysInPrev = new Date(y, m, 0).getDate();
+        var today = new Date();
+        var html = '';
+        var total = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+        for (var i = 0; i < total; i++) {
+          var day, isOther = false;
+          if (i < firstDay) { day = daysInPrev - firstDay + i + 1; isOther = true; }
+          else if (i >= firstDay + daysInMonth) { day = i - firstDay - daysInMonth + 1; isOther = true; }
+          else { day = i - firstDay + 1; }
+          var isToday = !isOther && day === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+          var ev = !isOther && events.find(function(e){ return e.year===y && e.month===m && e.day===day; });
+          var cls = 'cal-day' + (isOther?' other-month':'') + (isToday?' today':'') + (ev?' has-event':'');
+          html += '<div class="'+cls+'">';
+          html += '<span class="day-num">'+day+'</span>';
+          if (ev) {
+            html += '<span class="cal-event-dot">'+ev.title+'</span>';
+            html += '<div class="cal-tooltip"><strong>'+ev.title+'</strong>'+ev.time+' · '+ev.tag+'<br>'+ev.price+' + HST · Members 50% off'+(ev.link?'<br><a href="'+ev.link+'" target="_blank" style="color:var(--green-light)">Register →</a>':'<br><em style="opacity:.6">Registration opening soon</em>')+'</div>';
+          }
+          html += '</div>';
+        }
+        document.getElementById('cal-days').innerHTML = html;
+      }
+      document.getElementById('cal-prev').addEventListener('click', function(){ cur.setMonth(cur.getMonth()-1); render(); });
+      document.getElementById('cal-next').addEventListener('click', function(){ cur.setMonth(cur.getMonth()+1); render(); });
+      render();
+    })();
+
+    // ── Countdown ──
+    (function() {
+      var target = new Date('2026-06-21T00:00:00');
+      function update() {
+        var now = new Date();
+        var diff = target - now;
+        if (diff <= 0) { document.getElementById('countdown').textContent = 'Ended'; return; }
+        var d = Math.floor(diff / 86400000);
+        var h = Math.floor((diff % 86400000) / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        document.getElementById('countdown').textContent = d + 'd ' + h + 'h ' + m + 'm';
+      }
+      update();
+      setInterval(update, 60000);
+    })();
+  </script>
+</body>
+</html>
