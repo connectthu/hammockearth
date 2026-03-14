@@ -2,6 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { SupabaseService } from "../supabase/supabase.service";
 import { EmailService } from "../email/email.service";
 import type { CreateInquiryDto } from "./dto/create-inquiry.dto";
+import type { Database } from "@hammock/database";
+
+type FacilitatorInsert =
+  Database["public"]["Tables"]["facilitator_inquiries"]["Insert"];
 
 @Injectable()
 export class FacilitatorService {
@@ -11,15 +15,20 @@ export class FacilitatorService {
   ) {}
 
   async create(dto: CreateInquiryDto) {
+    const payload: FacilitatorInsert = {
+      name: dto.name,
+      email: dto.email,
+      message: dto.message,
+    };
+
     const { data, error } = await this.supabase.client
       .from("facilitator_inquiries")
-      .insert(dto)
+      .insert(payload)
       .select()
       .single();
 
     if (error) throw error;
 
-    // Fire-and-forget notification
     this.email.facilitatorInquiryNotification(dto).catch(() => {});
 
     return data;
@@ -32,6 +41,6 @@ export class FacilitatorService {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data;
+    return data ?? [];
   }
 }

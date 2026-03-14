@@ -9,20 +9,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { WaitlistService } from "./waitlist.service";
-import { IsEmail, IsOptional, IsString } from "class-validator";
-
-class JoinWaitlistDto {
-  @IsEmail()
-  email!: string;
-
-  @IsString()
-  @IsOptional()
-  first_name?: string;
-
-  @IsString()
-  @IsOptional()
-  source?: string;
-}
+import { JoinWaitlistDto } from "./dto/join-waitlist.dto";
 
 @Controller("waitlist")
 export class WaitlistController {
