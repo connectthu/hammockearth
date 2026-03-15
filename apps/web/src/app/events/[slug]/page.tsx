@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CalendarExportButton } from "@hammock/ui";
 import { RegisterButton } from "@/components/RegisterButton";
 import { WaitlistButton } from "@/components/WaitlistButton";
+import { EventDateTime } from "@/components/EventDateTime";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -50,30 +51,6 @@ export default async function EventDetailPage({ params }: PageProps) {
 
   const spotsRemaining = capacity?.spots_remaining ?? null;
   const isAtCapacity = spotsRemaining !== null && spotsRemaining <= 0;
-
-  const startDate = new Date(event.start_at);
-  const endDate = event.end_at ? new Date(event.end_at) : null;
-
-  const formattedDate = startDate.toLocaleDateString("en-CA", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const formattedTime = startDate.toLocaleTimeString("en-CA", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
-
-  const formattedEndTime = endDate
-    ? endDate.toLocaleTimeString("en-CA", {
-        hour: "numeric",
-        minute: "2-digit",
-        timeZoneName: "short",
-      })
-    : null;
 
   const formatPrice = (cents: number) =>
     `$${(cents / 100).toFixed(0)} CAD`;
@@ -143,11 +120,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   <p className="text-xs uppercase tracking-wide text-moss font-medium mb-1">
                     When
                   </p>
-                  <p className="font-medium text-soil text-sm">{formattedDate}</p>
-                  <p className="text-charcoal/60 text-sm">
-                    {formattedTime}
-                    {formattedEndTime && ` – ${formattedEndTime}`}
-                  </p>
+                  <EventDateTime startAt={event.start_at} endAt={event.end_at} />
                 </div>
 
                 {/* Location */}
