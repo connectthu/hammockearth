@@ -10,8 +10,7 @@ export const metadata: Metadata = {
     "Seasonal gatherings, farm tours, communal meals, and immersive workshops at Hammock Hills in Hillsdale, Ontario.",
 };
 
-// Revalidate every hour
-export const revalidate = 3600;
+export const runtime = "edge";
 
 async function getEvents(tag?: string) {
   const supabase = createServerClient();

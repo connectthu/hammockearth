@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/sections/HeroSection";
