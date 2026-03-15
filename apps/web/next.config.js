@@ -6,12 +6,6 @@ const nextConfig = {
   images: {
     domains: ["hammock.earth"],
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
 if (process.env.NODE_ENV === "development") {
