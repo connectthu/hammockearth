@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: hammockearth-api
+    runtime: node
+    rootDir: packages/api
+    buildCommand: pnpm install && pnpm build
+    startCommand: node dist/main
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: hello@hammock.earth
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://hammock.earth
+      - key: ADMIN_APP_URL
+        value: https://admin.hammock.earth
+      - key: ADMIN_SECRET
+        sync: false
+      - key: PORT
+        value: 4000
