@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "pnpm --filter @hammock/database build && pnpm --filter @hammock/admin build",
-  "installCommand": "COREPACK_ENABLE_STRICT=0 npm install -g pnpm@10 && COREPACK_ENABLE_STRICT=0 pnpm install --no-frozen-lockfile"
+  "installCommand": "corepack enable && corepack prepare pnpm@9.12.3 --activate && pnpm install --no-frozen-lockfile"
 }
