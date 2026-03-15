@@ -11,8 +11,8 @@ import type { CreateDiscountCodeDto } from "./dto/create-discount-code.dto";
 export class DiscountCodesService {
   constructor(private supabase: SupabaseService) {}
 
-  async validate(code: string): Promise<DiscountCode> {
-    const upperCode = code.toUpperCase();
+  async validate(codeStr: string): Promise<DiscountCode> {
+    const upperCode = codeStr.toUpperCase();
     const now = new Date().toISOString();
 
     const { data, error } = await this.supabase.client
@@ -23,17 +23,19 @@ export class DiscountCodesService {
 
     if (error || !data) throw new NotFoundException("Discount code not found");
 
-    if (data.valid_from && data.valid_from > now) {
+    const dc = data as unknown as DiscountCode;
+
+    if (dc.valid_from && dc.valid_from > now) {
       throw new BadRequestException("Discount code is not yet active");
     }
-    if (data.valid_until && data.valid_until < now) {
+    if (dc.valid_until && dc.valid_until < now) {
       throw new BadRequestException("Discount code has expired");
     }
-    if (data.max_uses !== null && data.used_count >= data.max_uses) {
+    if (dc.max_uses !== null && dc.used_count >= dc.max_uses) {
       throw new BadRequestException("Discount code has reached its usage limit");
     }
 
-    return data;
+    return dc;
   }
 
   calculateDiscount(
@@ -49,30 +51,30 @@ export class DiscountCodesService {
   }
 
   async incrementUsedCount(id: string): Promise<void> {
-    // Read current count, then increment (good enough for low-volume use)
     const { data } = await this.supabase.client
       .from("discount_codes")
       .select("used_count")
       .eq("id", id)
       .single();
     if (data) {
+      const dc = data as unknown as DiscountCode;
       await this.supabase.client
         .from("discount_codes")
-        .update({ used_count: data.used_count + 1 })
+        .update({ used_count: dc.used_count + 1 })
         .eq("id", id);
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<DiscountCode[]> {
     const { data, error } = await this.supabase.client
       .from("discount_codes")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []) as unknown as DiscountCode[];
   }
 
-  async create(dto: CreateDiscountCodeDto) {
+  async create(dto: CreateDiscountCodeDto): Promise<DiscountCode> {
     const { data, error } = await this.supabase.client
       .from("discount_codes")
       .insert({
@@ -88,7 +90,7 @@ export class DiscountCodesService {
       .select()
       .single();
     if (error) throw error;
-    return data;
+    return data as unknown as DiscountCode;
   }
 
   async remove(id: string) {

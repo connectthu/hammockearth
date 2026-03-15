@@ -8,6 +8,7 @@ import { StripeService } from "../stripe/stripe.service";
 import { EmailService } from "../email/email.service";
 import { EventsService } from "../events/events.service";
 import { DiscountCodesService } from "../discount-codes/discount-codes.service";
+import type { EventRegistration } from "@hammock/database";
 import type { CreateRegistrationDto } from "./dto/create-registration.dto";
 
 @Injectable()
@@ -23,24 +24,23 @@ export class RegistrationsService {
   ) {}
 
   async createRegistration(dto: CreateRegistrationDto) {
-    // 1. Fetch event
+    // 1. Fetch event (findBySlug returns Promise<Event>)
     const event = await this.events.findBySlug(dto.eventSlug);
-    if (!event) throw new NotFoundException("Event not found");
 
     // 2. Check capacity
-    const { data: capacity } = await this.supabase.client
+    const { data: capacityData } = await this.supabase.client
       .from("event_capacity")
       .select("spots_remaining")
       .eq("slug", dto.eventSlug)
       .single();
 
-    const spotsRemaining = capacity?.spots_remaining ?? null;
+    const spotsRemaining = (capacityData as any)?.spots_remaining ?? null;
     const isAtCapacity =
       spotsRemaining !== null && spotsRemaining < dto.quantity;
 
     if (isAtCapacity) {
       // Insert waitlisted registration (no payment)
-      const { data: reg, error } = await this.supabase.client
+      const { data: regData, error } = await this.supabase.client
         .from("event_registrations")
         .insert({
           event_id: event.id,
@@ -54,6 +54,7 @@ export class RegistrationsService {
         .single();
 
       if (error) throw error;
+      const reg = regData as unknown as EventRegistration;
 
       // Send waitlist confirmation email
       try {
@@ -84,7 +85,7 @@ export class RegistrationsService {
         discountCodeId = code.id;
       } catch (err) {
         this.logger.warn(`Invalid discount code: ${dto.discountCode}`, err);
-        // Invalid discount code — proceed without discount
+        // Proceed without discount
       }
     }
 
@@ -101,7 +102,7 @@ export class RegistrationsService {
     });
 
     // 6. Insert registration
-    const { data: reg, error } = await this.supabase.client
+    const { data: regData, error } = await this.supabase.client
       .from("event_registrations")
       .insert({
         event_id: event.id,
@@ -117,6 +118,7 @@ export class RegistrationsService {
       .single();
 
     if (error) throw error;
+    const reg = regData as unknown as EventRegistration;
 
     // 7. Update PaymentIntent metadata with real registrationId
     try {
@@ -137,32 +139,29 @@ export class RegistrationsService {
   }
 
   async cancelRegistration(id: string) {
-    const { data: reg, error } = await this.supabase.client
+    const { data: regData, error } = await this.supabase.client
       .from("event_registrations")
       .update({ status: "cancelled" })
       .eq("id", id)
       .select("*, events(*)")
       .single();
 
-    if (error || !reg) throw new NotFoundException("Registration not found");
+    if (error || !regData) throw new NotFoundException("Registration not found");
+    const reg = regData as any;
 
     // Promote first waitlisted registration for this event
-    const { data: waitlisted } = await this.supabase.client
+    const { data: waitlistedData } = await this.supabase.client
       .from("event_registrations")
       .select("*")
-      .eq("event_id", (reg as any).event_id)
+      .eq("event_id", reg.event_id)
       .eq("status", "waitlisted")
       .order("created_at", { ascending: true })
       .limit(1)
       .single();
 
-    if (waitlisted) {
-      await this.supabase.client
-        .from("event_registrations")
-        .update({ status: "waitlisted" }) // keep as waitlisted — they still need to register
-        .eq("id", waitlisted.id);
-
-      const event = (reg as any).events;
+    if (waitlistedData) {
+      const waitlisted = waitlistedData as unknown as EventRegistration;
+      const event = reg.events;
       const appUrl =
         process.env.NEXT_PUBLIC_APP_URL ?? "https://hammock.earth";
 
@@ -182,18 +181,20 @@ export class RegistrationsService {
     return { success: true };
   }
 
-  async confirmRegistration(registrationId: string) {
-    const { data: reg, error } = await this.supabase.client
+  async confirmRegistration(registrationId: string): Promise<EventRegistration | null> {
+    const { data: regData, error } = await this.supabase.client
       .from("event_registrations")
       .update({ status: "confirmed" })
       .eq("id", registrationId)
       .select()
       .single();
 
-    if (error || !reg) {
+    if (error || !regData) {
       this.logger.error(`Failed to confirm registration ${registrationId}`);
       return null;
     }
+
+    const reg = regData as unknown as EventRegistration;
 
     // Increment discount code usage if applicable
     if (reg.discount_code_id) {

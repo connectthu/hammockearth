@@ -6,7 +6,7 @@ import {
 import { SupabaseService } from "../supabase/supabase.service";
 import type { CreateEventDto } from "./dto/create-event.dto";
 import type { UpdateEventDto } from "./dto/update-event.dto";
-import type { EventInsert, EventUpdate } from "@hammock/database";
+import type { Event, EventInsert, EventUpdate } from "@hammock/database";
 
 @Injectable()
 export class EventsService {
@@ -30,7 +30,7 @@ export class EventsService {
     return data ?? [];
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string): Promise<Event> {
     const { data, error } = await this.supabase.client
       .from("events")
       .select("*")
@@ -38,7 +38,7 @@ export class EventsService {
       .single();
 
     if (error || !data) throw new NotFoundException(`Event not found: ${slug}`);
-    return data;
+    return data as unknown as Event;
   }
 
   async create(dto: CreateEventDto, createdBy?: string) {

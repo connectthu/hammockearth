@@ -52,7 +52,8 @@ export class WebhooksService {
             .eq("id", registrationId)
             .single();
 
-          const event = (regWithEvent as any)?.events;
+          const regRow = regWithEvent as any;
+          const event = regRow?.events;
           if (!event) break;
 
           const icsContent = this.calendar.generateIcs(event);
