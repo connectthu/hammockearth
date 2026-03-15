@@ -14,7 +14,6 @@ import { TeamSection } from "@/components/sections/TeamSection";
 import { GallerySection } from "@/components/sections/GallerySection";
 import { VisitSection } from "@/components/sections/VisitSection";
 import { NewsletterSection } from "@/components/sections/NewsletterSection";
-import { FacilitatorSection } from "@/components/sections/FacilitatorSection";
 
 export default function HomePage() {
   return (
@@ -32,7 +31,6 @@ export default function HomePage() {
         <TeamSection />
         <GallerySection />
         <VisitSection />
-        <FacilitatorSection />
         <NewsletterSection />
       </main>
       <Footer />
