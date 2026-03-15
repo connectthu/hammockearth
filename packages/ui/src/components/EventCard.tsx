@@ -82,10 +82,10 @@ export function EventCard({
               Online
             </span>
           )}
-          {tags.slice(0, 2).map((tag) => (
+          {tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-xs px-2.5 py-1 rounded-full bg-cream text-charcoal/60 border border-linen"
+              className="text-xs px-2.5 py-1 rounded-full bg-linen text-moss/80 border border-moss/20"
             >
               {tag}
             </span>
