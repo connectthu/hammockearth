@@ -3,6 +3,8 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "target": "ES2021",
+    "lib": ["ES2021"],
+    "types": ["node"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
