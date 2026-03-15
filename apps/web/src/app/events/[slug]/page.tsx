@@ -1,6 +1,9 @@
 import { createServerClient } from "@hammock/database";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { CalendarExportButton } from "@hammock/ui";
+import { RegisterButton } from "@/components/RegisterButton";
+import { WaitlistButton } from "@/components/WaitlistButton";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -28,14 +31,25 @@ export const runtime = "edge";
 
 export default async function EventDetailPage({ params }: PageProps) {
   const supabase = createServerClient();
-  const { data: event } = await supabase
-    .from("events")
-    .select("*")
-    .eq("slug", params.slug)
-    .eq("status", "published")
-    .single();
+
+  const [{ data: event }, { data: capacity }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("*")
+      .eq("slug", params.slug)
+      .eq("status", "published")
+      .single(),
+    supabase
+      .from("event_capacity")
+      .select("spots_remaining")
+      .eq("slug", params.slug)
+      .single(),
+  ]);
 
   if (!event) notFound();
+
+  const spotsRemaining = capacity?.spots_remaining ?? null;
+  const isAtCapacity = spotsRemaining !== null && spotsRemaining <= 0;
 
   const startDate = new Date(event.start_at);
   const endDate = event.end_at ? new Date(event.end_at) : null;
@@ -164,14 +178,9 @@ export default async function EventDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                {/* CTA */}
-                {event.registration_note ? (
-                  <div className="bg-white rounded-xl p-4 text-center">
-                    <p className="text-sm text-charcoal/60 italic">
-                      {event.registration_note}
-                    </p>
-                  </div>
-                ) : event.registration_url ? (
+                {/* CTA — priority order */}
+                {event.registration_url ? (
+                  // 1. External payment URL (Wave, Eventbrite, partner events)
                   <a
                     href={event.registration_url}
                     target="_blank"
@@ -180,13 +189,23 @@ export default async function EventDetailPage({ params }: PageProps) {
                   >
                     Register Now
                   </a>
-                ) : (
+                ) : event.registration_note ? (
+                  // 2. Custom note (e.g. "Contact us to register")
                   <div className="bg-white rounded-xl p-4 text-center">
-                    <p className="text-sm text-charcoal/60">
-                      Registration coming soon
+                    <p className="text-sm text-charcoal/60 italic">
+                      {event.registration_note}
                     </p>
                   </div>
+                ) : isAtCapacity ? (
+                  // 3. Waitlist (event full)
+                  <WaitlistButton event={event} />
+                ) : (
+                  // 4. Stripe registration modal
+                  <RegisterButton event={event} />
                 )}
+
+                {/* Calendar export — always shown */}
+                <CalendarExportButton event={event} />
 
                 <div className="border-t border-linen/80 pt-4">
                   <p className="text-xs text-charcoal/50 text-center">

@@ -23,7 +23,7 @@ export type PriceWindowStatus = "open" | "sold_out" | "closed";
 export type BillingType = "one_time" | "monthly";
 export type EventVisibility = "public" | "members_only";
 export type EventStatus = "draft" | "published" | "cancelled";
-export type RegistrationStatus = "confirmed" | "waitlisted" | "cancelled";
+export type RegistrationStatus = "pending" | "confirmed" | "waitlisted" | "cancelled";
 export type ContentType =
   | "recipe"
   | "homesteading"
@@ -158,34 +158,40 @@ export type Database = {
         Row: {
           id: string;
           event_id: string;
-          user_id: string;
+          user_id: string | null;
           quantity: number;
           stripe_payment_intent_id: string | null;
           status: RegistrationStatus;
           discount_code_id: string | null;
           amount_paid_cents: number;
+          guest_name: string | null;
+          guest_email: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           event_id: string;
-          user_id: string;
+          user_id?: string | null;
           quantity?: number;
           stripe_payment_intent_id?: string | null;
           status?: RegistrationStatus;
           discount_code_id?: string | null;
           amount_paid_cents?: number;
+          guest_name?: string | null;
+          guest_email?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           event_id?: string;
-          user_id?: string;
+          user_id?: string | null;
           quantity?: number;
           stripe_payment_intent_id?: string | null;
           status?: RegistrationStatus;
           discount_code_id?: string | null;
           amount_paid_cents?: number;
+          guest_name?: string | null;
+          guest_email?: string | null;
           created_at?: string;
         };
         Relationships: [
