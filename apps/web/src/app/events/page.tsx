@@ -2,6 +2,7 @@ import { createServerClient } from "@hammock/database";
 import { EventCard } from "@hammock/ui";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { TagFilterDropdown } from "@/components/TagFilterDropdown";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -80,64 +81,44 @@ export default async function EventsPage({ searchParams }: PageProps) {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Type filter tabs */}
-          <div className="flex gap-2 mb-6">
-            {[
-              { label: "All", value: "" },
-              { label: "On the Land", value: "in-person" },
-              { label: "Online", value: "online" },
-            ].map(({ label, value }) => {
-              const isActive = value ? searchParams.type === value : !searchParams.type;
-              const href = value ? `/events?type=${value}` : "/events";
-              return (
-                <a
-                  key={label}
-                  href={href}
-                  className={`text-sm px-4 py-2 rounded-full border transition-colors ${
-                    isActive
-                      ? "bg-soil text-cream border-soil"
-                      : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
-                  }`}
-                >
-                  {label}
-                </a>
-              );
-            })}
-          </div>
-
-          {/* Tag filter */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-10">
-              <a
-                href={searchParams.type ? `/events?type=${searchParams.type}` : "/events"}
-                className={`text-sm px-4 py-2 rounded-full border transition-colors ${
-                  !searchParams.tag
-                    ? "bg-soil text-cream border-soil"
-                    : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
-                }`}
-              >
-                All
-              </a>
-              {tags.map((tag) => {
-                const tagHref = searchParams.type
-                  ? `/events?type=${searchParams.type}&tag=${encodeURIComponent(tag)}`
-                  : `/events?tag=${encodeURIComponent(tag)}`;
+          {/* Filters row */}
+          <div className="flex items-center justify-between gap-4 mb-10 flex-wrap">
+            {/* Type filter tabs */}
+            <div className="flex gap-2">
+              {[
+                { label: "All", value: "" },
+                { label: "On the Land", value: "in-person" },
+                { label: "Online", value: "online" },
+              ].map(({ label, value }) => {
+                const isActive = value ? searchParams.type === value : !searchParams.type;
+                const href = value
+                  ? searchParams.tag ? `/events?type=${value}&tag=${encodeURIComponent(searchParams.tag)}` : `/events?type=${value}`
+                  : searchParams.tag ? `/events?tag=${encodeURIComponent(searchParams.tag)}` : "/events";
                 return (
                   <a
-                    key={tag}
-                    href={tagHref}
+                    key={label}
+                    href={href}
                     className={`text-sm px-4 py-2 rounded-full border transition-colors ${
-                      searchParams.tag === tag
+                      isActive
                         ? "bg-soil text-cream border-soil"
                         : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
                     }`}
                   >
-                    {tag}
+                    {label}
                   </a>
                 );
               })}
             </div>
-          )}
+
+            {/* Tag filter dropdown */}
+            {tags.length > 0 && (
+              <TagFilterDropdown
+                tags={tags}
+                selectedTag={searchParams.tag}
+                type={searchParams.type}
+              />
+            )}
+          </div>
 
           {/* Upcoming events */}
           {upcoming.length > 0 && (
