@@ -134,36 +134,36 @@ function MiniCalendar({
   while (cells.length % 7 !== 0) cells.push({ key: null, day: null });
 
   return (
-    <div className="bg-white rounded-2xl border border-linen p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-2xl border border-linen p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-5">
         <button
           onClick={onPrev}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-linen transition-colors text-charcoal/50 hover:text-soil text-lg leading-none"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-linen transition-colors text-charcoal/40 hover:text-soil text-xl leading-none"
           aria-label="Previous month"
         >
           ‹
         </button>
-        <span className="font-serif text-sm font-medium text-soil">
-          {MONTH_NAMES[month]} {year}
+        <span className="font-serif text-lg font-semibold text-soil">
+          {MONTH_NAMES[month]}
         </span>
         <button
           onClick={onNext}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-linen transition-colors text-charcoal/50 hover:text-soil text-lg leading-none"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-linen transition-colors text-charcoal/40 hover:text-soil text-xl leading-none"
           aria-label="Next month"
         >
           ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7 mb-1">
+      <div className="grid grid-cols-7 mb-2">
         {DAY_NAMES.map((d) => (
-          <div key={d} className="text-center text-[10px] font-medium text-charcoal/40 py-1">
+          <div key={d} className="text-center text-xs font-semibold text-charcoal/40 py-1">
             {d}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 gap-y-1">
         {cells.map((cell, i) => {
           if (!cell.key || !cell.day) return <div key={i} />;
           const isToday = cell.key === todayKey;
@@ -172,19 +172,19 @@ function MiniCalendar({
             <button
               key={cell.key}
               onClick={() => dot && onDayClick(cell.key!)}
-              className={`flex flex-col items-center justify-center rounded-lg py-1.5 text-xs transition-colors ${
+              className={`flex flex-col items-center justify-center rounded-lg py-2 text-sm transition-colors ${
                 isToday
-                  ? "bg-soil text-cream font-semibold"
+                  ? "bg-clay text-white font-bold"
                   : dot
-                  ? "hover:bg-linen cursor-pointer text-soil font-medium"
-                  : "text-charcoal/30 cursor-default"
+                  ? "hover:bg-linen cursor-pointer text-soil font-semibold"
+                  : "text-charcoal/35 cursor-default"
               }`}
             >
               <span>{cell.day}</span>
-              {dot && (
+              {dot && !isToday && (
                 <div className="flex gap-0.5 mt-0.5">
-                  {dot.inPerson && <span className="w-1 h-1 rounded-full bg-moss" />}
-                  {dot.online && <span className="w-1 h-1 rounded-full bg-[#7BA7BC]" />}
+                  {dot.inPerson && <span className="w-1.5 h-1.5 rounded-full bg-moss" />}
+                  {dot.online && <span className="w-1.5 h-1.5 rounded-full bg-[#7BA7BC]" />}
                 </div>
               )}
             </button>
@@ -217,13 +217,13 @@ function EventRow({ item }: { item: ListItem }) {
   const dotColor = item.isOnline ? "bg-[#7BA7BC]" : "bg-moss";
 
   return (
-    <div className="relative pl-8 pb-6 last:pb-0">
+    <div className="relative pl-8 pb-4 last:pb-0">
       {/* Timeline dot */}
       <div
-        className={`absolute left-0 top-[22px] w-3.5 h-3.5 rounded-full border-[3px] border-cream shadow-sm ${dotColor}`}
+        className={`absolute left-0 top-[26px] w-3.5 h-3.5 rounded-full border-[3px] border-cream shadow-sm ${dotColor}`}
       />
 
-      <div className="flex gap-4 items-start">
+      <div className="flex gap-4 items-start bg-white rounded-2xl border border-linen shadow-sm p-4">
         {/* Main content */}
         <div className="flex-1 min-w-0">
           <p className="text-xs text-charcoal/40 mb-0.5 font-medium tabular-nums">
@@ -500,7 +500,7 @@ export function EventsClient({
         </div>
 
         {/* Sticky calendar — desktop only */}
-        <div className="hidden lg:block w-64 flex-shrink-0">
+        <div className="hidden lg:block w-72 flex-shrink-0">
           <div className="sticky top-24">
             <MiniCalendar
               year={calYear}
