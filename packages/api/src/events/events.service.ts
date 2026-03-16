@@ -35,10 +35,10 @@ export class EventsService {
       .from("events")
       .select("*")
       .eq("slug", slug)
-      .single();
+      .limit(1);
 
-    if (error || !data) throw new NotFoundException(`Event not found: ${slug}`);
-    return data as unknown as Event;
+    if (error || !data || data.length === 0) throw new NotFoundException(`Event not found: ${slug}`);
+    return data[0] as unknown as Event;
   }
 
   async create(dto: CreateEventDto, createdBy?: string) {
