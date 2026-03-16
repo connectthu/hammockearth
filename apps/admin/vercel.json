@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "turbo build --filter=@hammock/admin",
+  "buildCommand": "turbo run build",
   "installCommand": "node --version && npx --yes pnpm@9.12.3 install --no-frozen-lockfile"
 }
