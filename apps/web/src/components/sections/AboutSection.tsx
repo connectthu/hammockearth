@@ -32,16 +32,11 @@ export function AboutSection() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center justify-center">
             <img
-              src="/images/IMG_7522.jpg"
-              alt="Farm baking with edible flowers"
-              className="rounded-2xl w-full h-64 object-cover"
-            />
-            <img
-              src="/images/IMG_7306.jpg"
-              alt="Friends on the farm"
-              className="rounded-2xl w-full h-64 object-cover mt-8"
+              src="/logo.svg"
+              alt="Hammock Earth"
+              className="w-full max-w-sm opacity-90"
             />
           </div>
         </div>
