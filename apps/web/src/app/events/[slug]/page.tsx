@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export const runtime = "edge";
+export const revalidate = 0;
 
 export default async function EventDetailPage({ params }: PageProps) {
   const supabase = createServerClient();
