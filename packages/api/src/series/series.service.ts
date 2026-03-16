@@ -105,9 +105,14 @@ export class SeriesService {
     const durationMinutes = dto.sessionDurationMinutes ?? 90;
     const firstStart = new Date(dto.firstSessionAt);
 
+    const frequencyDays =
+      dto.sessionFrequency === "biweekly" ? 14
+      : dto.sessionFrequency === "monthly" ? 28
+      : 7; // weekly default
+
     const sessions = Array.from({ length: dto.sessionCount }, (_, i) => {
       const startAt = new Date(
-        firstStart.getTime() + i * 7 * 24 * 60 * 60 * 1000
+        firstStart.getTime() + i * frequencyDays * 24 * 60 * 60 * 1000
       );
       const endAt = new Date(startAt.getTime() + durationMinutes * 60 * 1000);
       return {

@@ -14,6 +14,7 @@ type SeriesFormData = {
   duration_weeks: string;
   session_count: string;
   first_session_at: string;
+  session_frequency: "weekly" | "biweekly" | "monthly";
   session_duration_minutes: string;
   price_cents: string;
   member_price_cents: string;
@@ -56,6 +57,7 @@ function toFormData(s?: InitialSeries): SeriesFormData {
     duration_weeks: s?.duration_weeks?.toString() ?? "",
     session_count: s?.session_count?.toString() ?? "",
     first_session_at: "",
+    session_frequency: "weekly",
     session_duration_minutes: "90",
     price_cents: s?.price_cents ? (s.price_cents / 100).toString() : "",
     member_price_cents: s?.member_price_cents ? (s.member_price_cents / 100).toString() : "",
@@ -126,6 +128,7 @@ export function SeriesForm({ initialData, onSubmit, submitLabel = "Save Series",
         payload.firstSessionAt = form.first_session_at
           ? new Date(form.first_session_at).toISOString()
           : undefined;
+        payload.sessionFrequency = form.session_frequency;
         payload.sessionDurationMinutes = parseInt(form.session_duration_minutes) || 90;
       }
 
@@ -217,6 +220,20 @@ export function SeriesForm({ initialData, onSubmit, submitLabel = "Save Series",
                 onChange={(e) => set("first_session_at", e.target.value)}
                 className={inputClass}
               />
+            </div>
+
+            <div>
+              <label className={labelClass}>Session frequency</label>
+              <select
+                value={form.session_frequency}
+                onChange={(e) => set("session_frequency", e.target.value as SeriesFormData["session_frequency"])}
+                className={inputClass}
+              >
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Biweekly (every 2 weeks)</option>
+                <option value="monthly">Monthly (every 4 weeks)</option>
+              </select>
+              <p className="text-xs text-charcoal/40 mt-1">Exact dates can be adjusted per session after creation.</p>
             </div>
 
             <div>

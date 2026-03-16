@@ -46,6 +46,10 @@ export class CreateSeriesDto {
   @IsDateString()
   firstSessionAt!: string;
 
+  @IsIn(["weekly", "biweekly", "monthly"])
+  @IsOptional()
+  sessionFrequency?: "weekly" | "biweekly" | "monthly";
+
   @IsInt()
   @Min(1)
   @IsOptional()
