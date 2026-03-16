@@ -192,6 +192,11 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
         return;
       }
 
+      if (data.status === "confirmed") {
+        setStep("confirmation");
+        return;
+      }
+
       setClientSecret(data.clientSecret);
       setAmountCents(data.amountCents);
       setStep("payment");
@@ -306,6 +311,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
                 </div>
               </div>
 
+              {event.price_cents > 0 && (
               <div>
                 <label className="block text-xs font-medium text-moss uppercase tracking-wide mb-1">
                   Discount code
@@ -340,25 +346,35 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
                   </p>
                 )}
               </div>
+              )}
 
               {/* Price breakdown */}
               <div className="bg-linen rounded-xl p-4 space-y-1 text-sm">
-                <div className="flex justify-between text-charcoal/70">
-                  <span>
-                    ${(event.price_cents / 100).toFixed(2)} × {quantity}
-                  </span>
-                  <span>${(baseTotal / 100).toFixed(2)}</span>
-                </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-moss">
-                    <span>Discount</span>
-                    <span>−${(discountAmount / 100).toFixed(2)}</span>
+                {event.price_cents === 0 ? (
+                  <div className="flex justify-between font-semibold text-soil">
+                    <span>Total</span>
+                    <span>Free</span>
                   </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-charcoal/70">
+                      <span>
+                        ${(event.price_cents / 100).toFixed(2)} × {quantity}
+                      </span>
+                      <span>${(baseTotal / 100).toFixed(2)}</span>
+                    </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-moss">
+                        <span>Discount</span>
+                        <span>−${(discountAmount / 100).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-soil border-t border-linen/80 pt-1 mt-1">
+                      <span>Total</span>
+                      <span>${(total / 100).toFixed(2)} CAD</span>
+                    </div>
+                  </>
                 )}
-                <div className="flex justify-between font-semibold text-soil border-t border-linen/80 pt-1 mt-1">
-                  <span>Total</span>
-                  <span>${(total / 100).toFixed(2)} CAD</span>
-                </div>
               </div>
 
               {submitError && (
@@ -372,7 +388,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
                 disabled={submitting}
                 className="w-full bg-clay text-white font-medium py-3 px-6 rounded-full hover:bg-clay/90 transition-colors disabled:opacity-50"
               >
-                {submitting ? "Loading…" : "Continue to payment"}
+                {submitting ? "Loading…" : total === 0 ? "Register for free" : "Continue to payment"}
               </button>
             </form>
           )}

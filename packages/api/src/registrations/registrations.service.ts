@@ -95,13 +95,59 @@ export class RegistrationsService {
       event.price_cents * dto.quantity - discountAmountCents
     );
 
-    // 5. Create Stripe PaymentIntent with placeholder metadata
+    // 5. Free event — skip Stripe entirely
+    if (amountCents === 0) {
+      const { data: regData, error } = await this.supabase.client
+        .from("event_registrations")
+        .insert({
+          event_id: event.id,
+          guest_name: dto.guestName,
+          guest_email: dto.guestEmail,
+          quantity: dto.quantity,
+          status: "confirmed",
+          discount_code_id: discountCodeId,
+          amount_paid_cents: 0,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      const reg = regData as unknown as EventRegistration;
+
+      if (discountCodeId) {
+        try {
+          await this.discountCodes.incrementUsedCount(discountCodeId);
+        } catch (err) {
+          this.logger.warn("Failed to increment discount code usage", err);
+        }
+      }
+
+      try {
+        const { CalendarService } = await import("../calendar/calendar.service");
+        const calendarService = new CalendarService();
+        const icsContent = calendarService.generateIcs(event as any);
+        await this.email.bookingConfirmation({
+          to: dto.guestEmail,
+          name: dto.guestName,
+          event,
+          quantity: dto.quantity,
+          amountPaidCents: 0,
+          icsContent,
+        });
+      } catch (err) {
+        this.logger.error("Failed to send free event confirmation email", err);
+      }
+
+      return { status: "confirmed", registrationId: reg.id };
+    }
+
+    // 6. Create Stripe PaymentIntent with placeholder metadata
     const paymentIntent = await this.stripe.createPaymentIntent(amountCents, {
       registrationId: "pending",
       eventSlug: dto.eventSlug,
     });
 
-    // 6. Insert registration
+    // 7. Insert registration
     const { data: regData, error } = await this.supabase.client
       .from("event_registrations")
       .insert({
@@ -120,7 +166,7 @@ export class RegistrationsService {
     if (error) throw error;
     const reg = regData as unknown as EventRegistration;
 
-    // 7. Update PaymentIntent metadata with real registrationId
+    // 8. Update PaymentIntent metadata with real registrationId
     try {
       await this.stripe.updatePaymentIntentMetadata(paymentIntent.id, {
         registrationId: reg.id,
