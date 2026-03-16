@@ -1,5 +1,5 @@
 import { createServerClient } from "@hammock/database";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { CalendarExportButton } from "@hammock/ui";
@@ -108,7 +108,10 @@ export default async function EventDetailPage({ params }: PageProps) {
                 <div
                   className="prose prose-stone max-w-none text-charcoal/80 prose-headings:font-serif prose-headings:text-soil prose-a:text-clay prose-strong:text-soil"
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(event.description),
+                    __html: sanitizeHtml(event.description, {
+                    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["h2", "h3"]),
+                    allowedAttributes: { a: ["href", "rel", "target"] },
+                  }),
                   }}
                 />
               )}
