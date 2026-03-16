@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+
+const PUBLIC_URL = process.env.NEXT_PUBLIC_WEB_URL ?? "https://hammock.earth";
 import { AdminShell } from "@/components/AdminShell";
 import { EventForm } from "@/components/EventForm";
 import { apiGet, apiPatch } from "@/lib/api";
@@ -40,6 +42,16 @@ export default function EditEventPage() {
             ← Events
           </a>
           <h1 className="font-serif text-2xl text-soil">Edit Event</h1>
+          {event && (
+            <a
+              href={`${PUBLIC_URL}/events/${event.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-clay hover:underline ml-auto"
+            >
+              View live ↗
+            </a>
+          )}
         </div>
 
         {loading && (

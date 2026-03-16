@@ -22,6 +22,7 @@ export default function NewEventPage() {
           </a>
           <h1 className="font-serif text-2xl text-soil">New Event</h1>
         </div>
+
         <div className="bg-white rounded-2xl border border-linen p-8">
           <EventForm onSubmit={handleSubmit} submitLabel="Create Event" />
         </div>

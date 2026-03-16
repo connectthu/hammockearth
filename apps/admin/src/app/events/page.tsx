@@ -124,9 +124,14 @@ export default function AdminEventsPage() {
                       <p className="font-medium text-soil leading-snug">
                         {event.title}
                       </p>
-                      <p className="text-xs text-charcoal/50 mt-0.5">
-                        {event.slug}
-                      </p>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_WEB_URL ?? "https://hammock.earth"}/events/${event.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-charcoal/50 hover:text-clay mt-0.5 inline-block"
+                      >
+                        {event.slug} ↗
+                      </a>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-charcoal/70 hidden sm:table-cell">
