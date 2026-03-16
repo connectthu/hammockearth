@@ -175,7 +175,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                   <WaitlistButton event={event} />
                 ) : (
                   // 4. Stripe registration modal
-                  <RegisterButton event={event} />
+                  <RegisterButton event={event} spotsRemaining={spotsRemaining} />
                 )}
 
                 {/* Calendar export — always shown */}

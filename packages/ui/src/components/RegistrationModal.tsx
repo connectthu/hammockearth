@@ -40,6 +40,7 @@ type Step = "details" | "payment" | "confirmation" | "waitlisted";
 
 interface RegistrationModalProps {
   event: EventSummary;
+  spotsRemaining?: number | null;
   onClose: () => void;
 }
 
@@ -108,7 +109,7 @@ function PaymentForm({
 }
 
 // ─── Main modal ───────────────────────────────────────────────────────────────
-export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
+export function RegistrationModal({ event, spotsRemaining, onClose }: RegistrationModalProps) {
   const [step, setStep] = useState<Step>("details");
   const [clientSecret, setClientSecret] = useState("");
   const [amountCents, setAmountCents] = useState(event.price_cents);
@@ -116,7 +117,8 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
   // Form state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [quantity, setQuantity] = useState<1 | 2>(1);
+  const maxQuantity = spotsRemaining != null ? Math.min(spotsRemaining, 10) : 10;
+  const [quantity, setQuantity] = useState(1);
   const [discountInput, setDiscountInput] = useState("");
   const [discountCode, setDiscountCode] = useState<{
     code: string;
@@ -269,21 +271,38 @@ export function RegistrationModal({ event, onClose }: RegistrationModalProps) {
                 <label className="block text-xs font-medium text-moss uppercase tracking-wide mb-2">
                   Tickets
                 </label>
-                <div className="flex gap-3">
-                  {([1, 2] as const).map((q) => (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => { setQuantity(q); setDiscountCode(null); }}
-                      className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
-                        quantity === q
-                          ? "border-clay bg-clay/10 text-clay"
-                          : "border-linen text-charcoal/60 hover:border-clay/40"
-                      }`}
-                    >
-                      {q} ticket{q > 1 ? "s" : ""}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setQuantity(q => Math.max(1, q - 1)); setDiscountCode(null); }}
+                    disabled={quantity <= 1}
+                    className="w-10 h-10 rounded-xl border border-linen text-charcoal/60 text-lg font-medium hover:border-clay/40 disabled:opacity-30 transition-colors"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={maxQuantity}
+                    value={quantity}
+                    onChange={(e) => {
+                      const v = Math.max(1, Math.min(maxQuantity, parseInt(e.target.value) || 1));
+                      setQuantity(v);
+                      setDiscountCode(null);
+                    }}
+                    className="w-16 text-center border border-linen rounded-xl py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-clay/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setQuantity(q => Math.min(maxQuantity, q + 1)); setDiscountCode(null); }}
+                    disabled={quantity >= maxQuantity}
+                    className="w-10 h-10 rounded-xl border border-linen text-charcoal/60 text-lg font-medium hover:border-clay/40 disabled:opacity-30 transition-colors"
+                  >
+                    +
+                  </button>
+                  <span className="text-sm text-charcoal/50">
+                    ticket{quantity > 1 ? "s" : ""}
+                  </span>
                 </div>
               </div>
 

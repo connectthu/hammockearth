@@ -6,9 +6,10 @@ import type { Event } from "@hammock/database";
 
 interface RegisterButtonProps {
   event: Event;
+  spotsRemaining?: number | null;
 }
 
-export function RegisterButton({ event }: RegisterButtonProps) {
+export function RegisterButton({ event, spotsRemaining }: RegisterButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,7 +21,7 @@ export function RegisterButton({ event }: RegisterButtonProps) {
         Register Now
       </button>
       {open && (
-        <RegistrationModal event={event} onClose={() => setOpen(false)} />
+        <RegistrationModal event={event} spotsRemaining={spotsRemaining} onClose={() => setOpen(false)} />
       )}
     </>
   );

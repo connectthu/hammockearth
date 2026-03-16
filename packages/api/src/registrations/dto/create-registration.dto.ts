@@ -5,7 +5,6 @@ import {
   IsOptional,
   MinLength,
   Min,
-  Max,
 } from "class-validator";
 
 export class CreateRegistrationDto {
@@ -21,7 +20,6 @@ export class CreateRegistrationDto {
 
   @IsInt()
   @Min(1)
-  @Max(2)
   quantity: number;
 
   @IsOptional()
