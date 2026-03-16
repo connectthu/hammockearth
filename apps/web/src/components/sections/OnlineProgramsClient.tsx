@@ -17,16 +17,16 @@ const programs = [
       "Exploring the people, farms, and practices behind a generous Canadian food culture — and how we each play a role in making it real.",
   },
   {
-    emoji: "🌙",
-    title: "Slow Living Circle",
+    emoji: "✨",
+    title: "Embodied Creation in the Age of AI",
     description:
-      "A monthly online gathering for those called to live with more intention — stories, seasonal practices, and community woven across distances.",
+      "How do we create our dreams with AI without losing our humanity? How do we build our businesses, communities and organizations with presence, embodiment and values? A 6-week Embodied Creator Lab exploring Inner technology and Outer technology.",
   },
   {
-    emoji: "🔥",
-    title: "Community by Design",
+    emoji: "🌸",
+    title: "Embodiment Circle Fall 2026",
     description:
-      "The principles of intentional community: communication, shared decision-making, land stewardship, and the art of gathering with purpose.",
+      "The Safety, Freedom & Joy of Being Your True Self. A 12-week journey and celebration of your becoming — rooted in safety, creativity, courage, and lived wisdom, guided by a diverse circle of facilitators who share the practices that shaped their own becoming.",
   },
 ];
 
