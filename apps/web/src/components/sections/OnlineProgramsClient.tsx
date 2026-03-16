@@ -101,7 +101,7 @@ export function OnlineProgramsClient({ events }: { events: Event[] }) {
         <div className="text-center mb-16">
           <p className="section-label text-moss mb-4">From Anywhere</p>
           <h2 className="font-serif text-3xl sm:text-4xl text-cream mb-4">
-            Online Programs
+            Programs
           </h2>
           <p className="text-cream/70 max-w-2xl mx-auto">
             Can't make it to the land? Our online offerings bring the spirit of

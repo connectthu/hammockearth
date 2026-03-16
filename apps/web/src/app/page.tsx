@@ -24,13 +24,13 @@ export default function HomePage() {
         <AboutSection />
         <VisionSection />
         <EventsSection />
-        <MembershipSection />
         <OnlineProgramsSection />
-        <GallerySection />
+        <MembershipSection />
         <VisitSection />
         <TeamSection />
         <MissionSection />
         <ValuesSection />
+        <GallerySection />
         <NewsletterSection />
       </main>
       <Footer />

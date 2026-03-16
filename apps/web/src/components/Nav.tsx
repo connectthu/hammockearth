@@ -6,12 +6,11 @@ import Image from "next/image";
 
 const links = [
   { label: "About", href: "/#about" },
-  { label: "Values", href: "/#values" },
-  { label: "Membership", href: "/#membership" },
   { label: "Events", href: "/events" },
-  { label: "Online", href: "/#programs" },
-  { label: "Team", href: "/#team" },
+  { label: "Programs", href: "/#programs" },
+  { label: "Membership", href: "/#membership" },
   { label: "Visit", href: "/#visit" },
+  { label: "Team", href: "/#team" },
   { label: "Connect", href: "/#newsletter" },
 ];
 

@@ -31,7 +31,7 @@ export function NewsletterSection() {
   }
 
   return (
-    <section id="newsletter" className="py-24 bg-linen">
+    <section id="newsletter" className="py-24 bg-cream">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
         <p className="section-label mb-4">Stay Connected</p>
         <h2 className="font-serif text-3xl sm:text-4xl text-soil mb-4">
