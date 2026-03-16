@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export const runtime = "edge";
-export const revalidate = 0;
+export const revalidate = 3600;
 
 async function getEvents(tag?: string) {
   const supabase = createServerClient();
