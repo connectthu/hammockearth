@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Event } from "@hammock/database";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
+import { DateTimePicker } from "./DateTimePicker";
 
 type EventFormData = {
   title: string;
@@ -180,22 +181,18 @@ export function EventForm({
 
         <div>
           <label className={labelClass}>Start *</label>
-          <input
-            type="datetime-local"
-            required
+          <DateTimePicker
             value={form.start_at}
-            onChange={(e) => set("start_at", e.target.value)}
-            className={inputClass}
+            onChange={(v) => set("start_at", v)}
+            required
           />
         </div>
 
         <div>
           <label className={labelClass}>End</label>
-          <input
-            type="datetime-local"
+          <DateTimePicker
             value={form.end_at}
-            onChange={(e) => set("end_at", e.target.value)}
-            className={inputClass}
+            onChange={(v) => set("end_at", v)}
           />
         </div>
 

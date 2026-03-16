@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { AdminShell } from "@/components/AdminShell";
 import { apiGet, apiPatch } from "@/lib/api";
+import { DateTimePicker } from "@/components/DateTimePicker";
 
 type Session = {
   id: string;
@@ -156,11 +157,9 @@ export default function ManageSessionsPage() {
                     <label className="block text-xs font-medium text-charcoal/60 mb-1">
                       Start
                     </label>
-                    <input
-                      type="datetime-local"
+                    <DateTimePicker
                       value={edit.start_at ?? formatDatetimeLocal(session.start_at)}
-                      onChange={(e) => setEdit(session.id, "start_at", e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-linen text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
+                      onChange={(v) => setEdit(session.id, "start_at", v)}
                     />
                   </div>
 
@@ -168,11 +167,9 @@ export default function ManageSessionsPage() {
                     <label className="block text-xs font-medium text-charcoal/60 mb-1">
                       End
                     </label>
-                    <input
-                      type="datetime-local"
+                    <DateTimePicker
                       value={edit.end_at ?? formatDatetimeLocal(session.end_at)}
-                      onChange={(e) => setEdit(session.id, "end_at", e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-linen text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
+                      onChange={(v) => setEdit(session.id, "end_at", v)}
                     />
                   </div>
 

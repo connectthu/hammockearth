@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
+import { DateTimePicker } from "./DateTimePicker";
 
 type SeriesFormData = {
   title: string;
@@ -213,12 +214,10 @@ export function SeriesForm({ initialData, onSubmit, submitLabel = "Save Series",
           <>
             <div>
               <label className={labelClass}>First session date & time *</label>
-              <input
-                type="datetime-local"
-                required={!isEdit}
+              <DateTimePicker
                 value={form.first_session_at}
-                onChange={(e) => set("first_session_at", e.target.value)}
-                className={inputClass}
+                onChange={(v) => set("first_session_at", v)}
+                required={!isEdit}
               />
             </div>
 
