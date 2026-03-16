@@ -104,11 +104,13 @@ export class EmailService {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "America/Toronto",
     });
     const formattedTime = startDate.toLocaleTimeString("en-CA", {
       hour: "numeric",
       minute: "2-digit",
       timeZoneName: "short",
+      timeZone: "America/Toronto",
     });
     const amount = `$${(amountPaidCents / 100).toFixed(2)} CAD`;
 
@@ -184,11 +186,13 @@ export class EmailService {
           weekday: "short",
           month: "long",
           day: "numeric",
+          timeZone: "America/Toronto",
         });
         const time = new Date(s.start_at).toLocaleTimeString("en-CA", {
           hour: "numeric",
           minute: "2-digit",
           timeZoneName: "short",
+          timeZone: "America/Toronto",
         });
         return `<tr>
           <td style="padding:6px 8px;border-top:1px solid #F5EFE6;color:#6B7C5C;font-weight:bold">Week ${s.session_number}</td>

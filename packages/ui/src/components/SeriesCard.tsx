@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 
 interface SeriesCardProps {
   title: string;
@@ -19,15 +21,6 @@ function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-CA", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 export function SeriesCard({
   title,
   slug,
@@ -41,6 +34,12 @@ export function SeriesCard({
   coverImageUrl,
   tags = [],
 }: SeriesCardProps) {
+  const [startDate, setStartDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStartDate(new Date(startAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }));
+  }, [startAt]);
+
   return (
     <article className="bg-white rounded-2xl overflow-hidden shadow-sm border border-linen hover:shadow-md transition-shadow border-t-4 border-t-[#7BA7BC]">
       {coverImageUrl ? (
@@ -69,7 +68,7 @@ export function SeriesCard({
         </h3>
 
         <p className="text-xs text-charcoal/50 mb-3">
-          {durationWeeks} weeks · {sessionCount} sessions · starts {formatDate(startAt)}
+          {durationWeeks} weeks · {sessionCount} sessions{startDate ? ` · starts ${startDate}` : ""}
         </p>
 
         <div className="flex items-center justify-between">

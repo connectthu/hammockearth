@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 
 interface EventCardProps {
   title: string;
@@ -19,23 +21,6 @@ function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-CA", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-CA", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
-}
-
 export function EventCard({
   title,
   slug,
@@ -50,6 +35,15 @@ export function EventCard({
   registrationNote,
   tags = [],
 }: EventCardProps) {
+  const [dateTime, setDateTime] = useState<string | null>(null);
+
+  useEffect(() => {
+    const d = new Date(startAt);
+    const date = d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+    setDateTime(`${date} · ${time}`);
+  }, [startAt]);
+
   const href = registrationUrl ?? `/events/${slug}`;
   const isExternal = !!registrationUrl;
 
@@ -89,7 +83,7 @@ export function EventCard({
         </h3>
 
         <div className="space-y-1 mb-4 text-sm text-charcoal/70">
-          <p>{formatDate(startAt)} · {formatTime(startAt)}</p>
+          <p>{dateTime ?? "\u00a0"}</p>
           <p>{location}</p>
         </div>
 
