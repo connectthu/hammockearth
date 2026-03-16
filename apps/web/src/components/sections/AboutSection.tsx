@@ -6,14 +6,12 @@ export function AboutSection() {
           <div>
             <p className="section-label mb-4">Who We Are</p>
             <h2 className="font-serif text-3xl sm:text-4xl text-soil leading-snug mb-6">
-              Hammock Earth is a community dedicated to cultivating ecological
-              belonging through shared experiences with land, food, and one
-              another.
+              We believe that human well-being and ecological health are
+              inseparable.
             </h2>
             <div className="space-y-4 text-charcoal/80 leading-relaxed">
               <p>
-                We believe that human well-being and ecological health are
-                inseparable. When we reconnect with the land that nourishes
+                When we reconnect with the land that nourishes
                 us—through food, seasons, soil, and community—we rediscover a
                 deeper sense of belonging and responsibility for the living
                 world.
