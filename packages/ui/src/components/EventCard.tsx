@@ -18,6 +18,7 @@ interface EventCardProps {
 }
 
 function formatPrice(cents: number): string {
+  if (cents === 0) return "Free";
   return `$${(cents / 100).toFixed(0)}`;
 }
 
@@ -33,100 +34,84 @@ export function EventCard({
   isOnline,
   registrationUrl,
   registrationNote,
-  tags = [],
 }: EventCardProps) {
   const [dateTime, setDateTime] = useState<string | null>(null);
 
   useEffect(() => {
     const d = new Date(startAt);
-    const date = d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
     setDateTime(`${date} · ${time}`);
   }, [startAt]);
 
   const href = registrationUrl ?? `/events/${slug}`;
   const isExternal = !!registrationUrl;
+  const topBorder = isOnline ? "border-t-[#7BA7BC]" : "border-t-moss";
 
   return (
-    <article className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-linen hover:shadow-md transition-shadow border-t-4 ${isOnline ? "border-t-[#7BA7BC]" : "border-t-moss"}`}>
-      {coverImageUrl && (
-        <div className="aspect-[16/9] overflow-hidden">
+    <article className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-linen hover:shadow-md transition-shadow border-t-[3px] ${topBorder} flex flex-col`}>
+      {/* Cover image with overlaid badge */}
+      <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined} className="relative block aspect-[4/3] overflow-hidden bg-linen flex-shrink-0">
+        {coverImageUrl ? (
           <img
             src={coverImageUrl}
             alt={title}
             className="w-full h-full object-cover"
           />
-        </div>
-      )}
-      {!coverImageUrl && (
-        <div className="aspect-[16/9] bg-linen flex items-center justify-center">
-          <span className="text-4xl">🌿</span>
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full bg-linen" />
+        )}
+        {/* Event type badge overlaid bottom-left of image */}
+        {(eventType || isOnline) && (
+          <div className="absolute bottom-3 left-3 flex gap-1.5">
+            {eventType && (
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-linen/90 text-soil uppercase tracking-wide backdrop-blur-sm">
+                {eventType}
+              </span>
+            )}
+            {isOnline && (
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#7BA7BC]/90 text-white uppercase tracking-wide backdrop-blur-sm">
+                Online
+              </span>
+            )}
+          </div>
+        )}
+      </a>
 
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          {eventType && (
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-linen text-moss uppercase tracking-wide">
-              {eventType}
-            </span>
-          )}
-          {isOnline && (
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-moss/10 text-moss uppercase tracking-wide">
-              Online
-            </span>
-          )}
-        </div>
-
-        <h3 className="font-serif text-xl text-soil mb-2 leading-snug">
-          {title}
+      {/* Card body */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className="font-serif text-lg text-soil font-bold leading-snug mb-2">
+          <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined} className="hover:text-clay transition-colors">
+            {title}
+          </a>
         </h3>
 
-        <div className="space-y-1 mb-4 text-sm text-charcoal/70">
+        <div className="text-sm text-charcoal/60 space-y-0.5 mb-4">
           <p>{dateTime ?? "\u00a0"}</p>
           <p>{location}</p>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-auto">
           <div>
-            <span className="text-soil font-semibold text-lg">
-              {formatPrice(priceCents)}
-            </span>
-            <span className="text-charcoal/50 text-sm ml-2">
-              · Members {formatPrice(memberPriceCents)}
-            </span>
+            <span className="text-soil font-bold text-base">{formatPrice(priceCents)}</span>
+            {memberPriceCents < priceCents && (
+              <span className="text-charcoal/45 text-xs ml-1.5">· Members {formatPrice(memberPriceCents)}</span>
+            )}
           </div>
 
           {registrationNote ? (
-            <span className="text-sm text-charcoal/50 italic">
-              {registrationNote}
-            </span>
+            <span className="text-xs text-charcoal/45 italic">{registrationNote}</span>
           ) : (
             <a
               href={href}
               target={isExternal ? "_blank" : undefined}
               rel={isExternal ? "noopener noreferrer" : undefined}
-              className="inline-flex items-center gap-1 bg-clay text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-clay/90 transition-colors"
+              className="text-sm font-medium px-4 py-2 rounded-full bg-clay text-white hover:bg-clay/90 transition-colors flex-shrink-0"
             >
               Register
-              {isExternal && (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              )}
             </a>
           )}
         </div>
-
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-linen">
-            {tags.slice(0, 4).map((tag) => (
-              <span key={tag} className="text-[11px] text-charcoal/40 px-2 py-0.5 rounded-full bg-charcoal/5">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
     </article>
   );
