@@ -5,7 +5,9 @@
 
 DROP VIEW IF EXISTS event_capacity;
 
-CREATE VIEW event_capacity AS
+CREATE VIEW public.event_capacity
+WITH (security_invoker = true)
+AS
 SELECT
   e.id AS event_id,
   e.slug,

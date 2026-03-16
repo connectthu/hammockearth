@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { Event } from "@hammock/database";
+import { RichTextEditor } from "./RichTextEditor";
+import { ImageUpload } from "./ImageUpload";
 
 type EventFormData = {
   title: string;
@@ -302,11 +304,9 @@ export function EventForm({
 
         <div className="sm:col-span-2">
           <label className={labelClass}>Description</label>
-          <textarea
-            rows={5}
+          <RichTextEditor
             value={form.description}
-            onChange={(e) => set("description", e.target.value)}
-            className={inputClass}
+            onChange={(html) => set("description", html)}
           />
         </div>
 
@@ -332,13 +332,11 @@ export function EventForm({
           />
         </div>
 
-        <div>
-          <label className={labelClass}>Cover image URL</label>
-          <input
-            type="url"
+        <div className="sm:col-span-2">
+          <label className={labelClass}>Cover image</label>
+          <ImageUpload
             value={form.cover_image_url}
-            onChange={(e) => set("cover_image_url", e.target.value)}
-            className={inputClass}
+            onChange={(url) => set("cover_image_url", url)}
           />
         </div>
 

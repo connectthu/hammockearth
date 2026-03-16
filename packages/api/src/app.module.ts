@@ -10,6 +10,7 @@ import { DiscountCodesModule } from "./discount-codes/discount-codes.module";
 import { CalendarModule } from "./calendar/calendar.module";
 import { RegistrationsModule } from "./registrations/registrations.module";
 import { WebhooksModule } from "./webhooks/webhooks.module";
+import { UploadModule } from "./upload/upload.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { WebhooksModule } from "./webhooks/webhooks.module";
     CalendarModule,
     RegistrationsModule,
     WebhooksModule,
+    UploadModule,
   ],
 })
 export class AppModule {}

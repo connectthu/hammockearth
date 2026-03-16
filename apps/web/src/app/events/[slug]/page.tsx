@@ -1,4 +1,5 @@
 import { createServerClient } from "@hammock/database";
+import DOMPurify from "isomorphic-dompurify";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { CalendarExportButton } from "@hammock/ui";
@@ -28,7 +29,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export const runtime = "edge";
 export const revalidate = 0;
 
 export default async function EventDetailPage({ params }: PageProps) {
@@ -105,11 +105,12 @@ export default async function EventDetailPage({ params }: PageProps) {
               </h1>
 
               {event.description && (
-                <div className="prose prose-stone max-w-none">
-                  <p className="text-charcoal/80 leading-relaxed whitespace-pre-line">
-                    {event.description}
-                  </p>
-                </div>
+                <div
+                  className="prose prose-stone max-w-none text-charcoal/80 prose-headings:font-serif prose-headings:text-soil prose-a:text-clay prose-strong:text-soil"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(event.description),
+                  }}
+                />
               )}
             </div>
 
