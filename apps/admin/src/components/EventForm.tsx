@@ -290,16 +290,14 @@ export function EventForm({
         </div>
 
         <div className="sm:col-span-2 flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="is_online"
-            checked={form.is_online}
-            onChange={(e) => set("is_online", e.target.checked)}
-            className="w-4 h-4 text-clay"
-          />
-          <label htmlFor="is_online" className="text-sm text-charcoal">
-            This is an online event
-          </label>
+          <button
+            type="button"
+            onClick={() => set("is_online", !form.is_online)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.is_online ? "bg-moss" : "bg-linen border border-charcoal/20"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.is_online ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <label className="text-sm text-charcoal">Online event</label>
         </div>
 
         <div className="sm:col-span-2">

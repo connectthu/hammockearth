@@ -54,7 +54,7 @@ export function EventCard({
   const isExternal = !!registrationUrl;
 
   return (
-    <article className="bg-white rounded-2xl overflow-hidden shadow-sm border border-linen hover:shadow-md transition-shadow">
+    <article className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-linen hover:shadow-md transition-shadow border-t-4 ${isOnline ? "border-t-[#7BA7BC]" : "border-t-moss"}`}>
       {coverImageUrl && (
         <div className="aspect-[16/9] overflow-hidden">
           <img

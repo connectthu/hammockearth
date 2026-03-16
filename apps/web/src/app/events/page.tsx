@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export const runtime = "edge";
 export const revalidate = 3600;
 
-async function getEvents(tag?: string) {
+async function getEvents(tag?: string, type?: string) {
   const supabase = createServerClient();
   let query = supabase
     .from("events")
@@ -24,6 +24,12 @@ async function getEvents(tag?: string) {
 
   if (tag) {
     query = query.contains("tags", [tag]);
+  }
+
+  if (type === "in-person") {
+    query = query.eq("is_online", false);
+  } else if (type === "online") {
+    query = query.eq("is_online", true);
   }
 
   const { data } = await query;
@@ -44,12 +50,12 @@ async function getAllTags() {
 }
 
 interface PageProps {
-  searchParams: { tag?: string };
+  searchParams: { tag?: string; type?: string };
 }
 
 export default async function EventsPage({ searchParams }: PageProps) {
   const [events, tags] = await Promise.all([
-    getEvents(searchParams.tag),
+    getEvents(searchParams.tag, searchParams.type),
     getAllTags(),
   ]);
 
@@ -74,11 +80,36 @@ export default async function EventsPage({ searchParams }: PageProps) {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Type filter tabs */}
+          <div className="flex gap-2 mb-6">
+            {[
+              { label: "All", value: "" },
+              { label: "On the Land", value: "in-person" },
+              { label: "Online", value: "online" },
+            ].map(({ label, value }) => {
+              const isActive = value ? searchParams.type === value : !searchParams.type;
+              const href = value ? `/events?type=${value}` : "/events";
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  className={`text-sm px-4 py-2 rounded-full border transition-colors ${
+                    isActive
+                      ? "bg-soil text-cream border-soil"
+                      : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
+                  }`}
+                >
+                  {label}
+                </a>
+              );
+            })}
+          </div>
+
           {/* Tag filter */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-10">
               <a
-                href="/events"
+                href={searchParams.type ? `/events?type=${searchParams.type}` : "/events"}
                 className={`text-sm px-4 py-2 rounded-full border transition-colors ${
                   !searchParams.tag
                     ? "bg-soil text-cream border-soil"
@@ -87,19 +118,24 @@ export default async function EventsPage({ searchParams }: PageProps) {
               >
                 All
               </a>
-              {tags.map((tag) => (
-                <a
-                  key={tag}
-                  href={`/events?tag=${encodeURIComponent(tag)}`}
-                  className={`text-sm px-4 py-2 rounded-full border transition-colors ${
-                    searchParams.tag === tag
-                      ? "bg-soil text-cream border-soil"
-                      : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
-                  }`}
-                >
-                  {tag}
-                </a>
-              ))}
+              {tags.map((tag) => {
+                const tagHref = searchParams.type
+                  ? `/events?type=${searchParams.type}&tag=${encodeURIComponent(tag)}`
+                  : `/events?tag=${encodeURIComponent(tag)}`;
+                return (
+                  <a
+                    key={tag}
+                    href={tagHref}
+                    className={`text-sm px-4 py-2 rounded-full border transition-colors ${
+                      searchParams.tag === tag
+                        ? "bg-soil text-cream border-soil"
+                        : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
+                    }`}
+                  >
+                    {tag}
+                  </a>
+                );
+              })}
             </div>
           )}
 

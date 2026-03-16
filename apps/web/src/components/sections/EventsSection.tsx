@@ -9,9 +9,10 @@ async function getUpcomingEvents() {
       .select("*")
       .eq("status", "published")
       .eq("visibility", "public")
+      .eq("is_online", false)
       .gte("start_at", new Date().toISOString())
       .order("start_at", { ascending: true })
-      .limit(3);
+      .limit(7);
     return data ?? [];
   } catch {
     return [];
@@ -37,7 +38,7 @@ export async function EventsSection() {
 
         {events.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-            {events.map((event) => (
+            {events.slice(0, 6).map((event) => (
               <EventCard
                 key={event.id}
                 title={event.title}
