@@ -3,13 +3,27 @@ import {
   IsEmail,
   IsInt,
   IsOptional,
+  IsIn,
   MinLength,
   Min,
 } from "class-validator";
 
 export class CreateRegistrationDto {
+  @IsOptional()
   @IsString()
-  eventSlug: string;
+  eventSlug?: string;
+
+  @IsOptional()
+  @IsString()
+  seriesSlug?: string;
+
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
+
+  @IsIn(["single_event", "full_series", "drop_in_session"])
+  @IsOptional()
+  registrationType?: "single_event" | "full_series" | "drop_in_session";
 
   @IsString()
   @MinLength(1)

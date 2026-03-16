@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type { Event } from "@hammock/database";
+import type { Event, EventSeries, EventSeriesSession } from "@hammock/database";
 
 interface SendEmailOptions {
   to: string | string[];
@@ -161,6 +161,81 @@ export class EmailService {
       attachments: [
         {
           filename: `${event.slug}.ics`,
+          content: Buffer.from(icsContent).toString("base64"),
+        },
+      ],
+    });
+  }
+
+  seriesBookingConfirmation(opts: {
+    to: string;
+    name: string;
+    series: EventSeries;
+    sessions: EventSeriesSession[];
+    amountPaidCents: number;
+    icsContent: string;
+  }): Promise<void> {
+    const { to, name, series, sessions, amountPaidCents, icsContent } = opts;
+    const amount = amountPaidCents === 0 ? "Free" : `$${(amountPaidCents / 100).toFixed(2)} CAD`;
+
+    const sessionRows = sessions
+      .map((s) => {
+        const date = new Date(s.start_at).toLocaleDateString("en-CA", {
+          weekday: "short",
+          month: "long",
+          day: "numeric",
+        });
+        const time = new Date(s.start_at).toLocaleTimeString("en-CA", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZoneName: "short",
+        });
+        return `<tr>
+          <td style="padding:6px 8px;border-top:1px solid #F5EFE6;color:#6B7C5C;font-weight:bold">Week ${s.session_number}</td>
+          <td style="padding:6px 8px;border-top:1px solid #F5EFE6">${date}</td>
+          <td style="padding:6px 8px;border-top:1px solid #F5EFE6">${time}</td>
+        </tr>`;
+      })
+      .join("");
+
+    return this.send({
+      to,
+      subject: `You're registered — ${series.title}`,
+      html: `
+        <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#3B2F2F">
+          <h1 style="color:#3B2F2F;font-size:24px">You're registered 🌿</h1>
+          <p>Hi ${name},</p>
+          <p>We're so glad you're joining us for <strong>${series.title}</strong>.</p>
+
+          <table style="width:100%;border-collapse:collapse;margin:24px 0">
+            <tr>
+              <td style="padding:8px 0;border-top:1px solid #F5EFE6;font-weight:bold">Program</td>
+              <td style="padding:8px 0;border-top:1px solid #F5EFE6">${series.title}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;border-top:1px solid #F5EFE6;font-weight:bold">Duration</td>
+              <td style="padding:8px 0;border-top:1px solid #F5EFE6">${series.duration_weeks} weeks · ${series.session_count} sessions</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;border-top:1px solid #F5EFE6;border-bottom:1px solid #F5EFE6;font-weight:bold">Total Paid</td>
+              <td style="padding:8px 0;border-top:1px solid #F5EFE6;border-bottom:1px solid #F5EFE6">${amount}</td>
+            </tr>
+          </table>
+
+          <h2 style="font-size:16px;color:#3B2F2F;margin-top:24px">Session Schedule</h2>
+          <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">
+            ${sessionRows}
+          </table>
+
+          <p style="color:#6B7C5C;font-size:14px">Meeting links will be shared before each session.</p>
+          <p>The .ics file is attached — open it to add all sessions to your calendar at once.</p>
+          <p>If you have any questions, reply to this email or reach us at <a href="mailto:hello@hammock.earth" style="color:#C4845A">hello@hammock.earth</a>.</p>
+          <p>With warmth,<br>Thu &amp; Anahita<br>Hammock Earth</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `${series.slug}.ics`,
           content: Buffer.from(icsContent).toString("base64"),
         },
       ],

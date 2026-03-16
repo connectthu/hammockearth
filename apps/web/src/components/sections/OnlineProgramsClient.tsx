@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EventCard } from "@hammock/ui";
+import { EventCard, SeriesCard } from "@hammock/ui";
 
 const programs = [
   {
@@ -94,7 +94,24 @@ type Event = {
   tags: string[] | null;
 };
 
-export function OnlineProgramsClient({ events }: { events: Event[] }) {
+type SeriesItem = {
+  id: string;
+  title: string;
+  slug: string;
+  duration_weeks: number;
+  session_count: number;
+  price_cents: number;
+  member_price_cents: number;
+  drop_in_enabled: boolean;
+  drop_in_price_cents: number | null;
+  cover_image_url: string | null;
+  is_online: boolean;
+  tags: string[] | null;
+  event_series_sessions: { start_at: string; session_number: number }[] | null;
+};
+
+export function OnlineProgramsClient({ events, seriesList = [] }: { events: Event[]; seriesList?: SeriesItem[] }) {
+  const hasLiveContent = events.length > 0 || seriesList.length > 0;
   return (
     <section id="programs" className="py-24 bg-soil">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,10 +126,10 @@ export function OnlineProgramsClient({ events }: { events: Event[] }) {
           </p>
         </div>
 
-        {events.length > 0 && (
+        {hasLiveContent && (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {events.slice(0, 6).map((event) => (
+              {events.slice(0, 3).map((event) => (
                 <EventCard
                   key={event.id}
                   title={event.title}
@@ -129,17 +146,36 @@ export function OnlineProgramsClient({ events }: { events: Event[] }) {
                   tags={event.tags ?? []}
                 />
               ))}
+              {seriesList.slice(0, 3).map((s) => {
+                const firstSession = [...(s.event_series_sessions ?? [])]
+                  .sort((a, b) => a.session_number - b.session_number)[0];
+                return (
+                  <SeriesCard
+                    key={s.id}
+                    title={s.title}
+                    slug={s.slug}
+                    startAt={firstSession?.start_at ?? new Date().toISOString()}
+                    durationWeeks={s.duration_weeks}
+                    sessionCount={s.session_count}
+                    priceCents={s.price_cents}
+                    memberPriceCents={s.member_price_cents}
+                    dropInEnabled={s.drop_in_enabled}
+                    dropInPriceCents={s.drop_in_price_cents}
+                    coverImageUrl={s.cover_image_url}
+                    isOnline={s.is_online}
+                    tags={s.tags ?? []}
+                  />
+                );
+              })}
             </div>
-            {events.length > 6 && (
-              <div className="text-center mb-6">
-                <a
-                  href="/events?type=online"
-                  className="inline-flex items-center gap-2 text-clay font-medium hover:text-clay/80 transition-colors"
-                >
-                  View all online →
-                </a>
-              </div>
-            )}
+            <div className="text-center mb-6">
+              <a
+                href="/events?type=online"
+                className="inline-flex items-center gap-2 text-clay font-medium hover:text-clay/80 transition-colors"
+              >
+                View all programs →
+              </a>
+            </div>
             <div className="border-t border-cream/10 my-12" />
           </>
         )}

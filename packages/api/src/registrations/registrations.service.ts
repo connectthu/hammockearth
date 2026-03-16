@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from "@nestjs/common";
 import { SupabaseService } from "../supabase/supabase.service";
@@ -8,6 +9,7 @@ import { StripeService } from "../stripe/stripe.service";
 import { EmailService } from "../email/email.service";
 import { EventsService } from "../events/events.service";
 import { DiscountCodesService } from "../discount-codes/discount-codes.service";
+import { SeriesService } from "../series/series.service";
 import type { EventRegistration } from "@hammock/database";
 import type { CreateRegistrationDto } from "./dto/create-registration.dto";
 
@@ -20,10 +22,23 @@ export class RegistrationsService {
     private stripe: StripeService,
     private email: EmailService,
     private events: EventsService,
-    private discountCodes: DiscountCodesService
+    private discountCodes: DiscountCodesService,
+    private series: SeriesService
   ) {}
 
   async createRegistration(dto: CreateRegistrationDto) {
+    const registrationType = dto.registrationType ?? "single_event";
+
+    if (registrationType === "full_series") {
+      return this.createSeriesRegistration(dto);
+    }
+    if (registrationType === "drop_in_session") {
+      return this.createDropInRegistration(dto);
+    }
+
+    // ── single_event (original flow) ──────────────────────────────────────
+    if (!dto.eventSlug) throw new BadRequestException("eventSlug is required");
+
     // 1. Fetch event (findBySlug returns Promise<Event>)
     const event = await this.events.findBySlug(dto.eventSlug);
 
@@ -175,6 +190,210 @@ export class RegistrationsService {
     } catch (err) {
       this.logger.warn("Failed to update PaymentIntent metadata", err);
     }
+
+    return {
+      status: "pending",
+      clientSecret: paymentIntent.client_secret,
+      registrationId: reg.id,
+      amountCents,
+    };
+  }
+
+  // ── full_series registration ───────────────────────────────────────────────
+  private async createSeriesRegistration(dto: CreateRegistrationDto) {
+    if (!dto.seriesSlug) throw new BadRequestException("seriesSlug is required");
+
+    const seriesData = await this.series.findBySlug(dto.seriesSlug);
+    if (seriesData.status !== "published") {
+      throw new NotFoundException("Series not found");
+    }
+
+    // Validate discount code
+    let discountAmountCents = 0;
+    let discountCodeId: string | null = null;
+    if (dto.discountCode) {
+      try {
+        const code = await this.discountCodes.validate(dto.discountCode);
+        discountAmountCents = this.discountCodes.calculateDiscount(
+          seriesData.price_cents,
+          1,
+          code
+        );
+        discountCodeId = code.id;
+      } catch {
+        // Proceed without discount
+      }
+    }
+
+    const amountCents = Math.max(0, seriesData.price_cents - discountAmountCents);
+
+    if (amountCents === 0) {
+      const { data: regData, error } = await this.supabase.client
+        .from("event_registrations")
+        .insert({
+          series_id: seriesData.id,
+          registration_type: "full_series",
+          guest_name: dto.guestName,
+          guest_email: dto.guestEmail,
+          quantity: 1,
+          status: "confirmed",
+          discount_code_id: discountCodeId,
+          amount_paid_cents: 0,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (discountCodeId) {
+        await this.discountCodes.incrementUsedCount(discountCodeId).catch(() => {});
+      }
+
+      try {
+        const { CalendarService } = await import("../calendar/calendar.service");
+        const calendarService = new CalendarService();
+        const icsContent = calendarService.generateSeriesIcs(seriesData, seriesData.sessions);
+        await this.email.seriesBookingConfirmation({
+          to: dto.guestEmail,
+          name: dto.guestName,
+          series: seriesData,
+          sessions: seriesData.sessions,
+          amountPaidCents: 0,
+          icsContent,
+        });
+      } catch (err) {
+        this.logger.error("Failed to send series confirmation email", err);
+      }
+
+      const reg = regData as unknown as EventRegistration;
+      return { status: "confirmed", registrationId: reg.id };
+    }
+
+    const paymentIntent = await this.stripe.createPaymentIntent(amountCents, {
+      registrationId: "pending",
+      seriesSlug: dto.seriesSlug,
+    });
+
+    const { data: regData, error } = await this.supabase.client
+      .from("event_registrations")
+      .insert({
+        series_id: seriesData.id,
+        registration_type: "full_series",
+        guest_name: dto.guestName,
+        guest_email: dto.guestEmail,
+        quantity: 1,
+        status: "pending",
+        stripe_payment_intent_id: paymentIntent.id,
+        discount_code_id: discountCodeId,
+        amount_paid_cents: amountCents,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    const reg = regData as unknown as EventRegistration;
+
+    await this.stripe
+      .updatePaymentIntentMetadata(paymentIntent.id, {
+        registrationId: reg.id,
+        seriesSlug: dto.seriesSlug,
+      })
+      .catch((err) => this.logger.warn("Failed to update PaymentIntent metadata", err));
+
+    return {
+      status: "pending",
+      clientSecret: paymentIntent.client_secret,
+      registrationId: reg.id,
+      amountCents,
+    };
+  }
+
+  // ── drop_in_session registration ──────────────────────────────────────────
+  private async createDropInRegistration(dto: CreateRegistrationDto) {
+    if (!dto.sessionId) throw new BadRequestException("sessionId is required");
+
+    const { data: sessionData, error: sessionError } =
+      await this.supabase.client
+        .from("event_series_sessions")
+        .select("*, event_series(*)")
+        .eq("id", dto.sessionId)
+        .limit(1);
+
+    if (sessionError || !sessionData || sessionData.length === 0) {
+      throw new NotFoundException("Session not found");
+    }
+
+    const session = sessionData[0] as any;
+    const seriesData = session.event_series;
+
+    if (!seriesData?.drop_in_enabled) {
+      throw new BadRequestException("Drop-in is not enabled for this series");
+    }
+
+    // Check session capacity
+    if (session.capacity !== null) {
+      const { count } = await this.supabase.client
+        .from("event_registrations")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", dto.sessionId)
+        .eq("status", "confirmed");
+
+      if ((count ?? 0) >= session.capacity) {
+        throw new BadRequestException("Session is full");
+      }
+    }
+
+    const amountCents = seriesData.drop_in_price_cents ?? 0;
+
+    if (amountCents === 0) {
+      const { data: regData, error } = await this.supabase.client
+        .from("event_registrations")
+        .insert({
+          session_id: dto.sessionId,
+          registration_type: "drop_in_session",
+          guest_name: dto.guestName,
+          guest_email: dto.guestEmail,
+          quantity: 1,
+          status: "confirmed",
+          amount_paid_cents: 0,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      const reg = regData as unknown as EventRegistration;
+      return { status: "confirmed", registrationId: reg.id };
+    }
+
+    const paymentIntent = await this.stripe.createPaymentIntent(amountCents, {
+      registrationId: "pending",
+      sessionId: dto.sessionId,
+    });
+
+    const { data: regData, error } = await this.supabase.client
+      .from("event_registrations")
+      .insert({
+        session_id: dto.sessionId,
+        registration_type: "drop_in_session",
+        guest_name: dto.guestName,
+        guest_email: dto.guestEmail,
+        quantity: 1,
+        status: "pending",
+        stripe_payment_intent_id: paymentIntent.id,
+        amount_paid_cents: amountCents,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    const reg = regData as unknown as EventRegistration;
+
+    await this.stripe
+      .updatePaymentIntentMetadata(paymentIntent.id, {
+        registrationId: reg.id,
+        sessionId: dto.sessionId,
+      })
+      .catch((err) => this.logger.warn("Failed to update PaymentIntent metadata", err));
 
     return {
       status: "pending",

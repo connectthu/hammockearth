@@ -157,10 +157,121 @@ export type Database = {
           }
         ];
       };
+      event_series: {
+        Row: {
+          id: string;
+          title: string;
+          slug: string;
+          description: string | null;
+          cover_image_url: string | null;
+          is_online: boolean;
+          location: string | null;
+          duration_weeks: number;
+          session_count: number;
+          price_cents: number;
+          member_price_cents: number;
+          drop_in_enabled: boolean;
+          drop_in_price_cents: number | null;
+          drop_in_member_price_cents: number | null;
+          visibility: EventVisibility;
+          status: EventStatus;
+          tags: string[];
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          slug: string;
+          description?: string | null;
+          cover_image_url?: string | null;
+          is_online?: boolean;
+          location?: string | null;
+          duration_weeks: number;
+          session_count: number;
+          price_cents?: number;
+          member_price_cents?: number;
+          drop_in_enabled?: boolean;
+          drop_in_price_cents?: number | null;
+          drop_in_member_price_cents?: number | null;
+          visibility?: EventVisibility;
+          status?: EventStatus;
+          tags?: string[];
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          slug?: string;
+          description?: string | null;
+          cover_image_url?: string | null;
+          is_online?: boolean;
+          location?: string | null;
+          duration_weeks?: number;
+          session_count?: number;
+          price_cents?: number;
+          member_price_cents?: number;
+          drop_in_enabled?: boolean;
+          drop_in_price_cents?: number | null;
+          drop_in_member_price_cents?: number | null;
+          visibility?: EventVisibility;
+          status?: EventStatus;
+          tags?: string[];
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      event_series_sessions: {
+        Row: {
+          id: string;
+          series_id: string;
+          title: string | null;
+          session_number: number;
+          start_at: string;
+          end_at: string;
+          location: string | null;
+          meeting_url: string | null;
+          capacity: number | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          series_id: string;
+          title?: string | null;
+          session_number: number;
+          start_at: string;
+          end_at: string;
+          location?: string | null;
+          meeting_url?: string | null;
+          capacity?: number | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          series_id?: string;
+          title?: string | null;
+          session_number?: number;
+          start_at?: string;
+          end_at?: string;
+          location?: string | null;
+          meeting_url?: string | null;
+          capacity?: number | null;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       event_registrations: {
         Row: {
           id: string;
-          event_id: string;
+          event_id: string | null;
+          series_id: string | null;
+          session_id: string | null;
+          registration_type: "single_event" | "full_series" | "drop_in_session";
           user_id: string | null;
           quantity: number;
           stripe_payment_intent_id: string | null;
@@ -173,7 +284,10 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          event_id: string;
+          event_id?: string | null;
+          series_id?: string | null;
+          session_id?: string | null;
+          registration_type?: "single_event" | "full_series" | "drop_in_session";
           user_id?: string | null;
           quantity?: number;
           stripe_payment_intent_id?: string | null;
@@ -186,7 +300,10 @@ export type Database = {
         };
         Update: {
           id?: string;
-          event_id?: string;
+          event_id?: string | null;
+          series_id?: string | null;
+          session_id?: string | null;
+          registration_type?: "single_event" | "full_series" | "drop_in_session";
           user_id?: string | null;
           quantity?: number;
           stripe_payment_intent_id?: string | null;
@@ -503,3 +620,11 @@ export type WaitlistSignup =
   Database["public"]["Tables"]["waitlist_signups"]["Row"];
 export type EventCapacity =
   Database["public"]["Views"]["event_capacity"]["Row"];
+export type EventSeries =
+  Database["public"]["Tables"]["event_series"]["Row"];
+export type EventSeriesInsert =
+  Database["public"]["Tables"]["event_series"]["Insert"];
+export type EventSeriesSession =
+  Database["public"]["Tables"]["event_series_sessions"]["Row"];
+export type EventSeriesSessionInsert =
+  Database["public"]["Tables"]["event_series_sessions"]["Insert"];

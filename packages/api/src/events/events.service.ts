@@ -60,6 +60,7 @@ export class EventsService {
       status: dto.status ?? "draft",
       registration_url: dto.registration_url ?? null,
       registration_note: dto.registration_note ?? null,
+      confirmation_details: dto.confirmation_details ?? null,
       tags: dto.tags ?? [],
       created_by: createdBy ?? null,
     };
@@ -98,6 +99,7 @@ export class EventsService {
       ...(dto.status !== undefined && { status: dto.status }),
       ...(dto.registration_url !== undefined && { registration_url: dto.registration_url }),
       ...(dto.registration_note !== undefined && { registration_note: dto.registration_note }),
+      ...(dto.confirmation_details !== undefined && { confirmation_details: dto.confirmation_details }),
       ...(dto.tags !== undefined && { tags: dto.tags }),
     };
 

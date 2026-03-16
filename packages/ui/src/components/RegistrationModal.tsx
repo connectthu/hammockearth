@@ -42,6 +42,8 @@ interface RegistrationModalProps {
   event: EventSummary;
   spotsRemaining?: number | null;
   onClose: () => void;
+  seriesSlug?: string;
+  registrationType?: "single_event" | "full_series" | "drop_in_session";
 }
 
 // ─── Inner payment form (needs Stripe context) ────────────────────────────────
@@ -109,7 +111,8 @@ function PaymentForm({
 }
 
 // ─── Main modal ───────────────────────────────────────────────────────────────
-export function RegistrationModal({ event, spotsRemaining, onClose }: RegistrationModalProps) {
+export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, registrationType = "single_event" }: RegistrationModalProps) {
+  const isSeries = registrationType === "full_series";
   const [step, setStep] = useState<Step>("details");
   const [clientSecret, setClientSecret] = useState("");
   const [amountCents, setAmountCents] = useState(event.price_cents);
@@ -168,16 +171,23 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
     setSubmitError(null);
 
     try {
+      const body: Record<string, unknown> = {
+        guestName: name,
+        guestEmail: email,
+        quantity: isSeries ? 1 : quantity,
+        discountCode: discountCode?.code,
+        registrationType,
+      };
+      if (isSeries && seriesSlug) {
+        body.seriesSlug = seriesSlug;
+      } else {
+        body.eventSlug = event.slug;
+      }
+
       const res = await fetch(`${API_URL}/registrations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventSlug: event.slug,
-          guestName: name,
-          guestEmail: email,
-          quantity,
-          discountCode: discountCode?.code,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -272,7 +282,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
                 />
               </div>
 
-              <div>
+              {!isSeries && <div>
                 <label className="block text-xs font-medium text-moss uppercase tracking-wide mb-2">
                   Tickets
                 </label>
@@ -309,7 +319,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
                     ticket{quantity > 1 ? "s" : ""}
                   </span>
                 </div>
-              </div>
+              </div>}
 
               {event.price_cents > 0 && (
               <div>
@@ -388,7 +398,9 @@ export function RegistrationModal({ event, spotsRemaining, onClose }: Registrati
                 disabled={submitting}
                 className="w-full bg-clay text-white font-medium py-3 px-6 rounded-full hover:bg-clay/90 transition-colors disabled:opacity-50"
               >
-                {submitting ? "Loading…" : total === 0 ? "Register for free" : "Continue to payment"}
+                {submitting ? "Loading…" : total === 0
+                  ? (isSeries ? "Register for full series" : "Register for free")
+                  : (isSeries ? "Register for full series" : "Continue to payment")}
               </button>
             </form>
           )}

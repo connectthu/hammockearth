@@ -44,28 +44,43 @@ export class WebhooksService {
         const reg = await this.registrations.confirmRegistration(registrationId);
         if (!reg) break;
 
-        // Fetch event and send confirmation email
+        // Fetch registration with event/series and send confirmation email
         try {
-          const { data: regWithEvent } = await this.supabase.client
+          const { data: regWithRelations } = await this.supabase.client
             .from("event_registrations")
-            .select("*, events(*)")
+            .select("*, events(*), event_series(*, event_series_sessions(*))")
             .eq("id", registrationId)
             .single();
 
-          const regRow = regWithEvent as any;
-          const event = regRow?.events;
-          if (!event) break;
+          const regRow = regWithRelations as any;
 
-          const icsContent = this.calendar.generateIcs(event);
-
-          await this.email.bookingConfirmation({
-            to: reg.guest_email!,
-            name: reg.guest_name!,
-            event,
-            quantity: reg.quantity,
-            amountPaidCents: reg.amount_paid_cents,
-            icsContent,
-          });
+          if (regRow?.registration_type === "full_series" && regRow?.event_series) {
+            const series = regRow.event_series;
+            const sessions = (series.event_series_sessions ?? []).sort(
+              (a: any, b: any) => a.session_number - b.session_number
+            );
+            const icsContent = this.calendar.generateSeriesIcs(series, sessions);
+            await this.email.seriesBookingConfirmation({
+              to: reg.guest_email!,
+              name: reg.guest_name!,
+              series,
+              sessions,
+              amountPaidCents: reg.amount_paid_cents,
+              icsContent,
+            });
+          } else {
+            const event = regRow?.events;
+            if (!event) break;
+            const icsContent = this.calendar.generateIcs(event);
+            await this.email.bookingConfirmation({
+              to: reg.guest_email!,
+              name: reg.guest_name!,
+              event,
+              quantity: reg.quantity,
+              amountPaidCents: reg.amount_paid_cents,
+              icsContent,
+            });
+          }
         } catch (err) {
           this.logger.error("Failed to send booking confirmation email", err);
           // Email failure must NOT return 500 — already caught here

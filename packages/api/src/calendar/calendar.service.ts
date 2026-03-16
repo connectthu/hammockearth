@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { Event } from "@hammock/database";
+import type { Event, EventSeries, EventSeriesSession } from "@hammock/database";
 
 @Injectable()
 export class CalendarService {
@@ -32,6 +32,35 @@ export class CalendarService {
     lines.push("END:VEVENT", "END:VCALENDAR");
 
     return lines.join("\r\n") + "\r\n";
+  }
+
+  generateSeriesIcs(series: EventSeries, sessions: EventSeriesSession[]): string {
+    const now = this.formatDate(new Date());
+    const events = sessions.map((session) => {
+      const start = this.formatDate(new Date(session.start_at));
+      const end = this.formatDate(new Date(session.end_at));
+      const location = session.meeting_url ?? series.location ?? "";
+      return [
+        "BEGIN:VEVENT",
+        `UID:${series.id}-${session.id}@hammock.earth`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${start}`,
+        `DTEND:${end}`,
+        `SUMMARY:${this.escapeText(`${series.title} — Week ${session.session_number}`)}`,
+        `LOCATION:${this.escapeText(location)}`,
+        "END:VEVENT",
+      ].join("\r\n");
+    });
+
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Hammock Earth//hammock.earth//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      ...events,
+      "END:VCALENDAR",
+    ].join("\r\n") + "\r\n";
   }
 
   private formatDate(date: Date): string {

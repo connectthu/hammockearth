@@ -1,5 +1,5 @@
 import { createServerClient } from "@hammock/database";
-import { EventCard } from "@hammock/ui";
+import { EventCard, SeriesCard } from "@hammock/ui";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { TagFilterDropdown } from "@/components/TagFilterDropdown";
@@ -54,10 +54,23 @@ interface PageProps {
   searchParams: { tag?: string; type?: string };
 }
 
+async function getSeries(type?: string) {
+  if (type === "in-person") return [];
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("event_series")
+    .select("*, event_series_sessions(start_at, session_number)")
+    .eq("status", "published")
+    .eq("visibility", "public")
+    .order("created_at", { ascending: true });
+  return data ?? [];
+}
+
 export default async function EventsPage({ searchParams }: PageProps) {
-  const [events, tags] = await Promise.all([
+  const [events, tags, seriesList] = await Promise.all([
     getEvents(searchParams.tag, searchParams.type),
     getAllTags(),
+    getSeries(searchParams.type),
   ]);
 
   const now = new Date();
@@ -163,6 +176,36 @@ export default async function EventsPage({ searchParams }: PageProps) {
               >
                 Get notified
               </a>
+            </div>
+          )}
+
+          {/* Programs & Series */}
+          {seriesList.length > 0 && !searchParams.tag && searchParams.type !== "in-person" && (
+            <div className="mb-16">
+              <h2 className="font-serif text-2xl text-soil mb-6">Programs & Series</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {seriesList.map((s: any) => {
+                  const firstSession = [...(s.event_series_sessions ?? [])]
+                    .sort((a: any, b: any) => a.session_number - b.session_number)[0];
+                  return (
+                    <SeriesCard
+                      key={s.id}
+                      title={s.title}
+                      slug={s.slug}
+                      startAt={firstSession?.start_at ?? s.created_at}
+                      durationWeeks={s.duration_weeks}
+                      sessionCount={s.session_count}
+                      priceCents={s.price_cents}
+                      memberPriceCents={s.member_price_cents}
+                      dropInEnabled={s.drop_in_enabled}
+                      dropInPriceCents={s.drop_in_price_cents}
+                      coverImageUrl={s.cover_image_url}
+                      isOnline={s.is_online}
+                      tags={s.tags ?? []}
+                    />
+                  );
+                })}
+              </div>
             </div>
           )}
 

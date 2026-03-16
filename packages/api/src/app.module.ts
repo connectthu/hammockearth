@@ -11,6 +11,7 @@ import { CalendarModule } from "./calendar/calendar.module";
 import { RegistrationsModule } from "./registrations/registrations.module";
 import { WebhooksModule } from "./webhooks/webhooks.module";
 import { UploadModule } from "./upload/upload.module";
+import { SeriesModule } from "./series/series.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UploadModule } from "./upload/upload.module";
     EmailModule,
     StripeModule,
     EventsModule,
+    SeriesModule,
     FacilitatorModule,
     WaitlistModule,
     DiscountCodesModule,
