@@ -149,6 +149,11 @@ export class EmailService {
           </table>
 
           <p>The .ics file is attached — open it to add the event to your calendar.</p>
+          ${event.confirmation_details ? `
+          <div style="margin:24px 0;padding:20px;background:#FBF7F0;border-radius:8px;border-left:3px solid #C4845A">
+            <p style="margin:0 0 8px;font-weight:bold;color:#3B2F2F">Details for this event</p>
+            ${event.confirmation_details}
+          </div>` : ""}
           <p>If you have any questions, reply to this email or reach us at <a href="mailto:hello@hammock.earth" style="color:#C4845A">hello@hammock.earth</a>.</p>
           <p>With warmth,<br>Thu &amp; Anahita<br>Hammock Earth</p>
         </div>

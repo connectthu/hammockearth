@@ -80,6 +80,10 @@ export class CreateEventDto {
   @IsOptional()
   registration_note?: string;
 
+  @IsString()
+  @IsOptional()
+  confirmation_details?: string;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

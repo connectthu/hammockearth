@@ -95,6 +95,7 @@ export type Database = {
           status: EventStatus;
           registration_url: string | null;
           registration_note: string | null;
+          confirmation_details: string | null;
           tags: string[];
           created_by: string | null;
           created_at: string;
@@ -118,6 +119,7 @@ export type Database = {
           status?: EventStatus;
           registration_url?: string | null;
           registration_note?: string | null;
+          confirmation_details?: string | null;
           tags?: string[];
           created_by?: string | null;
           created_at?: string;
@@ -141,6 +143,7 @@ export type Database = {
           status?: EventStatus;
           registration_url?: string | null;
           registration_note?: string | null;
+          confirmation_details?: string | null;
           tags?: string[];
           created_by?: string | null;
           created_at?: string;

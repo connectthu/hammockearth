@@ -22,6 +22,7 @@ type EventFormData = {
   status: "draft" | "published" | "cancelled";
   registration_url: string;
   registration_note: string;
+  confirmation_details: string;
   tags: string;
   cover_image_url: string;
 };
@@ -52,6 +53,7 @@ function toFormData(event?: Partial<Event>): EventFormData {
     status: event?.status ?? "draft",
     registration_url: event?.registration_url ?? "",
     registration_note: event?.registration_note ?? "",
+    confirmation_details: event?.confirmation_details ?? "",
     tags: event?.tags?.join(", ") ?? "",
     cover_image_url: event?.cover_image_url ?? "",
   };
@@ -118,6 +120,7 @@ export function EventForm({
         status: form.status,
         registration_url: form.registration_url || undefined,
         registration_note: form.registration_note || undefined,
+        confirmation_details: form.confirmation_details || undefined,
         tags: form.tags
           ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
           : [],
@@ -305,6 +308,15 @@ export function EventForm({
           <RichTextEditor
             value={form.description}
             onChange={(html) => set("description", html)}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className={labelClass}>Confirmation details</label>
+          <p className="text-xs text-charcoal/50 mb-2">Sent in the booking confirmation email. Use this for Zoom links, what to bring, prep instructions, etc.</p>
+          <RichTextEditor
+            value={form.confirmation_details}
+            onChange={(html) => set("confirmation_details", html)}
           />
         </div>
 
