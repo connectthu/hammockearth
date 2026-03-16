@@ -1,12 +1,11 @@
 import { createServerClient } from "@hammock/database";
-import { EventCard, SeriesCard } from "@hammock/ui";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { TagFilterDropdown } from "@/components/TagFilterDropdown";
+import { EventsClient } from "@/components/EventsClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Events & Workshops — Hammock Earth",
+  title: "Events & Dinners — Hammock Earth",
   description:
     "Seasonal gatherings, farm tours, communal meals, and immersive workshops at Hammock Hills in Hillsdale, Ontario.",
 };
@@ -23,15 +22,9 @@ async function getEvents(tag?: string, type?: string) {
     .eq("visibility", "public")
     .order("start_at", { ascending: true });
 
-  if (tag) {
-    query = query.contains("tags", [tag]);
-  }
-
-  if (type === "in-person") {
-    query = query.eq("is_online", false);
-  } else if (type === "online") {
-    query = query.eq("is_online", true);
-  }
+  if (tag) query = query.contains("tags", [tag]);
+  if (type === "in-person") query = query.eq("is_online", false);
+  else if (type === "online") query = query.eq("is_online", true);
 
   const { data } = await query;
   return data ?? [];
@@ -50,10 +43,6 @@ async function getAllTags() {
   return Array.from(tags).sort();
 }
 
-interface PageProps {
-  searchParams: { tag?: string; type?: string };
-}
-
 async function getSeries(type?: string) {
   if (type === "in-person") return [];
   const supabase = createServerClient();
@@ -66,16 +55,25 @@ async function getSeries(type?: string) {
   return data ?? [];
 }
 
+interface PageProps {
+  searchParams: { tag?: string; type?: string };
+}
+
 export default async function EventsPage({ searchParams }: PageProps) {
-  const [events, tags, seriesList] = await Promise.all([
+  const [events, tags, seriesRaw] = await Promise.all([
     getEvents(searchParams.tag, searchParams.type),
     getAllTags(),
     getSeries(searchParams.type),
   ]);
 
-  const now = new Date();
-  const upcoming = events.filter((e) => new Date(e.start_at) >= now);
-  const past = events.filter((e) => new Date(e.start_at) < now);
+  const seriesList = seriesRaw.map((s: any) => {
+    const sessions = [...(s.event_series_sessions ?? [])]
+      .sort((a: any, b: any) => a.session_number - b.session_number);
+    return {
+      ...s,
+      firstSessionAt: sessions[0]?.start_at ?? s.created_at,
+    };
+  });
 
   return (
     <>
@@ -83,9 +81,9 @@ export default async function EventsPage({ searchParams }: PageProps) {
       <main className="pt-16">
         {/* Header */}
         <div className="bg-linen border-b border-linen py-16 text-center">
-          <p className="section-label mb-3">On the Land</p>
+          <p className="section-label mb-3">On the Land &amp; Online</p>
           <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-4">
-            Events & Workshops
+            Events &amp; Dinners
           </h1>
           <p className="text-charcoal/70 max-w-xl mx-auto">
             Seasonal gatherings, farm tours, communal meals, and immersive
@@ -93,150 +91,13 @@ export default async function EventsPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Filters row */}
-          <div className="flex items-center justify-between gap-4 mb-10 flex-wrap">
-            {/* Type filter tabs */}
-            <div className="flex gap-2">
-              {[
-                { label: "All", value: "" },
-                { label: "On the Land", value: "in-person" },
-                { label: "Online", value: "online" },
-              ].map(({ label, value }) => {
-                const isActive = value ? searchParams.type === value : !searchParams.type;
-                const href = value
-                  ? searchParams.tag ? `/events?type=${value}&tag=${encodeURIComponent(searchParams.tag)}` : `/events?type=${value}`
-                  : searchParams.tag ? `/events?tag=${encodeURIComponent(searchParams.tag)}` : "/events";
-                return (
-                  <a
-                    key={label}
-                    href={href}
-                    className={`text-sm px-4 py-2 rounded-full border transition-colors ${
-                      isActive
-                        ? "bg-soil text-cream border-soil"
-                        : "border-linen text-charcoal/60 hover:border-soil hover:text-soil"
-                    }`}
-                  >
-                    {label}
-                  </a>
-                );
-              })}
-            </div>
-
-            {/* Tag filter dropdown */}
-            {tags.length > 0 && (
-              <TagFilterDropdown
-                tags={tags}
-                selectedTag={searchParams.tag}
-                type={searchParams.type}
-              />
-            )}
-          </div>
-
-          {/* Upcoming events */}
-          {upcoming.length > 0 && (
-            <div className="mb-16">
-              <h2 className="font-serif text-2xl text-soil mb-6">
-                Upcoming Events
-              </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {upcoming.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    title={event.title}
-                    slug={event.slug}
-                    eventType={event.event_type}
-                    startAt={event.start_at}
-                    location={event.location}
-                    priceCents={event.price_cents}
-                    memberPriceCents={event.member_price_cents}
-                    coverImageUrl={event.cover_image_url}
-                    isOnline={event.is_online}
-                    registrationUrl={event.registration_url}
-                    registrationNote={event.registration_note}
-                    tags={event.tags}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {upcoming.length === 0 && (
-            <div className="text-center py-20">
-              <p className="text-5xl mb-6">🌿</p>
-              <p className="font-serif text-xl text-soil mb-3">
-                More events coming soon.
-              </p>
-              <p className="text-charcoal/60 mb-6">
-                Sign up to be the first to hear about new events.
-              </p>
-              <a
-                href="/#newsletter"
-                className="inline-flex items-center gap-2 bg-clay text-white font-medium px-8 py-3 rounded-full hover:bg-clay/90 transition-colors text-sm"
-              >
-                Get notified
-              </a>
-            </div>
-          )}
-
-          {/* Programs & Series */}
-          {seriesList.length > 0 && !searchParams.tag && searchParams.type !== "in-person" && (
-            <div className="mb-16">
-              <h2 className="font-serif text-2xl text-soil mb-6">Programs & Series</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {seriesList.map((s: any) => {
-                  const firstSession = [...(s.event_series_sessions ?? [])]
-                    .sort((a: any, b: any) => a.session_number - b.session_number)[0];
-                  return (
-                    <SeriesCard
-                      key={s.id}
-                      title={s.title}
-                      slug={s.slug}
-                      startAt={firstSession?.start_at ?? s.created_at}
-                      durationWeeks={s.duration_weeks}
-                      sessionCount={s.session_count}
-                      priceCents={s.price_cents}
-                      memberPriceCents={s.member_price_cents}
-                      dropInEnabled={s.drop_in_enabled}
-                      dropInPriceCents={s.drop_in_price_cents}
-                      coverImageUrl={s.cover_image_url}
-                      isOnline={s.is_online}
-                      tags={s.tags ?? []}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Past events */}
-          {past.length > 0 && (
-            <div>
-              <h2 className="font-serif text-2xl text-soil mb-6 opacity-60">
-                Past Events
-              </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 opacity-50">
-                {past.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    title={event.title}
-                    slug={event.slug}
-                    eventType={event.event_type}
-                    startAt={event.start_at}
-                    location={event.location}
-                    priceCents={event.price_cents}
-                    memberPriceCents={event.member_price_cents}
-                    coverImageUrl={event.cover_image_url}
-                    isOnline={event.is_online}
-                    registrationUrl={event.registration_url}
-                    registrationNote={event.registration_note}
-                    tags={event.tags}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <EventsClient
+          events={events as any}
+          seriesList={seriesList as any}
+          allTags={tags}
+          currentType={searchParams.type}
+          currentTag={searchParams.tag}
+        />
       </main>
       <Footer />
     </>
