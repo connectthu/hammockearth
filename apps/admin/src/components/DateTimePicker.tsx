@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 interface DateTimePickerProps {
   value: string; // "YYYY-MM-DDTHH:MM" or ""
   onChange: (value: string) => void;
@@ -16,11 +18,24 @@ for (let h = 0; h < 24; h++) {
   }
 }
 
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 const inputClass =
   "px-4 py-2.5 rounded-xl border border-linen bg-white focus:outline-none focus:ring-2 focus:ring-clay/30 text-sm";
 
 export function DateTimePicker({ value, onChange, required }: DateTimePickerProps) {
-  const datePart = value ? value.slice(0, 10) : "";
+  // Default to today + 9:00 AM on mount if no value provided
+  useEffect(() => {
+    if (!value) {
+      onChange(`${todayStr()}T09:00`);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const datePart = value ? value.slice(0, 10) : todayStr();
   const timePart = value && value.length >= 16 ? value.slice(11, 16) : "09:00";
 
   function handleDate(newDate: string) {
@@ -29,7 +44,6 @@ export function DateTimePicker({ value, onChange, required }: DateTimePickerProp
   }
 
   function handleTime(newTime: string) {
-    if (!datePart) return;
     onChange(`${datePart}T${newTime}`);
   }
 
@@ -45,8 +59,7 @@ export function DateTimePicker({ value, onChange, required }: DateTimePickerProp
       <select
         value={timePart}
         onChange={(e) => handleTime(e.target.value)}
-        disabled={!datePart}
-        className={`w-36 ${inputClass} disabled:opacity-40 cursor-pointer`}
+        className={`w-36 ${inputClass} cursor-pointer`}
       >
         {TIME_OPTIONS.map(({ val, label }) => (
           <option key={val} value={val}>{label}</option>
