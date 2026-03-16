@@ -110,37 +110,44 @@ export function OnlineProgramsClient({ events }: { events: Event[] }) {
         </div>
 
         {events.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-            {events.slice(0, 6).map((event) => (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                slug={event.slug}
-                eventType={event.event_type}
-                startAt={event.start_at}
-                location={event.location}
-                priceCents={event.price_cents}
-                memberPriceCents={event.member_price_cents}
-                coverImageUrl={event.cover_image_url}
-                isOnline={event.is_online}
-                registrationUrl={event.registration_url}
-                registrationNote={event.registration_note}
-                tags={event.tags ?? []}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {events.slice(0, 6).map((event) => (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  slug={event.slug}
+                  eventType={event.event_type}
+                  startAt={event.start_at}
+                  location={event.location}
+                  priceCents={event.price_cents}
+                  memberPriceCents={event.member_price_cents}
+                  coverImageUrl={event.cover_image_url}
+                  isOnline={event.is_online}
+                  registrationUrl={event.registration_url}
+                  registrationNote={event.registration_note}
+                  tags={event.tags ?? []}
+                />
+              ))}
+            </div>
+            {events.length > 6 && (
+              <div className="text-center mb-6">
+                <a
+                  href="/events?type=online"
+                  className="inline-flex items-center gap-2 text-clay font-medium hover:text-clay/80 transition-colors"
+                >
+                  View all online →
+                </a>
+              </div>
+            )}
+            <div className="border-t border-cream/10 my-12" />
+          </>
         )}
 
-        {events.length > 6 && (
-          <div className="text-center mb-10">
-            <a
-              href="/events?type=online"
-              className="inline-flex items-center gap-2 text-clay font-medium hover:text-clay/80 transition-colors"
-            >
-              View all online →
-            </a>
-          </div>
-        )}
+        <div className="mb-8">
+          <h3 className="font-serif text-2xl text-cream mb-1">Coming Soon</h3>
+          <p className="text-cream/50 text-sm">Join the waitlist to be notified when these programs open.</p>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {programs.map((p) => (
