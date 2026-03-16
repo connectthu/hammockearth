@@ -28,7 +28,7 @@ export async function EventsSection() {
         <div className="text-center mb-16">
           <p className="section-label mb-4">On the Land</p>
           <h2 className="font-serif text-3xl sm:text-4xl text-soil mb-4">
-            Events & Workshops
+            Events & Dinners
           </h2>
           <p className="text-charcoal/70 max-w-2xl mx-auto">
             Seasonal gatherings, farm tours, communal meals, and immersive
