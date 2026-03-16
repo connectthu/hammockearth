@@ -1,6 +1,6 @@
 export function VisitSection() {
   return (
-    <section id="visit" className="py-24 bg-linen">
+    <section id="visit" className="py-24 bg-cream">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
