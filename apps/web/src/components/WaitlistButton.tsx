@@ -6,9 +6,10 @@ import type { Event } from "@hammock/database";
 
 interface WaitlistButtonProps {
   event: Event;
+  isMember?: boolean;
 }
 
-export function WaitlistButton({ event }: WaitlistButtonProps) {
+export function WaitlistButton({ event, isMember = false }: WaitlistButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,7 +21,7 @@ export function WaitlistButton({ event }: WaitlistButtonProps) {
         Join Waitlist
       </button>
       {open && (
-        <RegistrationModal event={event} onClose={() => setOpen(false)} />
+        <RegistrationModal event={event} onClose={() => setOpen(false)} isMember={isMember} />
       )}
     </>
   );

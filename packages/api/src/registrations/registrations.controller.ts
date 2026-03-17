@@ -19,8 +19,12 @@ export class RegistrationsController {
   ) {}
 
   @Post()
-  create(@Body() dto: CreateRegistrationDto) {
-    return this.registrationsService.createRegistration(dto);
+  create(
+    @Body() dto: CreateRegistrationDto,
+    @Headers("authorization") authorization?: string,
+  ) {
+    const token = authorization?.replace("Bearer ", "");
+    return this.registrationsService.createRegistration(dto, token);
   }
 
   @Post(":id/cancel")

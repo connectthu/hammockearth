@@ -34,6 +34,7 @@ interface EventSummary {
   location: string;
   description: string | null;
   price_cents: number;
+  member_price_cents?: number;
 }
 
 type Step = "details" | "payment" | "confirmation" | "waitlisted";
@@ -44,6 +45,8 @@ interface RegistrationModalProps {
   onClose: () => void;
   seriesSlug?: string;
   registrationType?: "single_event" | "full_series" | "drop_in_session";
+  isMember?: boolean;
+  authToken?: string;
 }
 
 // ─── Inner payment form (needs Stripe context) ────────────────────────────────
@@ -111,7 +114,7 @@ function PaymentForm({
 }
 
 // ─── Main modal ───────────────────────────────────────────────────────────────
-export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, registrationType = "single_event" }: RegistrationModalProps) {
+export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, registrationType = "single_event", isMember = false, authToken }: RegistrationModalProps) {
   const isSeries = registrationType === "full_series";
   const [step, setStep] = useState<Step>("details");
   const [clientSecret, setClientSecret] = useState("");
@@ -133,7 +136,11 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const baseTotal = event.price_cents * quantity;
+  const unitPrice =
+    isMember && event.member_price_cents && event.member_price_cents < event.price_cents
+      ? event.member_price_cents
+      : event.price_cents;
+  const baseTotal = unitPrice * quantity;
   const discountAmount = discountCode
     ? discountCode.discount_type === "percent"
       ? Math.round((baseTotal * discountCode.discount_value) / 100)
@@ -171,12 +178,14 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
     setSubmitError(null);
 
     try {
+      const useMemberPrice = isMember && !!authToken;
       const body: Record<string, unknown> = {
         guestName: name,
         guestEmail: email,
         quantity: isSeries ? 1 : quantity,
         discountCode: discountCode?.code,
         registrationType,
+        useMemberPrice,
       };
       if (isSeries && seriesSlug) {
         body.seriesSlug = seriesSlug;
@@ -184,9 +193,12 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
         body.eventSlug = event.slug;
       }
 
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
       const res = await fetch(`${API_URL}/registrations`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
 
@@ -367,9 +379,15 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
                   </div>
                 ) : (
                   <>
+                    {isMember && unitPrice < event.price_cents && (
+                      <div className="flex justify-between text-moss font-medium pb-1">
+                        <span>Member price applied</span>
+                        <span>✓</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-charcoal/70">
                       <span>
-                        ${(event.price_cents / 100).toFixed(2)} × {quantity}
+                        ${(unitPrice / 100).toFixed(2)} × {quantity}
                       </span>
                       <span>${(baseTotal / 100).toFixed(2)}</span>
                     </div>

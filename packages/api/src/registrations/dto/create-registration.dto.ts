@@ -4,6 +4,7 @@ import {
   IsInt,
   IsOptional,
   IsIn,
+  IsBoolean,
   MinLength,
   Min,
 } from "class-validator";
@@ -39,4 +40,8 @@ export class CreateRegistrationDto {
   @IsOptional()
   @IsString()
   discountCode?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  useMemberPrice?: boolean;
 }

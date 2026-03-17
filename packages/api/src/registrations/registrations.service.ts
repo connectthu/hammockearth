@@ -26,7 +26,21 @@ export class RegistrationsService {
     private series: SeriesService
   ) {}
 
-  async createRegistration(dto: CreateRegistrationDto) {
+  private async verifyActiveMembership(token: string): Promise<boolean> {
+    const { data: { user } } = await this.supabase.client.auth.getUser(token);
+    if (!user) return false;
+    const { data } = await this.supabase.client
+      .from("memberships")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active" as any)
+      .in("type", ["season_pass", "try_a_month"])
+      .limit(1)
+      .single();
+    return !!data;
+  }
+
+  async createRegistration(dto: CreateRegistrationDto, authToken?: string) {
     const registrationType = dto.registrationType ?? "single_event";
 
     if (registrationType === "full_series") {
@@ -85,7 +99,19 @@ export class RegistrationsService {
       return { status: "waitlisted", registrationId: reg.id };
     }
 
-    // 3. Validate discount code
+    // 3. Determine effective unit price (member pricing)
+    let unitPriceCents = event.price_cents;
+    if (
+      dto.useMemberPrice &&
+      authToken &&
+      (event as any).member_price_cents > 0 &&
+      (event as any).member_price_cents < event.price_cents
+    ) {
+      const verified = await this.verifyActiveMembership(authToken);
+      if (verified) unitPriceCents = (event as any).member_price_cents;
+    }
+
+    // 4. Validate discount code
     let discountAmountCents = 0;
     let discountCodeId: string | null = null;
 
@@ -93,7 +119,7 @@ export class RegistrationsService {
       try {
         const code = await this.discountCodes.validate(dto.discountCode);
         discountAmountCents = this.discountCodes.calculateDiscount(
-          event.price_cents,
+          unitPriceCents,
           dto.quantity,
           code
         );
@@ -104,13 +130,13 @@ export class RegistrationsService {
       }
     }
 
-    // 4. Calculate amount
+    // 5. Calculate amount
     const amountCents = Math.max(
       0,
-      event.price_cents * dto.quantity - discountAmountCents
+      unitPriceCents * dto.quantity - discountAmountCents
     );
 
-    // 5. Free event — skip Stripe entirely
+    // 6. Free event — skip Stripe entirely
     if (amountCents === 0) {
       const { data: regData, error } = await this.supabase.client
         .from("event_registrations")
@@ -156,13 +182,13 @@ export class RegistrationsService {
       return { status: "confirmed", registrationId: reg.id };
     }
 
-    // 6. Create Stripe PaymentIntent with placeholder metadata
+    // 7. Create Stripe PaymentIntent with placeholder metadata
     const paymentIntent = await this.stripe.createPaymentIntent(amountCents, {
       registrationId: "pending",
       eventSlug: dto.eventSlug,
     });
 
-    // 7. Insert registration
+    // 8. Insert registration
     const { data: regData, error } = await this.supabase.client
       .from("event_registrations")
       .insert({
@@ -181,7 +207,7 @@ export class RegistrationsService {
     if (error) throw error;
     const reg = regData as unknown as EventRegistration;
 
-    // 8. Update PaymentIntent metadata with real registrationId
+    // 9. Update PaymentIntent metadata with real registrationId
     try {
       await this.stripe.updatePaymentIntentMetadata(paymentIntent.id, {
         registrationId: reg.id,

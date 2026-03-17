@@ -1,4 +1,5 @@
 import { createServerClient } from "@hammock/database";
+import { createClient as createAuthClient } from "@/lib/supabase/server";
 import sanitizeHtml from "sanitize-html";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -68,6 +69,22 @@ export default async function EventDetailPage({ params }: PageProps) {
       .eq("id", event.created_by)
       .single();
     creator = profile as any;
+  }
+
+  // Check if logged-in user has an active membership
+  const authClient = createAuthClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  let isMember = false;
+  if (user) {
+    const { data: membership } = await authClient
+      .from("memberships")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active" as any)
+      .in("type", ["season_pass", "try_a_month"])
+      .limit(1)
+      .single();
+    isMember = !!membership;
   }
 
   const sanitizedDescription = event.description
@@ -188,11 +205,26 @@ export default async function EventDetailPage({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="mb-5">
-                        <p className="text-3xl font-bold text-soil">{formatPrice(event.price_cents)}</p>
-                        {event.member_price_cents < event.price_cents && (
-                          <p className="text-sm text-moss font-medium mt-1">
-                            Members: {formatPrice(event.member_price_cents)}
-                          </p>
+                        {isMember && event.member_price_cents > 0 && event.member_price_cents < event.price_cents ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <p className="text-3xl font-bold text-soil">{formatPrice(event.member_price_cents)}</p>
+                              <span className="text-xs font-semibold text-moss bg-moss/10 px-2 py-0.5 rounded-full">Member price</span>
+                            </div>
+                            <p className="text-sm text-charcoal/40 line-through mt-0.5">{formatPrice(event.price_cents)}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-3xl font-bold text-soil">{formatPrice(event.price_cents)}</p>
+                            {event.member_price_cents > 0 && event.member_price_cents < event.price_cents && (
+                              <a
+                                href={`/auth/login?next=/events/${event.slug}`}
+                                className="text-sm text-moss font-medium mt-1 inline-block hover:underline"
+                              >
+                                Log in for member pricing ({formatPrice(event.member_price_cents)})
+                              </a>
+                            )}
+                          </>
                         )}
                       </div>
 
@@ -210,9 +242,9 @@ export default async function EventDetailPage({ params }: PageProps) {
                           <p className="text-sm text-charcoal/60 italic">{event.registration_note}</p>
                         </div>
                       ) : isAtCapacity ? (
-                        <WaitlistButton event={event} />
+                        <WaitlistButton event={event} isMember={isMember} />
                       ) : (
-                        <RegisterButton event={event} spotsRemaining={spotsRemaining} />
+                        <RegisterButton event={event} spotsRemaining={spotsRemaining} isMember={isMember} />
                       )}
                     </>
                   )}
