@@ -86,7 +86,7 @@ export default async function EventDetailPage({ params }: PageProps) {
       .select("id")
       .eq("user_id", user.id)
       .eq("status", "active" as any)
-      .in("type", ["season_pass", "try_a_month"])
+      .in("membership_type", ["season_pass", "try_a_month"])
       .limit(1)
       .single();
     isMember = !!membership;
