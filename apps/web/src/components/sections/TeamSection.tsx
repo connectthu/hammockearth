@@ -30,7 +30,7 @@ export function TeamSection() {
           {/* Thu */}
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <img
-              src="/images/Thu2.jpg"
+              src="/images/thu.jpg"
               alt="Thu Nguyen"
               className="w-48 h-48 rounded-full object-cover mb-6 ring-4 ring-linen shadow-lg"
             />
@@ -53,7 +53,7 @@ export function TeamSection() {
           {/* Anahita */}
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <img
-              src="/images/Anahita.jpg"
+              src="/images/anahita.jpg"
               alt="Anahita Belanger"
               className="w-48 h-48 rounded-full object-cover mb-6 ring-4 ring-linen shadow-lg"
             />
