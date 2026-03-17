@@ -73,6 +73,7 @@ export default function OnboardingPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "ok" | "taken" | "invalid">("idle");
   const usernameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [superpowerSearch, setSuperpowerSearch] = useState("");
 
   const [form, setForm] = useState<FormState>({
     full_name: "",
@@ -316,7 +317,8 @@ export default function OnboardingPage() {
   }
 
   function Step2Superpowers() {
-    const [search, setSearch] = useState("");
+    const search = superpowerSearch;
+    const setSearch = setSuperpowerSearch;
 
     const filtered = allSuperpowers.filter((s) =>
       s.label.toLowerCase().includes(search.toLowerCase())
@@ -666,7 +668,6 @@ export default function OnboardingPage() {
   }
 
   const steps = [Step0Welcome, Step1About, Step2Superpowers, Step3Offerings, Step4Social, Step5Visibility, Step6Done];
-  const CurrentStep = steps[step];
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 py-12">
@@ -675,7 +676,7 @@ export default function OnboardingPage() {
           <ProgressDots step={step - 1} total={5} />
         )}
         <div className="bg-white rounded-3xl border border-linen p-8 shadow-sm">
-          <CurrentStep />
+          {steps[step]()}
         </div>
       </div>
     </div>
