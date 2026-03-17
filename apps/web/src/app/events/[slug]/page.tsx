@@ -253,26 +253,11 @@ export default async function EventDetailPage({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="mb-5">
-                        {isMember && event.member_price_cents > 0 && event.member_price_cents < event.price_cents ? (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <p className="text-3xl font-bold text-soil">{formatPrice(event.member_price_cents)}</p>
-                              <span className="text-xs font-semibold text-moss bg-moss/10 px-2 py-0.5 rounded-full">Member price</span>
-                            </div>
-                            <p className="text-sm text-charcoal/40 line-through mt-0.5">{formatPrice(event.price_cents)}</p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-3xl font-bold text-soil">{formatPrice(event.price_cents)}</p>
-                            {event.member_price_cents > 0 && event.member_price_cents < event.price_cents && (
-                              <a
-                                href={`/auth/login?next=/events/${event.slug}`}
-                                className="text-sm text-moss font-medium mt-1 inline-block hover:underline"
-                              >
-                                Log in for member pricing ({formatPrice(event.member_price_cents)})
-                              </a>
-                            )}
-                          </>
+                        <p className="text-3xl font-bold text-soil">{formatPrice(event.price_cents)}</p>
+                        {event.member_price_cents > 0 && event.member_price_cents < event.price_cents && (
+                          <p className="text-sm text-moss font-medium mt-1">
+                            Members: {formatPrice(event.member_price_cents)}
+                          </p>
                         )}
                       </div>
 
