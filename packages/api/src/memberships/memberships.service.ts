@@ -67,7 +67,36 @@ export class MembershipsService {
       discountCodeId = dc.id;
     }
 
-    // 4. Create PaymentIntent (DB row created by webhook on success)
+    // 4. Free membership — skip Stripe entirely
+    if (amountCents === 0) {
+      if (discountCodeId) await this.discountCodes.incrementUsedCount(discountCodeId);
+
+      const userId = await this.findOrCreateUser(dto.email, dto.name);
+      if (!userId) throw new BadRequestException("Failed to create account");
+
+      const validUntil = new Date("2026-12-31T23:59:59Z").toISOString();
+      await this.activateMembership({
+        userId,
+        membershipType: "season_pass",
+        billingType: "one_time",
+        priceWindowSlug: dto.priceWindowSlug,
+        validUntil,
+      });
+
+      await this.incrementSpotsTaken(dto.priceWindowSlug!);
+      await this.updateProfile(userId, "season_pass", "active");
+
+      await this.email.membershipWelcome({
+        to: dto.email,
+        name: dto.name,
+        membershipType: "season_pass",
+        validUntil: "December 31, 2026",
+      }).catch((err) => this.logger.error("Failed to send welcome email", err));
+
+      return { free: true };
+    }
+
+    // 5. Create PaymentIntent (DB row created by webhook on success)
     const paymentIntent = await this.stripe.createPaymentIntent(
       amountCents,
       {
@@ -260,4 +289,39 @@ export class MembershipsService {
     }
   }
 
+  private async findOrCreateUser(email: string, name: string): Promise<string | null> {
+    const { data, error } = await this.supabase.client.auth.admin.createUser({
+      email,
+      user_metadata: { full_name: name },
+      email_confirm: true,
+    });
+
+    if (data?.user?.id) return data.user.id;
+
+    if (error) {
+      const { data: listData } = await this.supabase.client.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      const existing = listData?.users?.find((u: any) => u.email === email);
+      if (existing?.id) return existing.id;
+      this.logger.error("Failed to find or create user", error);
+    }
+
+    return null;
+  }
+
+  private async incrementSpotsTaken(priceWindowSlug: string): Promise<void> {
+    const { data } = await this.supabase.client
+      .from("membership_price_windows")
+      .select("spots_taken")
+      .eq("slug", priceWindowSlug)
+      .single();
+    if (data) {
+      await this.supabase.client
+        .from("membership_price_windows")
+        .update({ spots_taken: (data as any).spots_taken + 1 })
+        .eq("slug", priceWindowSlug);
+    }
+  }
 }

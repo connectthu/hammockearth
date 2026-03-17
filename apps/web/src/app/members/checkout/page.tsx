@@ -209,6 +209,11 @@ function CheckoutContent() {
         return;
       }
 
+      if (data.free) {
+        setStep("success");
+        return;
+      }
+
       setClientSecret(data.clientSecret);
       setAmountCents(data.amountCents);
       setStep("payment");
