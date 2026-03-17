@@ -275,9 +275,9 @@ export default async function EventDetailPage({ params }: PageProps) {
                           <p className="text-sm text-charcoal/60 italic">{event.registration_note}</p>
                         </div>
                       ) : isAtCapacity ? (
-                        <WaitlistButton event={event} isMember={isMember} />
+                        <WaitlistButton event={event} />
                       ) : (
-                        <RegisterButton event={event} spotsRemaining={spotsRemaining} isMember={isMember} />
+                        <RegisterButton event={event} spotsRemaining={spotsRemaining} />
                       )}
                     </>
                   )}
