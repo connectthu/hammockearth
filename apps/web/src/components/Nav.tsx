@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 
 const links = [
   { label: "About", href: "/#about" },
@@ -14,8 +15,39 @@ const links = [
   { label: "Connect", href: "/#newsletter" },
 ];
 
+interface AuthUser {
+  name: string;
+  avatarUrl: string | null;
+}
+
 export function Nav() {
   const [open, setOpen] = useState(false);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setAuthUser({
+          name: session.user.user_metadata?.full_name ?? session.user.email ?? "Member",
+          avatarUrl: session.user.user_metadata?.avatar_url ?? null,
+        });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setAuthUser({
+          name: session.user.user_metadata?.full_name ?? session.user.email ?? "Member",
+          avatarUrl: session.user.user_metadata?.avatar_url ?? null,
+        });
+      } else {
+        setAuthUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-linen">
@@ -36,6 +68,28 @@ export function Nav() {
                 {l.label}
               </a>
             ))}
+            {authUser ? (
+              <Link
+                href="/members/dashboard"
+                className="flex items-center gap-2 text-sm text-soil font-medium hover:text-clay transition-colors"
+              >
+                {authUser.avatarUrl ? (
+                  <img src={authUser.avatarUrl} alt={authUser.name} className="w-7 h-7 rounded-full object-cover" />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-clay/20 text-clay text-xs font-semibold flex items-center justify-center">
+                    {authUser.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {authUser.name.split(" ")[0]}
+              </Link>
+            ) : (
+              <Link
+                href="/members/login"
+                className="text-sm text-clay font-medium hover:text-clay/80 transition-colors"
+              >
+                Member login
+              </Link>
+            )}
           </nav>
 
           {/* Mobile hamburger */}
@@ -68,6 +122,30 @@ export function Nav() {
               {l.label}
             </a>
           ))}
+          {authUser ? (
+            <Link
+              href="/members/dashboard"
+              className="flex items-center gap-2 text-soil font-medium py-1"
+              onClick={() => setOpen(false)}
+            >
+              {authUser.avatarUrl ? (
+                <img src={authUser.avatarUrl} alt={authUser.name} className="w-6 h-6 rounded-full object-cover" />
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-clay/20 text-clay text-xs font-semibold flex items-center justify-center">
+                  {authUser.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+              {authUser.name}
+            </Link>
+          ) : (
+            <Link
+              href="/members/login"
+              className="block text-clay font-medium py-1"
+              onClick={() => setOpen(false)}
+            >
+              Member login
+            </Link>
+          )}
         </div>
       )}
     </header>
