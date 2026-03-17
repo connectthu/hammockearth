@@ -53,12 +53,26 @@ export default async function EventDetailPage({ params }: PageProps) {
   const isAtCapacity = spotsRemaining !== null && spotsRemaining <= 0;
   const isPast = new Date(event.start_at) < new Date();
 
-  // Attendee count
-  const { count: attendeeCount } = await supabase
-    .from("event_registrations")
-    .select("*", { count: "exact", head: true })
-    .eq("event_id", event.id)
-    .eq("status", "confirmed");
+  // Attendee count + public attendee avatars (fetched in parallel)
+  const [{ count: attendeeCount }, publicAttendeesResult] = await Promise.all([
+    supabase
+      .from("event_registrations")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", event.id)
+      .eq("status", "confirmed"),
+    supabase
+      .from("event_registrations")
+      .select("profiles!inner(id, full_name, avatar_url, username, profile_visibility)")
+      .eq("event_id", event.id)
+      .eq("status", "confirmed")
+      .not("user_id", "is", null)
+      .limit(20),
+  ]);
+
+  const publicAttendees = ((publicAttendeesResult.data ?? []) as any[])
+    .map((r) => r.profiles)
+    .filter((p: any) => p && p.profile_visibility === "public" && p.avatar_url)
+    .slice(0, 6) as { id: string; full_name: string | null; avatar_url: string; username: string | null }[];
 
   // Creator profile + collaborators (fetched in parallel)
   const [creatorResult, collaboratorsResult] = await Promise.all([
@@ -183,12 +197,50 @@ export default async function EventDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Attendee count */}
+              {/* Attendee avatars + count */}
               {(attendeeCount ?? 0) > 0 && (
-                <div className="mt-5">
-                  <p className="text-sm font-medium text-charcoal/60">
-                    {attendeeCount} Going
+                <div className="mt-6 pt-5 border-t border-linen">
+                  <p className="text-xs text-charcoal/40 uppercase tracking-widest font-medium mb-3">
+                    Going
                   </p>
+                  <div className="flex items-center gap-3">
+                    {publicAttendees.length > 0 && (
+                      <div className="flex -space-x-2">
+                        {publicAttendees.map((a) =>
+                          a.username ? (
+                            <a
+                              key={a.id}
+                              href={`/members/${a.username}`}
+                              title={a.full_name ?? a.username}
+                              className="relative block w-8 h-8 rounded-full ring-2 ring-white overflow-hidden hover:z-10 transition-transform hover:scale-110"
+                            >
+                              <img
+                                src={a.avatar_url}
+                                alt={a.full_name ?? ""}
+                                className="w-full h-full object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <div
+                              key={a.id}
+                              title={a.full_name ?? ""}
+                              className="w-8 h-8 rounded-full ring-2 ring-white overflow-hidden"
+                            >
+                              <img
+                                src={a.avatar_url}
+                                alt={a.full_name ?? ""}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                    <p className="text-sm font-medium text-charcoal/70">
+                      <span className="text-soil font-semibold">{attendeeCount}</span>{" "}
+                      {attendeeCount === 1 ? "person going" : "people going"}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
