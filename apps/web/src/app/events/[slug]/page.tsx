@@ -1,5 +1,5 @@
 import { createServerClient } from "@hammock/database";
-import { createClient as createAuthClient } from "@/lib/supabase/server";
+
 import sanitizeHtml from "sanitize-html";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -75,22 +75,6 @@ export default async function EventDetailPage({ params }: PageProps) {
   const collaborators = ((collaboratorsResult.data ?? []) as any[])
     .map((row) => row.profiles)
     .filter(Boolean) as { id: string; full_name: string | null; avatar_url: string | null; bio: string | null; public_url: string | null }[];
-
-  // Check if logged-in user has an active membership
-  const authClient = createAuthClient();
-  const { data: { user } } = await authClient.auth.getUser();
-  let isMember = false;
-  if (user) {
-    const { data: membership } = await authClient
-      .from("memberships")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "active" as any)
-      .in("membership_type", ["season_pass", "try_a_month"])
-      .limit(1)
-      .single();
-    isMember = !!membership;
-  }
 
   const sanitizedDescription = event.description
     ? sanitizeHtml(event.description, {
