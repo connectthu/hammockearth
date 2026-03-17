@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 const links = [
@@ -23,6 +22,8 @@ interface AuthUser {
 export function Nav() {
   const [open, setOpen] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -49,6 +50,24 @@ export function Nav() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setDropdownOpen(false);
+    window.location.href = "/";
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-linen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -69,19 +88,38 @@ export function Nav() {
               </a>
             ))}
             {authUser ? (
-              <Link
-                href="/members/dashboard"
-                className="flex items-center gap-2 text-sm text-soil font-medium hover:text-clay transition-colors"
-              >
-                {authUser.avatarUrl ? (
-                  <img src={authUser.avatarUrl} alt={authUser.name} className="w-7 h-7 rounded-full object-cover" />
-                ) : (
-                  <span className="w-7 h-7 rounded-full bg-clay/20 text-clay text-xs font-semibold flex items-center justify-center">
-                    {authUser.name.charAt(0).toUpperCase()}
-                  </span>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 text-sm text-soil font-medium hover:text-clay transition-colors"
+                >
+                  {authUser.avatarUrl ? (
+                    <img src={authUser.avatarUrl} alt={authUser.name} className="w-7 h-7 rounded-full object-cover" />
+                  ) : (
+                    <span className="w-7 h-7 rounded-full bg-clay/20 text-clay text-xs font-semibold flex items-center justify-center">
+                      {authUser.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  {authUser.name.split(" ")[0]}
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-linen overflow-hidden">
+                    <Link
+                      href="/members/dashboard"
+                      className="block px-4 py-2.5 text-sm text-soil hover:bg-linen transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2.5 text-sm text-charcoal/60 hover:bg-linen transition-colors border-t border-linen"
+                    >
+                      Log out
+                    </button>
+                  </div>
                 )}
-                {authUser.name.split(" ")[0]}
-              </Link>
+              </div>
             ) : (
               <Link
                 href="/members/login"
@@ -123,20 +161,28 @@ export function Nav() {
             </a>
           ))}
           {authUser ? (
-            <Link
-              href="/members/dashboard"
-              className="flex items-center gap-2 text-soil font-medium py-1"
-              onClick={() => setOpen(false)}
-            >
-              {authUser.avatarUrl ? (
-                <img src={authUser.avatarUrl} alt={authUser.name} className="w-6 h-6 rounded-full object-cover" />
-              ) : (
-                <span className="w-6 h-6 rounded-full bg-clay/20 text-clay text-xs font-semibold flex items-center justify-center">
-                  {authUser.name.charAt(0).toUpperCase()}
-                </span>
-              )}
-              {authUser.name}
-            </Link>
+            <>
+              <Link
+                href="/members/dashboard"
+                className="flex items-center gap-2 text-soil font-medium py-1"
+                onClick={() => setOpen(false)}
+              >
+                {authUser.avatarUrl ? (
+                  <img src={authUser.avatarUrl} alt={authUser.name} className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-clay/20 text-clay text-xs font-semibold flex items-center justify-center">
+                    {authUser.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {authUser.name}
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block text-sm text-charcoal/50 hover:text-soil py-1"
+              >
+                Log out
+              </button>
+            </>
           ) : (
             <Link
               href="/members/login"
