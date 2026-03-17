@@ -71,7 +71,7 @@ export default async function MemberDashboardPage() {
     .from("memberships")
     .select("*")
     .eq("user_id", user.id)
-    .in("status", ["active", "pending"])
+    .eq("status", "active" as any)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
