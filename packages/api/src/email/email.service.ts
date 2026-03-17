@@ -325,6 +325,41 @@ export class EmailService {
     });
   }
 
+  collaboratorInvite(opts: {
+    to: string;
+    name: string;
+    loginLink: string;
+    eventTitle?: string;
+  }): Promise<void> {
+    const { to, name, loginLink, eventTitle } = opts;
+    const greeting = name ? `Hi ${name},` : "Hi,";
+    const eventLine = eventTitle
+      ? `<p>You've been added as a collaborator on <strong>${eventTitle}</strong>.</p>`
+      : `<p>You've been added as a collaborator on Hammock Earth.</p>`;
+
+    return this.send({
+      to,
+      subject: "You've been added as a collaborator — Hammock Earth",
+      html: `
+        <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#3B2F2F">
+          <h1 style="color:#3B2F2F;font-size:24px">Welcome, collaborator 🌿</h1>
+          <p>${greeting}</p>
+          ${eventLine}
+          <p>You can log in to your collaborator dashboard to view your events and set up your public profile (name, photo, bio, and website link).</p>
+          <p style="margin:32px 0">
+            <a href="${loginLink}"
+               style="background:#C4845A;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">
+              Log in to your dashboard
+            </a>
+          </p>
+          <p style="color:#6B7C5C;font-size:13px">This link expires in 24 hours. If you need a new one, go to <a href="https://hammock.earth/members/login" style="color:#C4845A">hammock.earth/members/login</a>.</p>
+          <p>If you have any questions, reply to this email or reach us at <a href="mailto:hello@hammock.earth" style="color:#C4845A">hello@hammock.earth</a>.</p>
+          <p>With warmth,<br>Thu &amp; Anahita<br>Hammock Earth</p>
+        </div>
+      `,
+    });
+  }
+
   waitlistPromotion(opts: {
     to: string;
     name: string;

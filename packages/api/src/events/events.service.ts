@@ -2,15 +2,22 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
 } from "@nestjs/common";
 import { SupabaseService } from "../supabase/supabase.service";
+import { EmailService } from "../email/email.service";
 import type { CreateEventDto } from "./dto/create-event.dto";
 import type { UpdateEventDto } from "./dto/update-event.dto";
 import type { Event, EventInsert, EventUpdate } from "@hammock/database";
 
 @Injectable()
 export class EventsService {
-  constructor(private supabase: SupabaseService) {}
+  private readonly logger = new Logger(EventsService.name);
+
+  constructor(
+    private supabase: SupabaseService,
+    private email: EmailService,
+  ) {}
 
   async findAll(includeUnpublished = false) {
     let query = this.supabase.client
@@ -191,6 +198,33 @@ export class EventsService {
       .select("id, full_name, avatar_url, bio, public_url, role")
       .eq("id", userId)
       .single();
+
+    // 5. Generate magic link and send invite email
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://hammock.earth";
+      const { data: linkData } = await this.supabase.client.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${appUrl}/collaborator` },
+      });
+
+      const loginLink = (linkData as any)?.properties?.action_link;
+      if (loginLink) {
+        let eventTitle: string | undefined;
+        if (linkToEventSlug) {
+          const ev = await this.findBySlug(linkToEventSlug).catch(() => null);
+          eventTitle = ev?.title;
+        }
+        await this.email.collaboratorInvite({
+          to: email,
+          name: (profile as any)?.full_name ?? name ?? "",
+          loginLink,
+          eventTitle,
+        });
+      }
+    } catch (err) {
+      this.logger.warn("Failed to send collaborator invite email", err);
+    }
 
     return profile;
   }
