@@ -24,15 +24,14 @@ export function RegisterButton({ event, spotsRemaining }: RegisterButtonProps) {
 
     if (session?.user) {
       token = session.access_token;
-      const { data: membership } = await supabase
-        .from("memberships")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .eq("status", "active")
-        .in("membership_type", ["season_pass", "try_a_month"])
-        .limit(1)
-        .maybeSingle();
-      memberStatus = !!membership;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("membership_type, membership_status")
+        .eq("id", session.user.id)
+        .single();
+      memberStatus =
+        profile?.membership_status === "active" &&
+        ["season_pass", "try_a_month"].includes(profile?.membership_type ?? "");
     }
 
     setAuthToken(token);
