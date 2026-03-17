@@ -1,5 +1,5 @@
 import { createServerClient } from "@hammock/database";
-
+import { createClient } from "@/lib/supabase/server";
 import sanitizeHtml from "sanitize-html";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -73,6 +73,22 @@ export default async function EventDetailPage({ params }: PageProps) {
     .map((r) => r.profiles)
     .filter((p: any) => p && p.profile_visibility === "public" && p.avatar_url)
     .slice(0, 6) as { id: string; full_name: string | null; avatar_url: string; username: string | null }[];
+
+  // Check if the current viewer has a confirmed registration
+  const authSupabase = createClient();
+  const { data: { user: viewer } } = await authSupabase.auth.getUser();
+  let hasRegistered = false;
+  if (viewer) {
+    const { data: reg } = await supabase
+      .from("event_registrations")
+      .select("id")
+      .eq("event_id", event.id)
+      .eq("user_id", viewer.id)
+      .eq("status", "confirmed")
+      .limit(1)
+      .maybeSingle();
+    hasRegistered = !!reg;
+  }
 
   // Creator profile + collaborators (fetched in parallel)
   const [creatorResult, collaboratorsResult] = await Promise.all([
@@ -342,8 +358,8 @@ export default async function EventDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Confirmation details (online event instructions etc.) */}
-              {event.confirmation_details && (
+              {/* Confirmation details — only for registered attendees */}
+              {hasRegistered && event.confirmation_details && (
                 <div className="mb-8 p-5 bg-linen rounded-2xl border border-linen/80">
                   <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-widest mb-3">
                     What to expect
