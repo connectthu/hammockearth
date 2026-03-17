@@ -27,7 +27,7 @@ function monthsUntilEndOf2026() {
   return diff;
 }
 
-export async function MembershipSection() {
+export async function MembershipSection({ checkoutLinks = false }: { checkoutLinks?: boolean } = {}) {
   const windows = await getPriceWindows();
   const months = monthsUntilEndOf2026();
 
@@ -94,7 +94,11 @@ export async function MembershipSection() {
                   </p>
                   {isOpen ? (
                     <a
-                      href="/members"
+                      href={
+                        checkoutLinks
+                          ? `/members/login?next=${encodeURIComponent(`/members/checkout?tier=season_pass&window=${w.slug}`)}`
+                          : "/members"
+                      }
                       className={`block text-center py-3 px-6 rounded-full font-medium text-sm transition-colors ${
                         isFounding
                           ? "bg-clay text-white hover:bg-clay/90"
@@ -152,7 +156,11 @@ export async function MembershipSection() {
               homesteading guides, and more.
             </p>
             <a
-              href="/members#farm-friend"
+              href={
+                checkoutLinks
+                  ? `/members/login?next=${encodeURIComponent("/members/checkout?tier=farm_friend")}`
+                  : "/members#farm-friend"
+              }
               className="block text-center py-3 px-6 rounded-full font-medium text-sm bg-moss/10 text-moss hover:bg-moss/20 transition-colors border border-moss/20"
             >
               Join as Farm Friend
@@ -169,10 +177,10 @@ export async function MembershipSection() {
               decide to join.
             </p>
             <a
-              href="/members#try-a-month"
+              href={checkoutLinks ? "mailto:hello@hammock.earth?subject=Try a Month" : "/members#try-a-month"}
               className="block text-center py-3 px-6 rounded-full font-medium text-sm bg-moss/10 text-moss hover:bg-moss/20 transition-colors border border-moss/20"
             >
-              Try a Month
+              Contact Us
             </a>
           </div>
         </div>

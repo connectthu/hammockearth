@@ -5,6 +5,7 @@ import { EmailService } from "../email/email.service";
 import { EventsService } from "../events/events.service";
 import { CalendarService } from "../calendar/calendar.service";
 import { SupabaseService } from "../supabase/supabase.service";
+import { MembershipsService } from "../memberships/memberships.service";
 
 @Injectable()
 export class WebhooksService {
@@ -16,7 +17,8 @@ export class WebhooksService {
     private email: EmailService,
     private events: EventsService,
     private calendar: CalendarService,
-    private supabase: SupabaseService
+    private supabase: SupabaseService,
+    private memberships: MembershipsService
   ) {}
 
   async handleStripe(rawBody: Buffer, signature: string): Promise<void> {
@@ -32,6 +34,65 @@ export class WebhooksService {
     switch (stripeEvent.type) {
       case "payment_intent.succeeded": {
         const paymentIntent = stripeEvent.data.object as any;
+        const metaType = paymentIntent.metadata?.type;
+
+        // ── Season Pass membership ────────────────────────────────────────
+        if (metaType === "season_pass") {
+          const userId = paymentIntent.metadata?.userId;
+          const priceWindowSlug = paymentIntent.metadata?.priceWindowSlug;
+          const name = paymentIntent.metadata?.name ?? "";
+          const email = paymentIntent.metadata?.email ?? "";
+
+          if (!userId) {
+            this.logger.warn(`Missing userId in season_pass PI: ${paymentIntent.id}`);
+            break;
+          }
+
+          try {
+            const validUntil = new Date("2026-12-31T23:59:59Z").toISOString();
+
+            // Create membership row
+            await this.memberships.activateMembership({
+              userId,
+              membershipType: "season_pass",
+              billingType: "one_time",
+              priceWindowSlug,
+              stripePaymentId: paymentIntent.id,
+              validUntil,
+            });
+
+            // Increment spots_taken
+            if (priceWindowSlug) {
+              const { data: windowData } = await this.supabase.client
+                .from("membership_price_windows")
+                .select("spots_taken")
+                .eq("slug", priceWindowSlug)
+                .single();
+              if (windowData) {
+                await this.supabase.client
+                  .from("membership_price_windows")
+                  .update({ spots_taken: (windowData as any).spots_taken + 1 })
+                  .eq("slug", priceWindowSlug);
+              }
+            }
+
+            // Update profile
+            await this.memberships.updateProfile(userId, "season_pass", "active");
+
+            // Send welcome email
+            await this.email.membershipWelcome({
+              to: email,
+              name,
+              membershipType: "season_pass",
+              validUntil: "December 31, 2026",
+            }).catch((err) => this.logger.error("Failed to send membership welcome email", err));
+          } catch (err) {
+            this.logger.error("Failed to handle season_pass payment", err);
+          }
+          break;
+        }
+
+        // ── Event / Series registration ───────────────────────────────────
         const registrationId = paymentIntent.metadata?.registrationId;
 
         if (!registrationId || registrationId === "pending") {
@@ -109,8 +170,83 @@ export class WebhooksService {
         break;
       }
 
+      case "customer.subscription.updated": {
+        const subscription = stripeEvent.data.object as any;
+        await this.handleSubscriptionChange(subscription);
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = stripeEvent.data.object as any;
+        await this.handleSubscriptionChange(subscription, true);
+        break;
+      }
+
       default:
         this.logger.debug(`Unhandled Stripe event: ${stripeEvent.type}`);
+    }
+  }
+
+  private async handleSubscriptionChange(
+    subscription: any,
+    isDeleted = false
+  ): Promise<void> {
+    const subscriptionId = subscription.id;
+    const userId = subscription.metadata?.userId;
+
+    try {
+      const isActive = !isDeleted && subscription.status === "active";
+
+      if (!userId) return;
+
+      if (isActive) {
+        // Check if membership already exists for this subscription
+        const { data: existing } = await this.supabase.client
+          .from("memberships")
+          .select("id, status")
+          .eq("stripe_subscription_id", subscriptionId)
+          .single();
+
+        const isNew = !existing;
+
+        // Create or activate membership row
+        await this.memberships.activateMembership({
+          userId,
+          membershipType: "farm_friend",
+          billingType: "monthly",
+          stripeSubscriptionId: subscriptionId,
+        });
+
+        await this.memberships.updateProfile(userId, "farm_friend", "active");
+
+        // Send welcome email only on first activation (use metadata from subscription)
+        if (isNew) {
+          const name = subscription.metadata?.name ?? "";
+          const email = subscription.metadata?.email ?? "";
+          if (email) {
+            await this.email.membershipWelcome({
+              to: email,
+              name,
+              membershipType: "farm_friend",
+            }).catch((err) =>
+              this.logger.error("Failed to send Farm Friend welcome email", err)
+            );
+          }
+        }
+      } else {
+        // Cancel membership
+        await this.supabase.client
+          .from("memberships")
+          .update({ status: "cancelled" as any })
+          .eq("stripe_subscription_id", subscriptionId);
+
+        await this.memberships.updateProfile(userId, "none", null);
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to handle subscription ${subscriptionId} change`,
+        err
+      );
     }
   }
 }

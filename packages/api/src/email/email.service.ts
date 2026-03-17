@@ -266,6 +266,65 @@ export class EmailService {
     });
   }
 
+  membershipWelcome(opts: {
+    to: string;
+    name: string;
+    membershipType: "season_pass" | "farm_friend";
+    validUntil?: string;
+  }): Promise<void> {
+    const { to, name, membershipType, validUntil } = opts;
+    const isSeasonPass = membershipType === "season_pass";
+
+    const perksHtml = isSeasonPass
+      ? `
+        <ul style="padding-left:20px;line-height:1.8;color:#3B2F2F">
+          <li>2 tickets per event at member price</li>
+          <li>Members-only events &amp; farm days</li>
+          <li>Weekly farm days at Hammock Hills</li>
+          <li>Care Tent visit</li>
+          <li>Farming &amp; homesteading workshops</li>
+          <li>Movement, meditation &amp; nature art</li>
+          <li>Online Community Circles</li>
+          <li>Full content library access</li>
+          <li>Newsletter &amp; a seasonal gift</li>
+        </ul>`
+      : `
+        <ul style="padding-left:20px;line-height:1.8;color:#3B2F2F">
+          <li>Access to our growing content library</li>
+          <li>Recipes &amp; homesteading guides</li>
+          <li>Monthly newsletter</li>
+        </ul>`;
+
+    const validityHtml = isSeasonPass && validUntil
+      ? `<p style="color:#6B7C5C;font-size:14px">Your membership is valid through <strong>${validUntil}</strong>.</p>`
+      : !isSeasonPass
+      ? `<p style="color:#6B7C5C;font-size:14px">Your Farm Friend membership renews at <strong>$10/month</strong>. Cancel anytime from your dashboard.</p>`
+      : "";
+
+    return this.send({
+      to,
+      subject: `Welcome to Hammock Earth — Your membership is active`,
+      html: `
+        <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#3B2F2F">
+          <h1 style="color:#3B2F2F;font-size:24px">Welcome to Hammock Earth</h1>
+          <p>Hi ${name || "there"},</p>
+          <p>Your <strong>${isSeasonPass ? "2026 Season Pass" : "Farm Friend"}</strong> membership is now active. We're so glad to have you.</p>
+
+          ${validityHtml}
+
+          <div style="margin:24px 0;padding:20px;background:#FBF7F0;border-radius:8px;border-left:3px solid #C4845A">
+            <p style="margin:0 0 12px;font-weight:bold;color:#3B2F2F">What's included</p>
+            ${perksHtml}
+          </div>
+
+          <p>Head to your <a href="https://hammock.earth/members/dashboard" style="color:#C4845A">member dashboard</a> to explore upcoming events and manage your membership.</p>
+          <p>If you have any questions, reply to this email or reach us at <a href="mailto:hello@hammock.earth" style="color:#C4845A">hello@hammock.earth</a>.</p>
+          <p>With warmth,<br>Thu &amp; Anahita<br>Hammock Earth</p>
+        </div>
+      `,
+    });
+  }
+
   waitlistPromotion(opts: {
     to: string;
     name: string;

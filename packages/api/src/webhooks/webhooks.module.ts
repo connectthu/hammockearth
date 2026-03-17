@@ -4,9 +4,10 @@ import { WebhooksService } from "./webhooks.service";
 import { RegistrationsModule } from "../registrations/registrations.module";
 import { EventsModule } from "../events/events.module";
 import { CalendarModule } from "../calendar/calendar.module";
+import { MembershipsModule } from "../memberships/memberships.module";
 
 @Module({
-  imports: [RegistrationsModule, EventsModule, CalendarModule],
+  imports: [RegistrationsModule, EventsModule, CalendarModule, MembershipsModule],
   controllers: [WebhooksController],
   providers: [WebhooksService],
 })
