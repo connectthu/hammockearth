@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Membership — Hammock Earth",
   description:
-    "Join Hammock Earth as a Season Pass holder or Farm Friend. Access members-only events, farm days, workshops, and more.",
+    "Join Hammock Earth as a Seasons Pass holder or Farm Friend. Access members-only events, farm days, workshops, and more.",
 };
 
 export const revalidate = 0;

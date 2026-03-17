@@ -308,7 +308,7 @@ export class EmailService {
         <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#3B2F2F">
           <h1 style="color:#3B2F2F;font-size:24px">Welcome to Hammock Earth</h1>
           <p>Hi ${name || "there"},</p>
-          <p>Your <strong>${isSeasonPass ? "2026 Season Pass" : "Farm Friend"}</strong> membership is now active. We're so glad to have you.</p>
+          <p>Your <strong>${isSeasonPass ? "2026 Seasons Pass" : "Farm Friend"}</strong> membership is now active. We're so glad to have you.</p>
 
           ${validityHtml}
 

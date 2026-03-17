@@ -133,7 +133,7 @@ function CheckoutContent() {
   const tierLabel =
     tier === "farm_friend"
       ? "Farm Friend"
-      : `${TIER_LABELS[window] ?? "Season Pass"} — Season Pass`;
+      : `${TIER_LABELS[window] ?? "Seasons Pass"} — Seasons Pass`;
 
   const priceDisplay =
     tier === "farm_friend" ? "$10/month" : formatPrice(amountCents);

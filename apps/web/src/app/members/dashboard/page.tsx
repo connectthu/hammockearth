@@ -38,7 +38,7 @@ function formatPrice(cents: number) {
 }
 
 const MEMBERSHIP_LABELS: Record<string, string> = {
-  season_pass: "Season Pass",
+  season_pass: "Seasons Pass",
   farm_friend: "Farm Friend",
   try_a_month: "Try a Month",
   community_partner: "Community Partner",

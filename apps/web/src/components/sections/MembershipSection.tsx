@@ -47,11 +47,11 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
           </p>
         </div>
 
-        {/* Season Pass */}
+        {/* Seasons Pass */}
         <div className="mb-12">
           <div className="text-center mb-8">
             <h3 className="font-serif text-2xl text-soil mb-2">
-              🌿 2026 Season Pass
+              🌿 2026 Seasons Pass
             </h3>
             <p className="text-sm text-moss font-medium">
               Valid through December 31, 2026 · {months} months remaining from today
@@ -130,10 +130,10 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
             })}
           </div>
 
-          {/* Season pass perks */}
+          {/* Seasons pass perks */}
           <div className="bg-linen rounded-2xl p-8 max-w-2xl mx-auto">
             <h4 className="font-serif text-lg text-soil mb-4 text-center">
-              Season Pass Includes
+              Seasons Pass Includes
             </h4>
             <ul className="grid sm:grid-cols-2 gap-2 text-sm text-charcoal/80">
               {[
