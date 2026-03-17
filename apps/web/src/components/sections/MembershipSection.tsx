@@ -40,9 +40,10 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
             Join Hammock Earth
           </h2>
           <p className="text-charcoal/70 max-w-2xl mx-auto">
-            One membership. All the perks. The price depends on when you
-            join — because the earlier you commit, the more of the season you
-            get to enjoy.
+            We have big plans for this year: more events, more collaborations,
+            and more ways to gather on the land and online. Membership helps
+            make it all possible. It supports the space, the offerings, and the
+            people behind Hammock Earth.
           </p>
         </div>
 
@@ -88,17 +89,17 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
                     </div>
                   )}
                   <h4 className="font-serif text-xl text-soil mb-1">
-                    {w.label}
+                    {w.slug === "regular" ? "Member" : w.label}
                   </h4>
                   <div className="text-3xl font-serif text-soil mb-4">
                     {formatPrice(w.price_cents)}
                   </div>
                   <p className="text-sm text-charcoal/60 mb-6 flex-1">
                     {isFounding
-                      ? "For our earliest believers. A price we'll never offer again."
+                      ? "For those who feel called to support from the very beginning and help shape what this becomes."
                       : isEarlyBird
-                      ? "Available until the summer solstice, June 21, 2026."
-                      : "Always available."}
+                      ? "A reduced rate for joining ahead of the season and planning to be part of what unfolds."
+                      : "Be part of the community throughout the season."}
                   </p>
                   {earlyBirdLocked ? (
                     <span className="mt-auto block text-center py-3 px-6 rounded-full text-sm text-charcoal/40 bg-linen border border-linen">
