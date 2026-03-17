@@ -25,7 +25,7 @@ export default function HomePage() {
         <VisionSection />
         <EventsSection />
         <OnlineProgramsSection />
-        <MembershipSection />
+        <MembershipSection checkoutLinks />
         <VisitSection />
         <TeamSection />
         <MissionSection />
