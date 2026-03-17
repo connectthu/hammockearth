@@ -61,7 +61,7 @@ export default async function MemberDashboardPage() {
   // Fetch profile
   const { data: profileData } = await db
     .from("profiles")
-    .select("full_name, membership_type, membership_status, role, onboarding_complete")
+    .select("full_name, membership_type, membership_status, role, onboarding_complete, username")
     .eq("id", user.id)
     .single();
   const profile = profileData as any;
@@ -152,13 +152,23 @@ export default async function MemberDashboardPage() {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Edit Profile link */}
-              <Link
-                href="/members/profile/edit"
-                className="text-sm font-medium text-clay hover:underline"
-              >
-                Edit Profile
-              </Link>
+              {/* Profile links */}
+              <div className="flex items-center gap-3">
+                {profile?.username && (
+                  <Link
+                    href={`/members/${profile.username}`}
+                    className="text-sm text-charcoal/50 hover:text-soil transition-colors"
+                  >
+                    View Profile
+                  </Link>
+                )}
+                <Link
+                  href="/members/profile/edit"
+                  className="text-sm font-medium text-clay hover:underline"
+                >
+                  Edit Profile
+                </Link>
+              </div>
 
               {/* Membership details */}
               {membership && (
