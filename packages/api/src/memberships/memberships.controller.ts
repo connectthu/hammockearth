@@ -26,9 +26,8 @@ export class MembershipsController {
   // ── User endpoints (Supabase JWT) ──────────────────────────────────────────
 
   @Post("checkout")
-  @UseGuards(SupabaseAuthGuard)
-  checkout(@Body() dto: CreateMembershipCheckoutDto, @Req() req: any) {
-    return this.membershipsService.checkout(dto, req.userId);
+  checkout(@Body() dto: CreateMembershipCheckoutDto) {
+    return this.membershipsService.checkout(dto);
   }
 
   @Get("me")

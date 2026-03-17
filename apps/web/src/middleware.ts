@@ -33,10 +33,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect dashboard and checkout — redirect to login with ?next=
-  const isProtected =
-    pathname.startsWith("/members/dashboard") ||
-    pathname.startsWith("/members/checkout");
+  // Protect dashboard only — checkout is auth-free
+  const isProtected = pathname.startsWith("/members/dashboard");
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();

@@ -21,17 +21,14 @@ export class MembershipsService {
     private config: ConfigService
   ) {}
 
-  async checkout(dto: CreateMembershipCheckoutDto, userId: string) {
+  async checkout(dto: CreateMembershipCheckoutDto) {
     if (dto.membershipType === "season_pass") {
-      return this.checkoutSeasonPass(dto, userId);
+      return this.checkoutSeasonPass(dto);
     }
-    return this.checkoutFarmFriend(dto, userId);
+    return this.checkoutFarmFriend(dto);
   }
 
-  private async checkoutSeasonPass(
-    dto: CreateMembershipCheckoutDto,
-    userId: string
-  ) {
+  private async checkoutSeasonPass(dto: CreateMembershipCheckoutDto) {
     if (!dto.priceWindowSlug) {
       throw new BadRequestException("priceWindowSlug is required for season_pass");
     }
@@ -58,15 +55,11 @@ export class MembershipsService {
       throw new BadRequestException("This price window is sold out");
     }
 
-    // 3. Get or create Stripe customer
-    const customerId = await this.getOrCreateCustomer(userId, dto.email, dto.name);
-
-    // 4. Create PaymentIntent (DB row created by webhook on success)
+    // 3. Create PaymentIntent (DB row created by webhook on success)
     const paymentIntent = await this.stripe.createPaymentIntent(
       window.price_cents,
       {
         type: "season_pass",
-        userId,
         priceWindowSlug: dto.priceWindowSlug,
         name: dto.name,
         email: dto.email,
@@ -79,36 +72,18 @@ export class MembershipsService {
     };
   }
 
-  private async checkoutFarmFriend(
-    dto: CreateMembershipCheckoutDto,
-    userId: string
-  ) {
+  private async checkoutFarmFriend(dto: CreateMembershipCheckoutDto) {
     const priceId = this.config.get<string>("STRIPE_FARM_FRIEND_PRICE_ID");
     if (!priceId) {
       throw new BadRequestException("Farm Friend price not configured");
     }
 
-    // 1. Check for existing active subscription
-    const { data: existing } = await this.supabase.client
-      .from("memberships")
-      .select("id, status")
-      .eq("user_id", userId)
-      .eq("membership_type", "farm_friend")
-      .eq("status", "active" as any)
-      .limit(1)
-      .single();
+    // 1. Create Stripe customer
+    const customer = await this.stripe.createCustomer(dto.email, { name: dto.name });
 
-    if (existing) {
-      throw new BadRequestException("You already have an active Farm Friend membership");
-    }
-
-    // 2. Get or create Stripe customer
-    const customerId = await this.getOrCreateCustomer(userId, dto.email, dto.name);
-
-    // 3. Create subscription (DB row created by webhook on activation)
-    const subscription = await this.stripe.createSubscription(customerId, priceId, {
+    // 2. Create subscription (DB row created by webhook on activation)
+    const subscription = await this.stripe.createSubscription(customer.id, priceId, {
       type: "farm_friend",
-      userId,
       name: dto.name,
       email: dto.email,
     });
@@ -268,35 +243,4 @@ export class MembershipsService {
     }
   }
 
-  private async getOrCreateCustomer(
-    userId: string,
-    email: string,
-    name: string
-  ): Promise<string> {
-    // Check if profile already has a customer ID
-    const { data: profileData } = await this.supabase.client
-      .from("profiles")
-      .select("stripe_customer_id")
-      .eq("id", userId)
-      .single();
-
-    const profile = profileData as any;
-    if (profile?.stripe_customer_id) {
-      return profile.stripe_customer_id;
-    }
-
-    // Create new customer
-    const customer = await this.stripe.createCustomer(email, {
-      userId,
-      name,
-    });
-
-    // Save to profile
-    await this.supabase.client
-      .from("profiles")
-      .update({ stripe_customer_id: customer.id })
-      .eq("id", userId);
-
-    return customer.id;
-  }
 }

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { StripeService } from "../stripe/stripe.service";
 import { RegistrationsService } from "../registrations/registrations.service";
 import { EmailService } from "../email/email.service";
@@ -18,7 +19,8 @@ export class WebhooksService {
     private events: EventsService,
     private calendar: CalendarService,
     private supabase: SupabaseService,
-    private memberships: MembershipsService
+    private memberships: MembershipsService,
+    private config: ConfigService
   ) {}
 
   async handleStripe(rawBody: Buffer, signature: string): Promise<void> {
@@ -38,17 +40,23 @@ export class WebhooksService {
 
         // ── Season Pass membership ────────────────────────────────────────
         if (metaType === "season_pass") {
-          const userId = paymentIntent.metadata?.userId;
           const priceWindowSlug = paymentIntent.metadata?.priceWindowSlug;
           const name = paymentIntent.metadata?.name ?? "";
           const email = paymentIntent.metadata?.email ?? "";
 
-          if (!userId) {
-            this.logger.warn(`Missing userId in season_pass PI: ${paymentIntent.id}`);
+          if (!email) {
+            this.logger.warn(`Missing email in season_pass PI: ${paymentIntent.id}`);
             break;
           }
 
           try {
+            // Find or create Supabase user
+            const userId = await this.findOrCreateUser(email, name);
+            if (!userId) {
+              this.logger.error(`Failed to find/create user for season_pass PI: ${paymentIntent.id}`);
+              break;
+            }
+
             const validUntil = new Date("2026-12-31T23:59:59Z").toISOString();
 
             // Create membership row
@@ -192,14 +200,26 @@ export class WebhooksService {
     isDeleted = false
   ): Promise<void> {
     const subscriptionId = subscription.id;
-    const userId = subscription.metadata?.userId;
 
     try {
       const isActive = !isDeleted && subscription.status === "active";
 
-      if (!userId) return;
-
       if (isActive) {
+        const name = subscription.metadata?.name ?? "";
+        const email = subscription.metadata?.email ?? "";
+
+        if (!email) {
+          this.logger.warn(`Missing email in farm_friend subscription: ${subscriptionId}`);
+          return;
+        }
+
+        // Find or create Supabase user
+        const userId = await this.findOrCreateUser(email, name);
+        if (!userId) {
+          this.logger.error(`Failed to find/create user for subscription: ${subscriptionId}`);
+          return;
+        }
+
         // Check if membership already exists for this subscription
         const { data: existing } = await this.supabase.client
           .from("memberships")
@@ -219,28 +239,32 @@ export class WebhooksService {
 
         await this.memberships.updateProfile(userId, "farm_friend", "active");
 
-        // Send welcome email only on first activation (use metadata from subscription)
-        if (isNew) {
-          const name = subscription.metadata?.name ?? "";
-          const email = subscription.metadata?.email ?? "";
-          if (email) {
-            await this.email.membershipWelcome({
-              to: email,
-              name,
-              membershipType: "farm_friend",
-            }).catch((err) =>
-              this.logger.error("Failed to send Farm Friend welcome email", err)
-            );
-          }
+        // Send welcome email only on first activation
+        if (isNew && email) {
+          await this.email.membershipWelcome({
+            to: email,
+            name,
+            membershipType: "farm_friend",
+          }).catch((err) =>
+            this.logger.error("Failed to send Farm Friend welcome email", err)
+          );
         }
       } else {
-        // Cancel membership
+        // Look up userId from membership row
+        const { data: membershipRow } = await this.supabase.client
+          .from("memberships")
+          .select("user_id")
+          .eq("stripe_subscription_id", subscriptionId)
+          .single();
+
         await this.supabase.client
           .from("memberships")
           .update({ status: "cancelled" as any })
           .eq("stripe_subscription_id", subscriptionId);
 
-        await this.memberships.updateProfile(userId, "none", null);
+        if (membershipRow) {
+          await this.memberships.updateProfile((membershipRow as any).user_id, "none", null);
+        }
       }
     } catch (err) {
       this.logger.error(
@@ -248,5 +272,30 @@ export class WebhooksService {
         err
       );
     }
+  }
+
+  private async findOrCreateUser(email: string, name: string): Promise<string | null> {
+    // Try to create user; if already exists, find their ID
+    const { data, error } = await this.supabase.client.auth.admin.createUser({
+      email,
+      user_metadata: { full_name: name },
+      email_confirm: true,
+    });
+
+    if (data?.user?.id) return data.user.id;
+
+    // User already registered — find by iterating listUsers
+    if (error) {
+      const { data: listData } = await this.supabase.client.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      const existing = listData?.users?.find((u: any) => u.email === email);
+      if (existing?.id) return existing.id;
+
+      this.logger.error("Failed to find or create user", error);
+    }
+
+    return null;
   }
 }

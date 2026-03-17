@@ -60,15 +60,23 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {windows.map((w) => {
               const isFounding = w.slug === "founding";
+              const isEarlyBird = w.slug === "early_bird";
               const spotsLeft = isFounding
                 ? (w.max_spots ?? 22) - w.spots_taken
                 : null;
               const isOpen = w.status === "open";
 
+              // Early Bird is locked until Founding sells out
+              const foundingWindow = windows.find((x: any) => x.slug === "founding");
+              const foundingSoldOut = foundingWindow
+                ? foundingWindow.spots_taken >= (foundingWindow.max_spots ?? 22)
+                : true;
+              const earlyBirdLocked = isEarlyBird && !foundingSoldOut;
+
               return (
                 <div
                   key={w.slug}
-                  className={`rounded-2xl p-8 border ${
+                  className={`flex flex-col rounded-2xl p-8 border ${
                     isFounding
                       ? "border-clay bg-clay/5"
                       : "border-linen bg-linen"
@@ -85,21 +93,25 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
                   <div className="text-3xl font-serif text-soil mb-4">
                     {formatPrice(w.price_cents)}
                   </div>
-                  <p className="text-sm text-charcoal/60 mb-6">
+                  <p className="text-sm text-charcoal/60 mb-6 flex-1">
                     {isFounding
                       ? "For our earliest believers. A price we'll never offer again."
-                      : w.slug === "early_bird"
+                      : isEarlyBird
                       ? "Available until the summer solstice, June 21, 2026."
                       : "Always available."}
                   </p>
-                  {isOpen ? (
+                  {earlyBirdLocked ? (
+                    <span className="mt-auto block text-center py-3 px-6 rounded-full text-sm text-charcoal/40 bg-linen border border-linen">
+                      Available after Founding
+                    </span>
+                  ) : isOpen ? (
                     <a
                       href={
                         checkoutLinks
-                          ? `/members/login?next=${encodeURIComponent(`/members/checkout?tier=season_pass&window=${w.slug}`)}`
+                          ? `/members/checkout?tier=season_pass&window=${w.slug}`
                           : "/members"
                       }
-                      className={`block text-center py-3 px-6 rounded-full font-medium text-sm transition-colors ${
+                      className={`mt-auto block text-center py-3 px-6 rounded-full font-medium text-sm transition-colors ${
                         isFounding
                           ? "bg-clay text-white hover:bg-clay/90"
                           : "bg-soil text-cream hover:bg-soil/90"
@@ -108,7 +120,7 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
                       Join Now
                     </a>
                   ) : (
-                    <span className="block text-center py-3 px-6 rounded-full text-sm text-charcoal/40 bg-linen border border-linen">
+                    <span className="mt-auto block text-center py-3 px-6 rounded-full text-sm text-charcoal/40 bg-linen border border-linen">
                       {w.status === "sold_out" ? "Sold Out" : "Closed"}
                     </span>
                   )}
@@ -158,7 +170,7 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
             <a
               href={
                 checkoutLinks
-                  ? `/members/login?next=${encodeURIComponent("/members/checkout?tier=farm_friend")}`
+                  ? "/members/checkout?tier=farm_friend"
                   : "/members#farm-friend"
               }
               className="block text-center py-3 px-6 rounded-full font-medium text-sm bg-moss/10 text-moss hover:bg-moss/20 transition-colors border border-moss/20"

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Elements,
   PaymentElement,
@@ -9,7 +9,6 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { createClient } from "@/lib/supabase/client";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 
@@ -107,7 +106,6 @@ function PaymentForm({
 // ── Main checkout page ────────────────────────────────────────────────────────
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const tier = searchParams.get("tier") ?? "season_pass"; // 'season_pass' | 'farm_friend'
   const window = searchParams.get("window") ?? "founding"; // price window slug
 
@@ -121,15 +119,6 @@ function CheckoutContent() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Pre-fill from Supabase auth session
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) setEmail(user.email);
-      if (user?.user_metadata?.full_name) setName(user.user_metadata.full_name);
-    });
-  }, []);
 
   const tierLabel =
     tier === "farm_friend"
@@ -145,16 +134,6 @@ function CheckoutContent() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.push(`/members/login?next=/members/checkout?tier=${tier}&window=${window}`);
-        return;
-      }
-
       const body: Record<string, string> = {
         membershipType: tier,
         name,
@@ -166,10 +145,7 @@ function CheckoutContent() {
 
       const res = await fetch(`${API_URL}/memberships/checkout`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -299,15 +275,9 @@ function CheckoutContent() {
                   Welcome to Hammock Earth!
                 </h2>
                 <p className="text-sm text-charcoal/70">
-                  Your membership is active. A welcome email is on its way to{" "}
-                  <strong>{email}</strong>.
+                  Check your email — we&apos;ve sent a welcome message and a link to
+                  activate your account to <strong>{email}</strong>.
                 </p>
-                <a
-                  href="/members/dashboard"
-                  className="inline-block w-full text-center bg-clay text-white font-medium py-3 px-6 rounded-full hover:bg-clay/90 transition-colors"
-                >
-                  Go to Dashboard
-                </a>
               </div>
             )}
           </div>
