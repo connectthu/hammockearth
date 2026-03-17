@@ -41,7 +41,7 @@ export class MembershipsService {
       await this.supabase.client
         .from("membership_price_windows")
         .select("*")
-        .eq("slug", dto.priceWindowSlug)
+        .eq("slug", dto.priceWindowSlug as any)
         .single();
 
     if (windowError || !windowData) {
