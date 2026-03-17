@@ -33,7 +33,7 @@ export type ContentType =
 export type ContentVisibility = "public" | "members_only";
 export type DiscountType = "percent" | "fixed";
 export type MediaKind = "video" | "audio" | "pdf";
-export type UserRole = "user" | "admin";
+export type UserRole = "superadmin" | "collaborator" | "member" | "event_customer";
 
 // ============================================================
 // Database type (matches @supabase/supabase-js v2 shape)
@@ -42,11 +42,31 @@ export type UserRole = "user" | "admin";
 export type Database = {
   public: {
     Tables: {
+      collaborator_events: {
+        Row: {
+          collaborator_id: string;
+          event_id: string;
+          created_at: string;
+        };
+        Insert: {
+          collaborator_id: string;
+          event_id: string;
+          created_at?: string;
+        };
+        Update: {
+          collaborator_id?: string;
+          event_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
           full_name: string | null;
           avatar_url: string | null;
+          bio: string | null;
+          public_url: string | null;
           role: UserRole;
           membership_type: MembershipType;
           membership_status: MembershipStatus | null;
@@ -57,6 +77,8 @@ export type Database = {
           id: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
+          public_url?: string | null;
           role?: UserRole;
           membership_type?: MembershipType;
           membership_status?: MembershipStatus | null;
@@ -67,6 +89,8 @@ export type Database = {
           id?: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
+          public_url?: string | null;
           role?: UserRole;
           membership_type?: MembershipType;
           membership_status?: MembershipStatus | null;
