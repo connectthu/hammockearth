@@ -26,7 +26,7 @@ export function VisitSection() {
                 <div>
                   <p className="font-medium text-soil text-sm">Location</p>
                   <p className="text-charcoal/70 text-sm">
-                    Hillsdale, Ontario · Simcoe County
+                    4803 Line 2 N, Hillsdale, ON L0L 1V0
                   </p>
                 </div>
               </div>
@@ -40,8 +40,7 @@ export function VisitSection() {
                 <div>
                   <p className="font-medium text-soil text-sm">Getting Here</p>
                   <p className="text-charcoal/70 text-sm">
-                    ~1 hour north of Toronto. Exact address shared upon event
-                    registration.
+                    ~1 hour north of Toronto.
                   </p>
                 </div>
               </div>

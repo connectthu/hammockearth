@@ -164,7 +164,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                 <div>
                   <p className="font-medium text-soil">{event.location}</p>
                   {!event.is_online && (
-                    <p className="text-xs text-charcoal/40 mt-0.5">Exact address shared upon registration</p>
+                    <p className="text-xs text-charcoal/40 mt-0.5">4803 Line 2 N, Hillsdale, ON L0L 1V0</p>
                   )}
                 </div>
               </div>
