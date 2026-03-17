@@ -11,21 +11,18 @@ export function TeamSection() {
             "How do we care for the Heart and the Earth at the same time?"
           </blockquote>
           <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto">
-            Hammock Earth began as a shared inquiry between two experienced
-            entrepreneurs asking the same question. Thu Nguyen and Anahita
-            first met through a Coralus community pod and later gathered in
-            person at Nusqool. As their friendship deepened—through walks,
-            meals, a spa day, and a temple sound bath—they realized their work
-            had been evolving in parallel.
+            This question sparked a shared calling between Thu Nguyen and
+            Anahita, to weave together their paths in community and land.
           </p>
           <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto mt-4">
-            Thu had been building a global community of helpers, healers,
-            facilitators, and educators. At the same time, Anahita had been
-            stewarding land as an organic grower, experimenting with
-            regenerative approaches to farming. Together they recognized a
-            shared calling: to create fertile ground—both in soil and in
-            community—where people can reconnect with land, actualize their
-            gifts, and experience ecological belonging.
+            Thu brings her work in cultivating heart-centered communities and
+            spaces for inner transformation. Anahita brings her stewardship of
+            land and regenerative approaches to growing and tending.
+          </p>
+          <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto mt-4">
+            Hammock Earth is the result: a living space where people can
+            reconnect with themselves, each other, and the earth, and grow into
+            the dreams and gifts they&apos;re here to bring forward.
           </p>
         </div>
 
