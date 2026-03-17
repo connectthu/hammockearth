@@ -315,13 +315,13 @@ export class MembershipsService {
     const { data } = await this.supabase.client
       .from("membership_price_windows")
       .select("spots_taken")
-      .eq("slug", priceWindowSlug)
+      .eq("slug", priceWindowSlug as any)
       .single();
     if (data) {
       await this.supabase.client
         .from("membership_price_windows")
         .update({ spots_taken: (data as any).spots_taken + 1 })
-        .eq("slug", priceWindowSlug);
+        .eq("slug", priceWindowSlug as any);
     }
   }
 }
