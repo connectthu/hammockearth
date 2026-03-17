@@ -109,8 +109,6 @@ export function SeriesForm({ initialData, onSubmit, submitLabel = "Save Series",
         coverImageUrl: form.cover_image_url || undefined,
         isOnline: form.is_online,
         location: form.location || undefined,
-        durationWeeks: parseInt(form.duration_weeks) || 1,
-        sessionCount: parseInt(form.session_count) || 1,
         priceCents: form.price_cents ? Math.round(parseFloat(form.price_cents) * 100) : 0,
         memberPriceCents: form.member_price_cents ? Math.round(parseFloat(form.member_price_cents) * 100) : 0,
         dropInEnabled: form.drop_in_enabled,
@@ -126,6 +124,8 @@ export function SeriesForm({ initialData, onSubmit, submitLabel = "Save Series",
       };
 
       if (!isEdit) {
+        payload.durationWeeks = parseInt(form.duration_weeks) || 1;
+        payload.sessionCount = parseInt(form.session_count) || 1;
         payload.firstSessionAt = form.first_session_at
           ? new Date(form.first_session_at).toISOString()
           : undefined;
