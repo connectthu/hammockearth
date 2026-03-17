@@ -136,7 +136,7 @@ export class EventsService {
   async listCollaboratorAccounts() {
     const { data, error } = await this.supabase.client
       .from("profiles")
-      .select("id, full_name, avatar_url, bio, public_url")
+      .select("id, full_name, avatar_url, bio, social_links")
       .eq("role", "collaborator" as any)
       .order("full_name", { ascending: true });
 
@@ -195,7 +195,7 @@ export class EventsService {
     // 4. Return updated profile
     const { data: profile } = await this.supabase.client
       .from("profiles")
-      .select("id, full_name, avatar_url, bio, public_url, role")
+      .select("id, full_name, avatar_url, bio, social_links, role")
       .eq("id", userId)
       .single();
 
@@ -205,7 +205,7 @@ export class EventsService {
       const { data: linkData } = await this.supabase.client.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: { redirectTo: `${appUrl}/collaborator` },
+        options: { redirectTo: `${appUrl}/members/dashboard` },
       });
 
       const loginLink = (linkData as any)?.properties?.action_link;
@@ -234,7 +234,7 @@ export class EventsService {
 
     const { data, error } = await this.supabase.client
       .from("collaborator_events")
-      .select("collaborator_id, profiles(id, full_name, avatar_url, bio, public_url)")
+      .select("collaborator_id, profiles(id, full_name, avatar_url, bio, social_links)")
       .eq("event_id", event.id);
 
     if (error) throw error;

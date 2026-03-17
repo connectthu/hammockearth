@@ -61,7 +61,7 @@ export default async function MemberDashboardPage() {
   // Fetch profile
   const { data: profileData } = await db
     .from("profiles")
-    .select("full_name, membership_type, membership_status")
+    .select("full_name, membership_type, membership_status, role, onboarding_complete")
     .eq("id", user.id)
     .single();
   const profile = profileData as any;
@@ -77,6 +77,11 @@ export default async function MemberDashboardPage() {
     .single();
   const membership = membershipData as any;
 
+  // Onboarding redirect — only for members who haven't completed onboarding
+  if (membership && profile?.onboarding_complete === false) {
+    redirect("/onboarding");
+  }
+
   // Fetch upcoming published events
   const { data: eventsData } = await db
     .from("events")
@@ -86,6 +91,28 @@ export default async function MemberDashboardPage() {
     .order("start_at", { ascending: true })
     .limit(20);
   const events = (eventsData as any[]) ?? [];
+
+  // Fetch collaborator-assigned events (for collaborators and superadmins)
+  const role: string = profile?.role ?? "event_customer";
+  const isCollaborator = role === "collaborator" || role === "superadmin";
+  let assignedEvents: any[] = [];
+
+  if (isCollaborator) {
+    const { data: linkRows } = await db
+      .from("collaborator_events")
+      .select("event_id")
+      .eq("collaborator_id", user.id);
+
+    const eventIds = (linkRows as any[])?.map((r) => r.event_id) ?? [];
+    if (eventIds.length > 0) {
+      const { data: eventsAssigned } = await db
+        .from("events")
+        .select("id, slug, title, start_at, end_at, location, cover_image_url, status")
+        .in("id", eventIds)
+        .order("start_at", { ascending: true });
+      assignedEvents = (eventsAssigned as any[]) ?? [];
+    }
+  }
 
   const displayName =
     profile?.full_name ?? user.user_metadata?.full_name ?? user.email ?? "Member";
@@ -124,96 +151,163 @@ export default async function MemberDashboardPage() {
               )}
             </div>
 
-            {/* Membership details */}
-            {membership && (
-              <div className="text-right text-sm">
-                {isSeasonPass && membership.valid_until && (
-                  <p className="text-charcoal/60">
-                    Valid until{" "}
-                    <strong className="text-soil">
-                      {new Date(membership.valid_until).toLocaleDateString("en-CA", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </strong>
-                  </p>
-                )}
-                {isFarmFriend && (
-                  <p className="text-charcoal/60">$10/month · Renews automatically</p>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {/* Edit Profile link */}
+              <Link
+                href="/members/profile/edit"
+                className="text-sm font-medium text-clay hover:underline"
+              >
+                Edit Profile
+              </Link>
+
+              {/* Membership details */}
+              {membership && (
+                <div className="text-right text-sm">
+                  {isSeasonPass && membership.valid_until && (
+                    <p className="text-charcoal/60">
+                      Valid until{" "}
+                      <strong className="text-soil">
+                        {new Date(membership.valid_until).toLocaleDateString("en-CA", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </strong>
+                    </p>
+                  )}
+                  {isFarmFriend && (
+                    <p className="text-charcoal/60">$10/month · Renews automatically</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-[2fr_1fr] gap-8">
-            {/* ── Upcoming Events ──────────────────────────────────────────── */}
-            <div>
-              <h2 className="font-serif text-xl text-soil mb-4">
-                Upcoming Events
-              </h2>
+            <div className="space-y-8">
+              {/* ── Collaborator Events ───────────────────────────────────── */}
+              {isCollaborator && (
+                <div>
+                  <h2 className="font-serif text-xl text-soil mb-4">Your Events</h2>
 
-              {events.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-linen p-8 text-center text-charcoal/50">
-                  No upcoming events right now. Check back soon.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {events.map((event: any) => {
-                    const isMembersOnly = event.visibility === "members_only";
-                    return (
-                      <Link
-                        key={event.id}
-                        href={`/events/${event.slug}`}
-                        className="block bg-white rounded-2xl border border-linen p-5 hover:border-clay/30 transition-colors group"
-                      >
-                        <div className="flex gap-4">
-                          {event.cover_image_url ? (
-                            <img
-                              src={event.cover_image_url}
-                              alt={event.title}
-                              className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 rounded-xl bg-linen flex items-center justify-center flex-shrink-0 text-2xl">
-                              🌿
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h3 className="font-medium text-soil group-hover:text-clay transition-colors leading-snug">
-                                {event.title}
-                              </h3>
-                              {isMembersOnly && (
-                                <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-clay/10 text-clay border border-clay/20">
-                                  Members Only
+                  {assignedEvents.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-linen p-8 text-center text-charcoal/50">
+                      No events assigned yet. An admin will link events to your account.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {assignedEvents.map((event: any) => (
+                        <Link
+                          key={event.id}
+                          href={`/events/${event.slug}`}
+                          className="block bg-white rounded-2xl border border-linen p-5 hover:border-clay/30 transition-colors group"
+                        >
+                          <div className="flex gap-4">
+                            {event.cover_image_url ? (
+                              <img
+                                src={event.cover_image_url}
+                                alt={event.title}
+                                className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-xl bg-linen flex items-center justify-center flex-shrink-0 text-2xl">
+                                🌿
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <h3 className="font-medium text-soil group-hover:text-clay transition-colors leading-snug">
+                                  {event.title}
+                                </h3>
+                                <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  event.status === "published"
+                                    ? "bg-green-50 text-green-700"
+                                    : "bg-linen text-charcoal/50"
+                                }`}>
+                                  {event.status}
                                 </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-charcoal/50 mb-1">
-                              {formatDate(event.start_at)} · {formatTime(event.start_at)}
-                            </p>
-                            <p className="text-xs text-charcoal/50 mb-2">
-                              {event.location}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-soil">
-                                {formatPrice(event.price_cents)}
-                              </span>
-                              {event.member_price_cents !== null &&
-                                event.member_price_cents < event.price_cents && (
-                                  <span className="text-xs text-moss font-medium">
-                                    Members: {formatPrice(event.member_price_cents)}
-                                  </span>
-                                )}
+                              </div>
+                              <p className="text-xs text-charcoal/50 mb-0.5">
+                                {formatDate(event.start_at)} · {formatTime(event.start_at)}
+                              </p>
+                              <p className="text-xs text-charcoal/50">{event.location}</p>
                             </div>
                           </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* ── Upcoming Events ──────────────────────────────────────────── */}
+              <div>
+                <h2 className="font-serif text-xl text-soil mb-4">
+                  Upcoming Events
+                </h2>
+
+                {events.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-linen p-8 text-center text-charcoal/50">
+                    No upcoming events right now. Check back soon.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {events.map((event: any) => {
+                      const isMembersOnly = event.visibility === "members_only";
+                      return (
+                        <Link
+                          key={event.id}
+                          href={`/events/${event.slug}`}
+                          className="block bg-white rounded-2xl border border-linen p-5 hover:border-clay/30 transition-colors group"
+                        >
+                          <div className="flex gap-4">
+                            {event.cover_image_url ? (
+                              <img
+                                src={event.cover_image_url}
+                                alt={event.title}
+                                className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-xl bg-linen flex items-center justify-center flex-shrink-0 text-2xl">
+                                🌿
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <h3 className="font-medium text-soil group-hover:text-clay transition-colors leading-snug">
+                                  {event.title}
+                                </h3>
+                                {isMembersOnly && (
+                                  <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-clay/10 text-clay border border-clay/20">
+                                    Members Only
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-charcoal/50 mb-1">
+                                {formatDate(event.start_at)} · {formatTime(event.start_at)}
+                              </p>
+                              <p className="text-xs text-charcoal/50 mb-2">
+                                {event.location}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-soil">
+                                  {formatPrice(event.price_cents)}
+                                </span>
+                                {event.member_price_cents !== null &&
+                                  event.member_price_cents < event.price_cents && (
+                                    <span className="text-xs text-moss font-medium">
+                                      Members: {formatPrice(event.member_price_cents)}
+                                    </span>
+                                  )}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ── Sidebar ──────────────────────────────────────────────────── */}
@@ -290,4 +384,3 @@ export default async function MemberDashboardPage() {
     </>
   );
 }
-

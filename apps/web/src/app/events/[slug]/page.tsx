@@ -67,14 +67,14 @@ export default async function EventDetailPage({ params }: PageProps) {
       : Promise.resolve({ data: null }),
     supabase
       .from("collaborator_events")
-      .select("profiles(id, full_name, avatar_url, bio, public_url)")
+      .select("profiles(id, full_name, avatar_url, bio, social_links, username)")
       .eq("event_id", event.id),
   ]);
 
   const creator = creatorResult.data as { full_name: string | null; avatar_url: string | null } | null;
   const collaborators = ((collaboratorsResult.data ?? []) as any[])
     .map((row) => row.profiles)
-    .filter(Boolean) as { id: string; full_name: string | null; avatar_url: string | null; bio: string | null; public_url: string | null }[];
+    .filter(Boolean) as { id: string; full_name: string | null; avatar_url: string | null; bio: string | null; social_links: Record<string, string> | null; username: string | null }[];
 
   const sanitizedDescription = event.description
     ? sanitizeHtml(event.description, {
@@ -154,9 +154,16 @@ export default async function EventDetailPage({ params }: PageProps) {
                           </div>
                         )}
                         <div className="min-w-0">
-                          {c.public_url ? (
+                          {c.username ? (
                             <a
-                              href={c.public_url}
+                              href={`/members/${c.username}`}
+                              className="font-medium text-soil hover:text-clay transition-colors"
+                            >
+                              {c.full_name ?? "Collaborator"}
+                            </a>
+                          ) : c.social_links?.website ? (
+                            <a
+                              href={c.social_links.website}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="font-medium text-soil hover:text-clay transition-colors"

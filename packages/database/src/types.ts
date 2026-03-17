@@ -66,7 +66,13 @@ export type Database = {
           full_name: string | null;
           avatar_url: string | null;
           bio: string | null;
-          public_url: string | null;
+          username: string | null;
+          location: string | null;
+          region: string | null;
+          social_links: Record<string, string>;
+          joined_at: string;
+          profile_visibility: 'public' | 'members_only';
+          onboarding_complete: boolean;
           role: UserRole;
           membership_type: MembershipType;
           membership_status: MembershipStatus | null;
@@ -78,7 +84,13 @@ export type Database = {
           full_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
-          public_url?: string | null;
+          username?: string | null;
+          location?: string | null;
+          region?: string | null;
+          social_links?: Record<string, string>;
+          joined_at?: string;
+          profile_visibility?: 'public' | 'members_only';
+          onboarding_complete?: boolean;
           role?: UserRole;
           membership_type?: MembershipType;
           membership_status?: MembershipStatus | null;
@@ -90,11 +102,86 @@ export type Database = {
           full_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
-          public_url?: string | null;
+          username?: string | null;
+          location?: string | null;
+          region?: string | null;
+          social_links?: Record<string, string>;
+          joined_at?: string;
+          profile_visibility?: 'public' | 'members_only';
+          onboarding_complete?: boolean;
           role?: UserRole;
           membership_type?: MembershipType;
           membership_status?: MembershipStatus | null;
           stripe_customer_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      superpowers: {
+        Row: {
+          id: string;
+          label: string;
+          is_custom: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          label: string;
+          is_custom?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          label?: string;
+          is_custom?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      profile_superpowers: {
+        Row: {
+          profile_id: string;
+          superpower_id: string;
+        };
+        Insert: {
+          profile_id: string;
+          superpower_id: string;
+        };
+        Update: {
+          profile_id?: string;
+          superpower_id?: string;
+        };
+        Relationships: [];
+      };
+      offerings: {
+        Row: {
+          id: string;
+          profile_id: string;
+          title: string;
+          description: string | null;
+          icon: string | null;
+          display_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          title: string;
+          description?: string | null;
+          icon?: string | null;
+          display_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          title?: string;
+          description?: string | null;
+          icon?: string | null;
+          display_order?: number;
           created_at?: string;
         };
         Relationships: [];
@@ -652,3 +739,5 @@ export type EventSeriesSession =
   Database["public"]["Tables"]["event_series_sessions"]["Row"];
 export type EventSeriesSessionInsert =
   Database["public"]["Tables"]["event_series_sessions"]["Insert"];
+export type Superpower = Database["public"]["Tables"]["superpowers"]["Row"];
+export type Offering = Database["public"]["Tables"]["offerings"]["Row"];

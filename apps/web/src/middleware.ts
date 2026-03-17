@@ -33,8 +33,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect dashboard only — checkout is auth-free
-  const isProtected = pathname.startsWith("/members/dashboard");
+  // Protect dashboard and onboarding — checkout is auth-free
+  const isProtected =
+    pathname.startsWith("/members/dashboard") ||
+    pathname.startsWith("/onboarding");
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
@@ -55,5 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/members/:path*"],
+  matcher: ["/members/:path*", "/onboarding"],
 };

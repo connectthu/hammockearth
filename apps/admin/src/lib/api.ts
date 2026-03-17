@@ -54,11 +54,11 @@ export async function apiDelete(path: string): Promise<void> {
 // ── Collaborator helpers ──────────────────────────────────────────────────────
 
 export interface CollaboratorProfile {
-  id:         string;
-  full_name:  string | null;
-  avatar_url: string | null;
-  bio:        string | null;
-  public_url: string | null;
+  id:           string;
+  full_name:    string | null;
+  avatar_url:   string | null;
+  bio:          string | null;
+  social_links: Record<string, string> | null;
 }
 
 export function apiGetCollaboratorAccounts() {

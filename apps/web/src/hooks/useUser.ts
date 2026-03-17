@@ -7,11 +7,11 @@ import type { User } from "@supabase/supabase-js";
 export type UserRole = "superadmin" | "collaborator" | "member" | "event_customer";
 
 export interface UserProfile {
-  full_name:  string | null;
-  avatar_url: string | null;
-  bio:        string | null;
-  public_url: string | null;
-  role:       UserRole;
+  full_name:    string | null;
+  avatar_url:   string | null;
+  bio:          string | null;
+  social_links: Record<string, string>;
+  role:         UserRole;
 }
 
 export interface UseUserReturn {
@@ -44,7 +44,7 @@ export function useUser(): UseUserReturn {
       }
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, bio, public_url, role")
+        .select("full_name, avatar_url, bio, social_links, role")
         .eq("id", userId)
         .single();
       setProfile(data as UserProfile | null);
