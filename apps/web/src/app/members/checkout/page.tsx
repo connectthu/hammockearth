@@ -120,6 +120,16 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: "percent" | "fixed";
+    discountValue: number;
+    discountCents: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const tierLabel =
     tier === "farm_friend"
       ? "Farm Friend"
@@ -127,6 +137,46 @@ function CheckoutContent() {
 
   const priceDisplay =
     tier === "farm_friend" ? "$10/month" : formatPrice(amountCents);
+
+  const basePrice = tier === "farm_friend" ? 1000 : TIER_PRICES[window] ?? 80000;
+  const discountedPrice = appliedCoupon
+    ? Math.max(0, basePrice - appliedCoupon.discountCents)
+    : basePrice;
+
+  async function handleApplyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch(`${API_URL}/discount-codes/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data.message ?? "Invalid coupon code.");
+        setAppliedCoupon(null);
+        return;
+      }
+      const dc = data.discountCode;
+      const discountCents =
+        dc.discount_type === "percent"
+          ? Math.round((basePrice * dc.discount_value) / 100)
+          : Math.min(dc.discount_value, basePrice);
+      setAppliedCoupon({
+        code: dc.code,
+        discountType: dc.discount_type,
+        discountValue: dc.discount_value,
+        discountCents,
+      });
+      setCouponInput("");
+    } catch {
+      setCouponError("Network error. Please try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
 
   async function handleContinue(e: React.FormEvent) {
     e.preventDefault();
@@ -141,6 +191,9 @@ function CheckoutContent() {
       };
       if (tier === "season_pass") {
         body.priceWindowSlug = window;
+      }
+      if (appliedCoupon) {
+        body.discountCode = appliedCoupon.code;
       }
 
       const res = await fetch(`${API_URL}/memberships/checkout`, {
@@ -208,12 +261,69 @@ function CheckoutContent() {
                   />
                 </div>
 
+                {/* Coupon code — season pass only */}
+                {tier === "season_pass" && (
+                  <div>
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between bg-moss/10 border border-moss/20 rounded-xl px-4 py-3 text-sm">
+                        <span className="text-moss font-medium">
+                          {appliedCoupon.code} —{" "}
+                          {appliedCoupon.discountType === "percent"
+                            ? `${appliedCoupon.discountValue}% off`
+                            : `${formatPrice(appliedCoupon.discountCents)} off`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setAppliedCoupon(null)}
+                          className="text-xs text-charcoal/50 hover:text-charcoal ml-3"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponInput}
+                          onChange={(e) => { setCouponInput(e.target.value); setCouponError(null); }}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())}
+                          placeholder="Coupon code"
+                          className="flex-1 border border-linen rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponInput.trim()}
+                          className="px-4 py-3 rounded-xl border border-linen text-sm font-medium text-moss hover:bg-linen transition-colors disabled:opacity-50"
+                        >
+                          {couponLoading ? "…" : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && (
+                      <p className="text-xs text-red-600 mt-1.5">{couponError}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Price summary */}
                 <div className="bg-linen rounded-xl p-4 text-sm">
                   <div className="flex justify-between font-semibold text-soil">
                     <span>{tierLabel}</span>
                     <span>{priceDisplay}</span>
                   </div>
+                  {appliedCoupon && (
+                    <>
+                      <div className="flex justify-between text-moss mt-1">
+                        <span>Discount ({appliedCoupon.code})</span>
+                        <span>−{formatPrice(appliedCoupon.discountCents)}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold text-soil border-t border-linen mt-2 pt-2">
+                        <span>Total</span>
+                        <span>{formatPrice(discountedPrice)}</span>
+                      </div>
+                    </>
+                  )}
                   {tier === "farm_friend" && (
                     <p className="text-charcoal/50 text-xs mt-1">
                       Billed monthly · Cancel anytime

@@ -8,6 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { SupabaseService } from "../supabase/supabase.service";
 import { StripeService } from "../stripe/stripe.service";
 import { EmailService } from "../email/email.service";
+import { DiscountCodesService } from "../discount-codes/discount-codes.service";
 import type { CreateMembershipCheckoutDto } from "./dto/create-membership-checkout.dto";
 
 @Injectable()
@@ -18,7 +19,8 @@ export class MembershipsService {
     private supabase: SupabaseService,
     private stripe: StripeService,
     private email: EmailService,
-    private config: ConfigService
+    private config: ConfigService,
+    private discountCodes: DiscountCodesService
   ) {}
 
   async checkout(dto: CreateMembershipCheckoutDto) {
@@ -55,20 +57,35 @@ export class MembershipsService {
       throw new BadRequestException("This price window is sold out");
     }
 
-    // 3. Create PaymentIntent (DB row created by webhook on success)
+    // 3. Apply discount code if provided
+    let amountCents = window.price_cents;
+    let discountCodeId: string | undefined;
+    if (dto.discountCode) {
+      const dc = await this.discountCodes.validate(dto.discountCode);
+      const discountAmount = this.discountCodes.calculateDiscount(window.price_cents, 1, dc);
+      amountCents = Math.max(0, window.price_cents - discountAmount);
+      discountCodeId = dc.id;
+    }
+
+    // 4. Create PaymentIntent (DB row created by webhook on success)
     const paymentIntent = await this.stripe.createPaymentIntent(
-      window.price_cents,
+      amountCents,
       {
         type: "season_pass",
         priceWindowSlug: dto.priceWindowSlug,
         name: dto.name,
         email: dto.email,
+        ...(discountCodeId ? { discountCodeId } : {}),
       }
     );
 
+    if (discountCodeId) {
+      await this.discountCodes.incrementUsedCount(discountCodeId);
+    }
+
     return {
       clientSecret: paymentIntent.client_secret,
-      amountCents: window.price_cents,
+      amountCents,
     };
   }
 

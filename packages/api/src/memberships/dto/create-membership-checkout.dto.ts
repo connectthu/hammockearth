@@ -14,4 +14,8 @@ export class CreateMembershipCheckoutDto {
 
   @IsEmail()
   email!: string;
+
+  @IsOptional()
+  @IsString()
+  discountCode?: string;
 }
