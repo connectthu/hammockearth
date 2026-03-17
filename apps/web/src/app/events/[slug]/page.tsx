@@ -60,16 +60,21 @@ export default async function EventDetailPage({ params }: PageProps) {
     .eq("event_id", event.id)
     .eq("status", "confirmed");
 
-  // Creator profile
-  let creator: { full_name: string | null; avatar_url: string | null } | null = null;
-  if (event.created_by) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, avatar_url")
-      .eq("id", event.created_by)
-      .single();
-    creator = profile as any;
-  }
+  // Creator profile + collaborators (fetched in parallel)
+  const [creatorResult, collaboratorsResult] = await Promise.all([
+    event.created_by
+      ? supabase.from("profiles").select("full_name, avatar_url").eq("id", event.created_by).single()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("collaborator_events")
+      .select("profiles(id, full_name, avatar_url, bio, public_url)")
+      .eq("event_id", event.id),
+  ]);
+
+  const creator = creatorResult.data as { full_name: string | null; avatar_url: string | null } | null;
+  const collaborators = ((collaboratorsResult.data ?? []) as any[])
+    .map((row) => row.profiles)
+    .filter(Boolean) as { id: string; full_name: string | null; avatar_url: string | null; bio: string | null; public_url: string | null }[];
 
   // Check if logged-in user has an active membership
   const authClient = createAuthClient();
@@ -143,6 +148,49 @@ export default async function EventDetailPage({ params }: PageProps) {
                   </span>
                 </div>
               </div>
+
+              {/* Collaborators */}
+              {collaborators.length > 0 && (
+                <div className="mt-6 pb-6 border-b border-linen">
+                  <p className="text-xs text-charcoal/40 uppercase tracking-widest font-medium mb-3">
+                    {collaborators.length === 1 ? "Collaborator" : "Collaborators"}
+                  </p>
+                  <div className="space-y-4">
+                    {collaborators.map((c) => (
+                      <div key={c.id} className="flex items-start gap-3">
+                        {c.avatar_url ? (
+                          <img
+                            src={c.avatar_url}
+                            alt={c.full_name ?? "Collaborator"}
+                            className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-linen flex items-center justify-center flex-shrink-0 text-sm font-semibold text-charcoal/40">
+                            {(c.full_name ?? "?").charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          {c.public_url ? (
+                            <a
+                              href={c.public_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-soil hover:text-clay transition-colors"
+                            >
+                              {c.full_name ?? "Collaborator"}
+                            </a>
+                          ) : (
+                            <span className="font-medium text-soil">{c.full_name ?? "Collaborator"}</span>
+                          )}
+                          {c.bio && (
+                            <p className="text-xs text-charcoal/50 mt-0.5 leading-relaxed">{c.bio}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Attendee count */}
               {(attendeeCount ?? 0) > 0 && (
