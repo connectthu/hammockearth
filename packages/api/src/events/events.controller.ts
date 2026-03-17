@@ -34,9 +34,46 @@ export class EventsController {
     return this.eventsService.findAll(true);
   }
 
+  // Must be declared before :slug to avoid route shadowing
+  @Get("collaborator-accounts")
+  listCollaboratorAccounts(@Headers("authorization") auth: string) {
+    this.requireAdmin(auth);
+    return this.eventsService.listCollaboratorAccounts();
+  }
+
   @Get(":slug")
   findOne(@Param("slug") slug: string) {
     return this.eventsService.findBySlug(slug);
+  }
+
+  @Get(":slug/collaborators")
+  getCollaborators(
+    @Headers("authorization") auth: string,
+    @Param("slug") slug: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.getEventCollaborators(slug);
+  }
+
+  @Post(":slug/collaborators")
+  addCollaborator(
+    @Headers("authorization") auth: string,
+    @Param("slug") slug: string,
+    @Body("userId") userId: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.addEventCollaborator(slug, userId);
+  }
+
+  @Delete(":slug/collaborators/:userId")
+  @HttpCode(200)
+  removeCollaborator(
+    @Headers("authorization") auth: string,
+    @Param("slug") slug: string,
+    @Param("userId") userId: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.removeEventCollaborator(slug, userId);
   }
 
   @Post()

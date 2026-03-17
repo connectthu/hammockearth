@@ -50,3 +50,33 @@ export async function apiDelete(path: string): Promise<void> {
   });
   if (!res.ok) throw new Error(`API error ${res.status}`);
 }
+
+// ── Collaborator helpers ──────────────────────────────────────────────────────
+
+export interface CollaboratorProfile {
+  id:         string;
+  full_name:  string | null;
+  avatar_url: string | null;
+  bio:        string | null;
+  public_url: string | null;
+}
+
+export function apiGetCollaboratorAccounts() {
+  return apiGet<CollaboratorProfile[]>("/events/collaborator-accounts");
+}
+
+export function apiGetEventCollaborators(slug: string) {
+  return apiGet<CollaboratorProfile[]>(`/events/${slug}/collaborators`);
+}
+
+export function apiAddEventCollaborator(slug: string, userId: string) {
+  return apiPost<{ success: boolean }>(`/events/${slug}/collaborators`, { userId });
+}
+
+export async function apiRemoveEventCollaborator(slug: string, userId: string) {
+  const res = await fetch(`${API_URL}/events/${slug}/collaborators/${userId}`, {
+    method: "DELETE",
+    headers: { ...getAuthHeader() },
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+}

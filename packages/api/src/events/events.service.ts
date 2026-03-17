@@ -123,4 +123,56 @@ export class EventsService {
     if (error) throw error;
     return { success: true };
   }
+
+  // ── Collaborator management ───────────────────────────────────────────────
+
+  async listCollaboratorAccounts() {
+    const { data, error } = await this.supabase.client
+      .from("profiles")
+      .select("id, full_name, avatar_url, bio, public_url")
+      .eq("role", "collaborator" as any)
+      .order("full_name", { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async getEventCollaborators(slug: string) {
+    const event = await this.findBySlug(slug);
+
+    const { data, error } = await this.supabase.client
+      .from("collaborator_events")
+      .select("collaborator_id, profiles(id, full_name, avatar_url, bio, public_url)")
+      .eq("event_id", event.id);
+
+    if (error) throw error;
+    return (data ?? []).map((row: any) => row.profiles);
+  }
+
+  async addEventCollaborator(slug: string, userId: string) {
+    const event = await this.findBySlug(slug);
+
+    const { error } = await this.supabase.client
+      .from("collaborator_events")
+      .insert({ collaborator_id: userId, event_id: event.id });
+
+    if (error) {
+      if (error.code === "23505") return { success: true }; // already linked
+      throw error;
+    }
+    return { success: true };
+  }
+
+  async removeEventCollaborator(slug: string, userId: string) {
+    const event = await this.findBySlug(slug);
+
+    const { error } = await this.supabase.client
+      .from("collaborator_events")
+      .delete()
+      .eq("event_id", event.id)
+      .eq("collaborator_id", userId);
+
+    if (error) throw error;
+    return { success: true };
+  }
 }

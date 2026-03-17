@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 const PUBLIC_URL = process.env.NEXT_PUBLIC_WEB_URL ?? "https://hammock.earth";
 import { AdminShell } from "@/components/AdminShell";
 import { EventForm } from "@/components/EventForm";
+import { CollaboratorsPanel } from "@/components/CollaboratorsPanel";
 import { apiGet, apiPatch } from "@/lib/api";
 import type { Event } from "@hammock/database";
 
@@ -65,13 +66,23 @@ export default function EditEventPage() {
         )}
 
         {event && (
-          <div className="bg-white rounded-2xl border border-linen p-8">
-            <EventForm
-              initialData={event}
-              onSubmit={handleSubmit}
-              submitLabel="Update Event"
-            />
-          </div>
+          <>
+            <div className="bg-white rounded-2xl border border-linen p-8">
+              <EventForm
+                initialData={event}
+                onSubmit={handleSubmit}
+                submitLabel="Update Event"
+              />
+            </div>
+
+            <div className="bg-white rounded-2xl border border-linen p-8 mt-6">
+              <h2 className="font-serif text-lg text-soil mb-1">Collaborators</h2>
+              <p className="text-xs text-charcoal/50 mb-5">
+                Collaborators can view this event and edit their own profile on the member site.
+              </p>
+              <CollaboratorsPanel eventSlug={event.slug} />
+            </div>
+          </>
         )}
       </div>
     </AdminShell>
