@@ -73,6 +73,18 @@ export function apiAddEventCollaborator(slug: string, userId: string) {
   return apiPost<{ success: boolean }>(`/events/${slug}/collaborators`, { userId });
 }
 
+export function apiCreateOrPromoteCollaborator(
+  email: string,
+  name?: string,
+  linkToEventSlug?: string,
+) {
+  return apiPost<CollaboratorProfile>("/events/collaborator-accounts", {
+    email,
+    name,
+    linkToEventSlug,
+  });
+}
+
 export async function apiRemoveEventCollaborator(slug: string, userId: string) {
   const res = await fetch(`${API_URL}/events/${slug}/collaborators/${userId}`, {
     method: "DELETE",

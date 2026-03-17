@@ -137,6 +137,64 @@ export class EventsService {
     return data ?? [];
   }
 
+  async createOrPromoteCollaborator(
+    email: string,
+    name?: string,
+    linkToEventSlug?: string,
+  ) {
+    // 1. Find or create Supabase auth user
+    let userId: string | null = null;
+
+    const { data: created, error: createError } =
+      await this.supabase.client.auth.admin.createUser({
+        email,
+        user_metadata: name ? { full_name: name } : {},
+        email_confirm: true,
+      });
+
+    if (created?.user?.id) {
+      userId = created.user.id;
+    } else if (createError) {
+      // User already exists — find them
+      const { data: list } = await this.supabase.client.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      const existing = list?.users?.find((u) => u.email === email);
+      if (existing?.id) userId = existing.id;
+    }
+
+    if (!userId) throw new Error(`Could not find or create user: ${email}`);
+
+    // 2. Set role to collaborator (never downgrade superadmin)
+    await this.supabase.client
+      .from("profiles")
+      .update({
+        role: "collaborator" as any,
+        ...(name ? { full_name: name } : {}),
+      })
+      .eq("id", userId)
+      .not("role", "eq", "superadmin");
+
+    // 3. Optionally link to event
+    if (linkToEventSlug) {
+      const event = await this.findBySlug(linkToEventSlug);
+      await this.supabase.client
+        .from("collaborator_events")
+        .insert({ collaborator_id: userId, event_id: event.id })
+        .throwOnError();
+    }
+
+    // 4. Return updated profile
+    const { data: profile } = await this.supabase.client
+      .from("profiles")
+      .select("id, full_name, avatar_url, bio, public_url, role")
+      .eq("id", userId)
+      .single();
+
+    return profile;
+  }
+
   async getEventCollaborators(slug: string) {
     const event = await this.findBySlug(slug);
 

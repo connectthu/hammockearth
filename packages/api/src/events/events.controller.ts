@@ -41,6 +41,17 @@ export class EventsController {
     return this.eventsService.listCollaboratorAccounts();
   }
 
+  @Post("collaborator-accounts")
+  createOrPromoteCollaborator(
+    @Headers("authorization") auth: string,
+    @Body("email") email: string,
+    @Body("name") name?: string,
+    @Body("linkToEventSlug") linkToEventSlug?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.createOrPromoteCollaborator(email, name, linkToEventSlug);
+  }
+
   @Get(":slug")
   findOne(@Param("slug") slug: string) {
     return this.eventsService.findBySlug(slug);
