@@ -7,7 +7,6 @@ import {
   IsArray,
   IsDateString,
   IsIn,
-  Min,
 } from "class-validator";
 
 const CONTENT_TYPES = ["blog_post", "meditation", "video", "recipe", "reflection", "guide", "audio"];
@@ -66,12 +65,10 @@ export class UpdateContentDto {
 
   @IsOptional()
   @IsInt()
-  @Min(1)
   read_time_minutes?: number;
 
   @IsOptional()
   @IsInt()
-  @Min(1)
   watch_listen_minutes?: number;
 
   @IsOptional()

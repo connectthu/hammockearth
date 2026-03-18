@@ -84,7 +84,7 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
     is_featured: false,
     read_time_minutes: "",
     watch_listen_minutes: "",
-    published_at: "",
+    published_at: mode === "create" ? new Date().toISOString().slice(0, 16) : "",
     ...initialValues,
   });
 
@@ -333,7 +333,7 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
           <label className="block text-sm font-medium text-soil mb-1">Read time (min)</label>
           <input
             type="number"
-            min="1"
+            min="0"
             value={values.read_time_minutes}
             onChange={(e) => set("read_time_minutes", e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-linen text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
@@ -344,7 +344,7 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
           <label className="block text-sm font-medium text-soil mb-1">Watch/listen time (min)</label>
           <input
             type="number"
-            min="1"
+            min="0"
             value={values.watch_listen_minutes}
             onChange={(e) => set("watch_listen_minutes", e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-linen text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
