@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   {
@@ -56,7 +58,7 @@ const navItems = [
   },
   {
     label: "Profile",
-    href: "/members/profile/edit",
+    href: "/members/__username__",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -67,6 +69,20 @@ const navItems = [
 
 export function MemberSidebar() {
   const pathname = usePathname();
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", session.user.id)
+        .single();
+      if ((data as any)?.username) setUsername((data as any).username);
+    });
+  }, []);
 
   return (
     <aside className="hidden md:flex flex-col w-56 shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-linen bg-white overflow-y-auto">
@@ -78,9 +94,12 @@ export function MemberSidebar() {
 
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {navItems.map((item) => {
-          const isActive = item.href ? pathname === item.href || pathname.startsWith(item.href + "/") : false;
+          const href = item.href === "/members/__username__"
+            ? (username ? `/members/${username}` : "/members/profile/edit")
+            : item.href;
+          const isActive = href ? pathname === href || pathname.startsWith(href + "/") : false;
 
-          if (item.comingSoon || !item.href) {
+          if (item.comingSoon || !href) {
             return (
               <div
                 key={item.label}
@@ -98,7 +117,7 @@ export function MemberSidebar() {
           return (
             <Link
               key={item.label}
-              href={item.href}
+              href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
                 isActive
                   ? "bg-clay/10 text-clay font-medium"
