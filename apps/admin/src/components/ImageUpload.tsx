@@ -9,9 +9,10 @@ const MAX_SIZE = 5 * 1024 * 1024;
 interface ImageUploadProps {
   value: string;
   onChange: (url: string) => void;
+  uploadEndpoint?: string;
 }
 
-export function ImageUpload({ value, onChange }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, uploadEndpoint = "/upload/event-cover" }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +41,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${API_URL}/upload/event-cover`, {
+      const res = await fetch(`${API_URL}${uploadEndpoint}`, {
         method: "POST",
         headers: getAuthHeader(),
         body: formData,

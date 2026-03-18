@@ -14,6 +14,7 @@ import { UploadModule } from "./upload/upload.module";
 import { SeriesModule } from "./series/series.module";
 import { MembershipsModule } from "./memberships/memberships.module";
 import { CommunicationsModule } from "./communications/communications.module";
+import { ContentLibraryModule } from "./content-library/content-library.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CommunicationsModule } from "./communications/communications.module";
     UploadModule,
     MembershipsModule,
     CommunicationsModule,
+    ContentLibraryModule,
   ],
 })
 export class AppModule {}
