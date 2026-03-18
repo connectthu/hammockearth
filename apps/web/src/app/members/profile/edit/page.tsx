@@ -98,7 +98,6 @@ export default async function EditProfilePage() {
             />
           </div>
         </div>
-        </div>
         </main>
       </div>
       <Footer />

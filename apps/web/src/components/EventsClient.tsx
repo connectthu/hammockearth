@@ -266,6 +266,11 @@ function EventRow({ item }: { item: ListItem }) {
             <span className="text-xs font-semibold text-white bg-clay px-2.5 py-0.5 rounded-full">
               {formatPrice(item.priceCents)}
             </span>
+            {item.memberPriceCents !== null && item.memberPriceCents < item.priceCents && (
+              <span className="text-xs font-medium text-moss bg-moss/10 px-2.5 py-0.5 rounded-full">
+                Members: {formatPrice(item.memberPriceCents)}
+              </span>
+            )}
             {item.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
