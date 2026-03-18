@@ -180,7 +180,9 @@ CREATE POLICY "Collaborators can view their assigned events"
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION sync_member_role()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   IF NEW.status = 'active' THEN
     UPDATE profiles
