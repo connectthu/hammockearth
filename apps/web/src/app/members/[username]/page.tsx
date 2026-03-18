@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@hammock/database";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { MemberSidebar } from "@/components/MemberSidebar";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -75,7 +76,9 @@ export default async function MemberProfilePage({ params }: PageProps) {
     return (
       <>
         <Nav />
-        <main className="pt-16 min-h-screen bg-cream flex items-center justify-center">
+        <div className="pt-16 min-h-screen bg-cream flex">
+          {viewer && <MemberSidebar />}
+        <main className="flex-1 min-w-0 flex items-center justify-center">
           <div className="text-center max-w-sm mx-auto px-4 py-16">
             <div className="text-5xl mb-6">🌿</div>
             <h1 className="font-serif text-2xl text-soil mb-3">
@@ -99,6 +102,7 @@ export default async function MemberProfilePage({ params }: PageProps) {
             </Link>
           </div>
         </main>
+        </div>
         <Footer />
       </>
     );
@@ -136,7 +140,9 @@ export default async function MemberProfilePage({ params }: PageProps) {
   return (
     <>
       <Nav />
-      <main className="pt-16 min-h-screen bg-cream">
+      <div className="pt-16 min-h-screen bg-cream flex">
+        {viewer && <MemberSidebar />}
+        <main className="flex-1 min-w-0">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
           {/* Own profile edit link */}
@@ -279,7 +285,8 @@ export default async function MemberProfilePage({ params }: PageProps) {
           </div>
 
         </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </>
   );
