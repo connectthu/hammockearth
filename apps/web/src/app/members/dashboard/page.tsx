@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@hammock/database";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { MemberSidebar } from "@/components/MemberSidebar";
 import CancelButtonClient from "./CancelButton";
 import type { Metadata } from "next";
 
@@ -127,8 +128,10 @@ export default async function MemberDashboardPage() {
   return (
     <>
       <Nav />
-      <main className="pt-16 min-h-screen bg-cream">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="pt-16 min-h-screen bg-cream flex">
+        <MemberSidebar />
+        <main className="flex-1 min-w-0">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
           {/* ── Header ─────────────────────────────────────────────────────── */}
           <div className="bg-white rounded-2xl border border-linen p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -389,7 +392,8 @@ export default async function MemberDashboardPage() {
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </>
   );

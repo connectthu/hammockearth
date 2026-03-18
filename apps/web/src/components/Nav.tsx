@@ -4,11 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-const links = [
+const publicLinks = [
   { label: "About", href: "/#about" },
   { label: "Events", href: "/events" },
   { label: "Programs", href: "/#programs" },
-  { label: "Library", href: "/library" },
   { label: "Membership", href: "/#membership" },
   { label: "Visit", href: "/#visit" },
   { label: "Team", href: "/#team" },
@@ -79,7 +78,7 @@ export function Nav() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
-            {links.map((l) => (
+            {publicLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -104,13 +103,20 @@ export function Nav() {
                   {authUser.name.split(" ")[0]}
                 </button>
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-linen overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-linen overflow-hidden">
                     <Link
                       href="/members/dashboard"
                       className="block px-4 py-2.5 text-sm text-soil hover:bg-linen transition-colors"
                       onClick={() => setDropdownOpen(false)}
                     >
                       Dashboard
+                    </Link>
+                    <Link
+                      href="/library"
+                      className="block px-4 py-2.5 text-sm text-soil hover:bg-linen transition-colors border-t border-linen"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Library
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -151,7 +157,7 @@ export function Nav() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-cream border-t border-linen px-4 py-4 space-y-3">
-          {links.map((l) => (
+          {publicLinks.map((l) => (
             <a
               key={l.href}
               href={l.href}
@@ -176,6 +182,13 @@ export function Nav() {
                   </span>
                 )}
                 {authUser.name}
+              </Link>
+              <Link
+                href="/library"
+                className="block text-charcoal/70 hover:text-soil py-1"
+                onClick={() => setOpen(false)}
+              >
+                Library
               </Link>
               <button
                 onClick={handleLogout}
