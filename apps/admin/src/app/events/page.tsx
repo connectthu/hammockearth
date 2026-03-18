@@ -137,8 +137,11 @@ export default function AdminEventsPage() {
                   <td className="px-4 py-3 text-charcoal/70 hidden sm:table-cell">
                     {formatDate(event.start_at)}
                   </td>
-                  <td className="px-4 py-3 text-charcoal/70 hidden md:table-cell">
-                    {formatPrice(event.price_cents)}
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className="text-charcoal/70">{formatPrice(event.price_cents)}</span>
+                    {event.member_price_cents > 0 && event.member_price_cents < event.price_cents && (
+                      <span className="text-moss text-xs ml-1.5">· Members {formatPrice(event.member_price_cents)}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span
