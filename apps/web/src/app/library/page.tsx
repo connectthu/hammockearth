@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { LibraryContent } from "@/components/LibraryContent";
+import { MemberSidebar } from "@/components/MemberSidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -75,24 +76,29 @@ export default async function LibraryPage() {
   const featured = items.find((i: any) => i.is_featured && !i.locked) ?? null;
   const userLevel = levels[levels.length - 1]; // highest level
 
+  const isLoggedIn = levels.includes("registered");
+
   return (
     <div className="min-h-screen bg-cream">
       <Nav />
-      <main className="pt-16">
-        {/* Hero */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-3">
-            The Living Room
-          </h1>
-          <p className="text-lg text-soil/60 max-w-2xl">
-            Resources for Growth — a curated sanctuary of knowledge, from regenerative soil
-            practices to the art of community gathering. Take a deep breath and explore at
-            your own pace.
-          </p>
-        </section>
+      <div className="pt-16 flex">
+        {isLoggedIn && <MemberSidebar />}
+        <main className="flex-1 min-w-0">
+          {/* Hero */}
+          <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-3">
+              The Living Room
+            </h1>
+            <p className="text-lg text-soil/60 max-w-2xl">
+              Resources for Growth — a curated sanctuary of knowledge, from regenerative soil
+              practices to the art of community gathering. Take a deep breath and explore at
+              your own pace.
+            </p>
+          </section>
 
-        <LibraryContent items={items} featured={featured} userLevel={userLevel} />
-      </main>
+          <LibraryContent items={items} featured={featured} userLevel={userLevel} />
+        </main>
+      </div>
       <Footer />
     </div>
   );

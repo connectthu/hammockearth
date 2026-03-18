@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ContentSocialLayer } from "@/components/ContentSocialLayer";
+import { MemberSidebar } from "@/components/MemberSidebar";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -146,10 +147,14 @@ export default async function ContentItemPage({ params }: PageProps) {
     hearted = !!heartRow;
   }
 
+  const isLoggedIn = !!userId;
+
   return (
     <div className="min-h-screen bg-cream">
       <Nav />
-      <main className="pt-16">
+      <div className="pt-16 flex">
+        {isLoggedIn && <MemberSidebar />}
+      <main className="flex-1 min-w-0">
         {/* Cover image */}
         {item.cover_image_url && (
           <div className="w-full h-72 sm:h-96 overflow-hidden bg-linen">
@@ -261,6 +266,7 @@ export default async function ContentItemPage({ params }: PageProps) {
           />
         </div>
       </main>
+      </div>
       <Footer />
     </div>
   );
