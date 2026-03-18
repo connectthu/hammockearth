@@ -28,10 +28,30 @@ type EventFormData = {
   cover_image_url: string;
 };
 
+// Convert UTC ISO string → "YYYY-MM-DDTHH:MM" in America/Toronto for the picker
+function isoToTorontoLocal(iso: string): string {
+  return new Date(iso)
+    .toLocaleString("sv-SE", { timeZone: "America/Toronto" })
+    .slice(0, 16)
+    .replace(" ", "T");
+}
+
+// Interpret picker value ("YYYY-MM-DDTHH:MM") as America/Toronto time, return UTC ISO
+function torontoLocalToISO(localStr: string): string {
+  const utcGuess = new Date(localStr + "Z");
+  const torontoStr = utcGuess
+    .toLocaleString("sv-SE", { timeZone: "America/Toronto" })
+    .slice(0, 16)
+    .replace(" ", "T");
+  const torontoAsUtc = new Date(torontoStr + "Z");
+  const offsetMs = utcGuess.getTime() - torontoAsUtc.getTime();
+  return new Date(utcGuess.getTime() + offsetMs).toISOString();
+}
+
 function toFormData(event?: Partial<Event>): EventFormData {
   const toDatetimeLocal = (iso?: string | null) => {
     if (!iso) return "";
-    return new Date(iso).toISOString().slice(0, 16);
+    return isoToTorontoLocal(iso);
   };
 
   return {
@@ -105,8 +125,8 @@ export function EventForm({
         description: form.description || undefined,
         event_type: form.event_type || undefined,
         cover_image_url: form.cover_image_url || undefined,
-        start_at: form.start_at ? new Date(form.start_at).toISOString() : undefined,
-        end_at: form.end_at ? new Date(form.end_at).toISOString() : undefined,
+        start_at: form.start_at ? torontoLocalToISO(form.start_at) : undefined,
+        end_at: form.end_at ? torontoLocalToISO(form.end_at) : undefined,
         location: form.location,
         is_online: form.is_online,
         capacity: form.capacity ? parseInt(form.capacity) : undefined,

@@ -19,8 +19,9 @@ for (let h = 0; h < 24; h++) {
 }
 
 function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return new Date()
+    .toLocaleString("sv-SE", { timeZone: "America/Toronto" })
+    .slice(0, 10);
 }
 
 const inputClass =
