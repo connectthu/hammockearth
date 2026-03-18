@@ -394,7 +394,10 @@ CREATE POLICY "Admins can read facilitator inquiries"
 -- Waitlist signups: insert-only for public
 CREATE POLICY "Anyone can sign up for waitlist"
   ON waitlist_signups FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    email IS NOT NULL AND email <> ''
+    AND source IS NOT NULL AND source <> ''
+  );
 
 CREATE POLICY "Admins can read waitlist signups"
   ON waitlist_signups FOR SELECT
