@@ -5,6 +5,7 @@ import { createServerClient } from "@hammock/database";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { EditProfileForm } from "@/components/profile/EditProfileForm";
+import { MemberSidebar } from "@/components/MemberSidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -56,7 +57,9 @@ export default async function EditProfilePage() {
   return (
     <>
       <Nav />
-      <main className="pt-16 min-h-screen bg-cream">
+      <div className="pt-16 min-h-screen bg-cream flex">
+        <MemberSidebar />
+        <main className="flex-1 min-w-0">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex items-center gap-4 mb-8">
             <Link
@@ -95,7 +98,9 @@ export default async function EditProfilePage() {
             />
           </div>
         </div>
-      </main>
+        </div>
+        </main>
+      </div>
       <Footer />
     </>
   );

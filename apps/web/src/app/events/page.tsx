@@ -1,7 +1,9 @@
 import { createServerClient } from "@hammock/database";
+import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { EventsClient } from "@/components/EventsClient";
+import { MemberSidebar } from "@/components/MemberSidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -60,6 +62,10 @@ interface PageProps {
 }
 
 export default async function EventsPage({ searchParams }: PageProps) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
+
   const [events, tags, seriesRaw] = await Promise.all([
     getEvents(searchParams.tag, searchParams.type),
     getAllTags(),
@@ -78,27 +84,30 @@ export default async function EventsPage({ searchParams }: PageProps) {
   return (
     <>
       <Nav />
-      <main className="pt-16">
-        {/* Header */}
-        <div className="bg-linen border-b border-linen py-16 text-center">
-          <p className="section-label mb-3">On the Land &amp; Online</p>
-          <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-4">
-            Events &amp; Dinners
-          </h1>
-          <p className="text-charcoal/70 max-w-xl mx-auto">
-            Seasonal gatherings, farm tours, communal meals, and immersive
-            workshops at Hammock Hills in Hillsdale, Ontario.
-          </p>
-        </div>
+      <div className="pt-16 flex">
+        {isLoggedIn && <MemberSidebar />}
+        <main className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="bg-linen border-b border-linen py-16 text-center">
+            <p className="section-label mb-3">On the Land &amp; Online</p>
+            <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-4">
+              Events &amp; Dinners
+            </h1>
+            <p className="text-charcoal/70 max-w-xl mx-auto">
+              Seasonal gatherings, farm tours, communal meals, and immersive
+              workshops at Hammock Hills in Hillsdale, Ontario.
+            </p>
+          </div>
 
-        <EventsClient
-          events={events as any}
-          seriesList={seriesList as any}
-          allTags={tags}
-          currentType={searchParams.type}
-          currentTag={searchParams.tag}
-        />
-      </main>
+          <EventsClient
+            events={events as any}
+            seriesList={seriesList as any}
+            allTags={tags}
+            currentType={searchParams.type}
+            currentTag={searchParams.tag}
+          />
+        </main>
+      </div>
       <Footer />
     </>
   );
