@@ -379,7 +379,11 @@ CREATE POLICY "Admins can manage content"
 -- Facilitator inquiries: insert-only for public; admins can read
 CREATE POLICY "Anyone can submit facilitator inquiry"
   ON facilitator_inquiries FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    name IS NOT NULL AND name <> ''
+    AND email IS NOT NULL AND email <> ''
+    AND message IS NOT NULL AND message <> ''
+  );
 
 CREATE POLICY "Admins can read facilitator inquiries"
   ON facilitator_inquiries FOR SELECT
