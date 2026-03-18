@@ -94,6 +94,13 @@ export class WebhooksService {
               membershipType: "season_pass",
               validUntil: "December 31, 2026",
             }).catch((err) => this.logger.error("Failed to send membership welcome email", err));
+
+            // Admin notification
+            this.email.sendAdminNotification(
+              "new_membership",
+              `New Season Pass — ${name || email}`,
+              `<p><strong>${name || "Someone"}</strong> (${email}) purchased a Season Pass.</p>`
+            ).catch(() => {});
           } catch (err) {
             this.logger.error("Failed to handle season_pass payment", err);
           }
@@ -150,6 +157,13 @@ export class WebhooksService {
               icsContent,
             });
           }
+
+          // Admin notification (fire-and-forget)
+          this.email.sendAdminNotification(
+            "new_registration",
+            `New Registration — ${reg.guest_name || reg.guest_email}`,
+            `<p><strong>${reg.guest_name}</strong> (${reg.guest_email}) registered. Registration ID: ${reg.id}</p>`
+          ).catch(() => {});
         } catch (err) {
           this.logger.error("Failed to send booking confirmation email", err);
           // Email failure must NOT return 500 — already caught here
@@ -248,6 +262,13 @@ export class WebhooksService {
           }).catch((err) =>
             this.logger.error("Failed to send Farm Friend welcome email", err)
           );
+
+          // Admin notification
+          this.email.sendAdminNotification(
+            "new_membership",
+            `New Farm Friend — ${name || email}`,
+            `<p><strong>${name || "Someone"}</strong> (${email}) started a Farm Friend membership.</p>`
+          ).catch(() => {});
         }
       } else {
         // Look up userId from membership row

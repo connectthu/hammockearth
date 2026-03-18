@@ -10,6 +10,7 @@ const navItems = [
   { label: "Members", href: "/memberships" },
   { label: "Waitlist signups", href: "/waitlist" },
   { label: "Facilitator inquiries", href: "/facilitator-inquiries" },
+  { label: "Communications", href: "/communications" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

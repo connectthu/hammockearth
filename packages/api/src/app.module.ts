@@ -13,6 +13,7 @@ import { WebhooksModule } from "./webhooks/webhooks.module";
 import { UploadModule } from "./upload/upload.module";
 import { SeriesModule } from "./series/series.module";
 import { MembershipsModule } from "./memberships/memberships.module";
+import { CommunicationsModule } from "./communications/communications.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { MembershipsModule } from "./memberships/memberships.module";
     WebhooksModule,
     UploadModule,
     MembershipsModule,
+    CommunicationsModule,
   ],
 })
 export class AppModule {}

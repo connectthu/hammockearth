@@ -179,6 +179,13 @@ export class RegistrationsService {
         this.logger.error("Failed to send free event confirmation email", err);
       }
 
+      // Admin notification (fire-and-forget)
+      this.email.sendAdminNotification(
+        "new_registration",
+        `New Registration — ${dto.guestName || dto.guestEmail}`,
+        `<p><strong>${dto.guestName}</strong> (${dto.guestEmail}) registered for <strong>${event.title}</strong> (free).</p>`
+      ).catch(() => {});
+
       return { status: "confirmed", registrationId: reg.id };
     }
 

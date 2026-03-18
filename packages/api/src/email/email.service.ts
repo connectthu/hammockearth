@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { SupabaseService } from "../supabase/supabase.service";
 import type { Event, EventSeries, EventSeriesSession } from "@hammock/database";
 
 interface SendEmailOptions {
@@ -14,7 +15,10 @@ interface SendEmailOptions {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    private supabase: SupabaseService
+  ) {}
 
   async send(opts: SendEmailOptions): Promise<void> {
     const apiKey = this.config.get<string>("RESEND_API_KEY");
@@ -56,6 +60,45 @@ export class EmailService {
     }
   }
 
+  private substituteVariables(template: string, vars: Record<string, string>): string {
+    return Object.entries(vars).reduce(
+      (t, [k, v]) => t.replaceAll(`{{${k}}}`, v ?? ""),
+      template
+    );
+  }
+
+  private wrapEmailBody(body: string): string {
+    return `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#3B2F2F">${body}</div>`;
+  }
+
+  private async fetchTemplate(key: string): Promise<{ subject: string; body_html: string } | null> {
+    try {
+      const { data } = await this.supabase.client
+        .from("email_templates" as any)
+        .select("subject,body_html")
+        .eq("key", key)
+        .single();
+      return (data as any) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async sendAdminNotification(eventKey: string, subject: string, html: string): Promise<void> {
+    try {
+      const { data } = await this.supabase.client
+        .from("notification_settings" as any)
+        .select("enabled,recipient_emails")
+        .eq("key", eventKey)
+        .single();
+      const row = data as any;
+      if (!row?.enabled || !row.recipient_emails?.length) return;
+      await this.send({ to: row.recipient_emails, subject, html });
+    } catch (err) {
+      this.logger.error(`Failed to send admin notification (${eventKey})`, err);
+    }
+  }
+
   facilitatorInquiryNotification(opts: {
     name: string;
     email: string;
@@ -89,7 +132,7 @@ export class EmailService {
     });
   }
 
-  bookingConfirmation(opts: {
+  async bookingConfirmation(opts: {
     to: string;
     name: string;
     event: Event;
@@ -112,8 +155,40 @@ export class EmailService {
       timeZoneName: "short",
       timeZone: "America/Toronto",
     });
-    const amount = `$${(amountPaidCents / 100).toFixed(2)} CAD`;
+    const amount = amountPaidCents === 0 ? "Free" : `$${(amountPaidCents / 100).toFixed(2)} CAD`;
 
+    const confirmationDetailsBlock = event.confirmation_details
+      ? `<div style="margin:24px 0;padding:20px;background:#FBF7F0;border-radius:8px;border-left:3px solid #C4845A">
+          <p style="margin:0 0 8px;font-weight:bold;color:#3B2F2F">Details for this event</p>
+          ${event.confirmation_details}
+        </div>`
+      : "";
+
+    const tmpl = await this.fetchTemplate("booking_confirmation");
+
+    if (tmpl) {
+      const html = this.wrapEmailBody(
+        this.substituteVariables(tmpl.body_html, {
+          name,
+          event_title: event.title,
+          event_date: formattedDate,
+          event_time: formattedTime,
+          event_location: event.location ?? "",
+          quantity: String(quantity),
+          amount_paid: amount,
+          confirmation_details_block: confirmationDetailsBlock,
+        })
+      );
+      const subject = this.substituteVariables(tmpl.subject, { event_title: event.title });
+      return this.send({
+        to,
+        subject,
+        html,
+        attachments: [{ filename: `${event.slug}.ics`, content: Buffer.from(icsContent).toString("base64") }],
+      });
+    }
+
+    // Fallback
     return this.send({
       to,
       subject: `You're registered — ${event.title}`,
@@ -151,11 +226,7 @@ export class EmailService {
           </table>
 
           <p>The .ics file is attached — open it to add the event to your calendar.</p>
-          ${event.confirmation_details ? `
-          <div style="margin:24px 0;padding:20px;background:#FBF7F0;border-radius:8px;border-left:3px solid #C4845A">
-            <p style="margin:0 0 8px;font-weight:bold;color:#3B2F2F">Details for this event</p>
-            ${event.confirmation_details}
-          </div>` : ""}
+          ${confirmationDetailsBlock}
           <p>If you have any questions, reply to this email or reach us at <a href="mailto:hello@hammock.earth" style="color:#C4845A">hello@hammock.earth</a>.</p>
           <p>With warmth,<br>Thu &amp; Anahita<br>Hammock Earth</p>
         </div>
@@ -266,7 +337,7 @@ export class EmailService {
     });
   }
 
-  membershipWelcome(opts: {
+  async membershipWelcome(opts: {
     to: string;
     name: string;
     membershipType: "season_pass" | "farm_friend";
@@ -275,6 +346,32 @@ export class EmailService {
     const { to, name, membershipType, validUntil } = opts;
     const isSeasonPass = membershipType === "season_pass";
 
+    const templateKey = isSeasonPass
+      ? "membership_welcome_season_pass"
+      : "membership_welcome_farm_friend";
+
+    const validityHtml = isSeasonPass && validUntil
+      ? `<p style="color:#6B7C5C;font-size:14px">Your membership is valid through <strong>${validUntil}</strong>.</p>`
+      : !isSeasonPass
+      ? `<p style="color:#6B7C5C;font-size:14px">Your Farm Friend membership renews at <strong>$10/month</strong>. Cancel anytime from your dashboard.</p>`
+      : "";
+
+    const dashboardUrl = "https://hammock.earth/members/dashboard";
+
+    const tmpl = await this.fetchTemplate(templateKey);
+
+    if (tmpl) {
+      const html = this.wrapEmailBody(
+        this.substituteVariables(tmpl.body_html, {
+          name: name || "there",
+          validity_html: validityHtml,
+          dashboard_url: dashboardUrl,
+        })
+      );
+      return this.send({ to, subject: tmpl.subject, html });
+    }
+
+    // Fallback
     const perksHtml = isSeasonPass
       ? `
         <ul style="padding-left:20px;line-height:1.8;color:#3B2F2F">
@@ -295,12 +392,6 @@ export class EmailService {
           <li>Monthly newsletter</li>
         </ul>`;
 
-    const validityHtml = isSeasonPass && validUntil
-      ? `<p style="color:#6B7C5C;font-size:14px">Your membership is valid through <strong>${validUntil}</strong>.</p>`
-      : !isSeasonPass
-      ? `<p style="color:#6B7C5C;font-size:14px">Your Farm Friend membership renews at <strong>$10/month</strong>. Cancel anytime from your dashboard.</p>`
-      : "";
-
     return this.send({
       to,
       subject: `Welcome to Hammock Earth — Your membership is active`,
@@ -317,7 +408,7 @@ export class EmailService {
             ${perksHtml}
           </div>
 
-          <p>Head to your <a href="https://hammock.earth/members/dashboard" style="color:#C4845A">member dashboard</a> to explore upcoming events and manage your membership.</p>
+          <p>Head to your <a href="${dashboardUrl}" style="color:#C4845A">member dashboard</a> to explore upcoming events and manage your membership.</p>
           <p>If you have any questions, reply to this email or reach us at <a href="mailto:hello@hammock.earth" style="color:#C4845A">hello@hammock.earth</a>.</p>
           <p>With warmth,<br>Thu &amp; Anahita<br>Hammock Earth</p>
         </div>
