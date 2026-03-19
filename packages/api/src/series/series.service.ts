@@ -2,16 +2,24 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from "@nestjs/common";
+import { createHash } from "crypto";
 import { SupabaseService } from "../supabase/supabase.service";
+import { ConfigService } from "@nestjs/config";
 import type { CreateSeriesDto } from "./dto/create-series.dto";
 import type { UpdateSeriesDto } from "./dto/update-series.dto";
 import type { UpdateSeriesSessionDto } from "./dto/update-series-session.dto";
+import type { CreateSessionVideoDto } from "./dto/create-session-video.dto";
+import type { UpdateSessionVideoDto } from "./dto/update-session-video.dto";
 import type { EventSeries, EventSeriesSession } from "@hammock/database";
 
 @Injectable()
 export class SeriesService {
-  constructor(private supabase: SupabaseService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private config: ConfigService,
+  ) {}
 
   async findAll(includeUnpublished = false) {
     let query = this.supabase.client
@@ -204,6 +212,207 @@ export class SeriesService {
 
     if (error) throw error;
     return { success: true };
+  }
+
+  // ── Session videos ────────────────────────────────────────────────────────
+
+  async getVideoUploadUrl(sessionId: string, title: string) {
+    const apiKey = this.config.get<string>("BUNNY_API_KEY") ?? "";
+    const libraryId = this.config.get<string>("BUNNY_LIBRARY_ID") ?? "";
+
+    const createRes = await fetch(
+      `https://video.bunnycdn.com/library/${libraryId}/videos`,
+      {
+        method: "POST",
+        headers: {
+          AccessKey: apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title }),
+      },
+    );
+    if (!createRes.ok) throw new Error("Failed to create Bunny video");
+    const { guid: videoId } = await createRes.json();
+
+    const expiry = Math.floor(Date.now() / 1000) + 3600;
+    const signature = createHash("sha256")
+      .update(`${libraryId}${apiKey}${expiry}${videoId}`)
+      .digest("hex");
+
+    return {
+      videoId,
+      libraryId,
+      uploadUrl: `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`,
+      signature,
+      expiry,
+    };
+  }
+
+  async createSessionVideo(sessionId: string, dto: CreateSessionVideoDto) {
+    const cdnHostname =
+      this.config.get<string>("BUNNY_CDN_HOSTNAME") ?? "iframe.mediadelivery.net";
+    const libraryId = this.config.get<string>("BUNNY_LIBRARY_ID") ?? "";
+
+    const bunnyUrl = dto.bunnyVideoId
+      ? `https://${cdnHostname}/embed/${libraryId}/${dto.bunnyVideoId}`
+      : (dto.bunnyUrl ?? "");
+
+    const { data: sessionRow, error: sessionErr } = await this.supabase.client
+      .from("event_series_sessions")
+      .select("series_id")
+      .eq("id", sessionId)
+      .single();
+
+    if (sessionErr || !sessionRow)
+      throw new NotFoundException(`Session not found: ${sessionId}`);
+
+    const { data, error } = await this.supabase.client
+      .from("session_videos" as any)
+      .insert({
+        session_id: sessionId,
+        series_id: (sessionRow as any).series_id,
+        title: dto.title,
+        video_type: dto.videoType ?? "main_recording",
+        bunny_url: bunnyUrl,
+        bunny_video_id: dto.bunnyVideoId ?? null,
+        description: dto.description ?? null,
+        facilitator: dto.facilitator ?? null,
+        duration_minutes: dto.durationMinutes ?? null,
+        display_order: dto.displayOrder ?? 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async listSessionVideos(sessionId: string) {
+    const { data, error } = await this.supabase.client
+      .from("session_videos" as any)
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []) as unknown[];
+  }
+
+  async updateSessionVideo(videoId: string, dto: UpdateSessionVideoDto) {
+    const payload: Record<string, unknown> = {};
+    if (dto.title !== undefined) payload.title = dto.title;
+    if (dto.videoType !== undefined) payload.video_type = dto.videoType;
+    if (dto.bunnyUrl !== undefined) payload.bunny_url = dto.bunnyUrl;
+    if (dto.description !== undefined) payload.description = dto.description;
+    if (dto.facilitator !== undefined) payload.facilitator = dto.facilitator;
+    if (dto.durationMinutes !== undefined) payload.duration_minutes = dto.durationMinutes;
+    if (dto.displayOrder !== undefined) payload.display_order = dto.displayOrder;
+    if (dto.isPublished !== undefined) {
+      payload.is_published = dto.isPublished;
+      if (dto.isPublished) payload.published_at = new Date().toISOString();
+    }
+
+    const { data, error } = await this.supabase.client
+      .from("session_videos" as any)
+      .update(payload)
+      .eq("id", videoId)
+      .select()
+      .single();
+
+    if (error || !data) throw new NotFoundException(`Video not found: ${videoId}`);
+    return data;
+  }
+
+  async deleteSessionVideo(videoId: string) {
+    const { data: row } = await this.supabase.client
+      .from("session_videos" as any)
+      .select("bunny_video_id")
+      .eq("id", videoId)
+      .single();
+
+    const bunnyVideoId = (row as any)?.bunny_video_id;
+    if (bunnyVideoId) {
+      const apiKey = this.config.get<string>("BUNNY_API_KEY") ?? "";
+      const libraryId = this.config.get<string>("BUNNY_LIBRARY_ID") ?? "";
+      await fetch(
+        `https://video.bunnycdn.com/library/${libraryId}/videos/${bunnyVideoId}`,
+        { method: "DELETE", headers: { AccessKey: apiKey } },
+      ).catch(() => null);
+    }
+
+    const { error } = await this.supabase.client
+      .from("session_videos" as any)
+      .delete()
+      .eq("id", videoId);
+
+    if (error) throw error;
+    return { success: true };
+  }
+
+  async getSeriesRecordings(slug: string, userId: string) {
+    const { data: seriesRows } = await this.supabase.client
+      .from("event_series")
+      .select("*")
+      .eq("slug", slug)
+      .limit(1);
+
+    if (!seriesRows || seriesRows.length === 0)
+      throw new NotFoundException(`Series not found: ${slug}`);
+    const series = seriesRows[0] as any;
+
+    // Check access: confirmed full_series registration or access grant
+    const [{ data: regData }, { data: grantData }] = await Promise.all([
+      this.supabase.client
+        .from("event_registrations")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("series_id", series.id)
+        .eq("registration_type", "full_series")
+        .eq("status", "confirmed")
+        .limit(1),
+      this.supabase.client
+        .from("series_video_access_grants" as any)
+        .select("id")
+        .eq("user_id", userId)
+        .eq("series_id", series.id)
+        .limit(1),
+    ]);
+
+    const hasAccess =
+      (regData && regData.length > 0) || (grantData && (grantData as any[]).length > 0);
+    if (!hasAccess) throw new ForbiddenException("No access to this series recordings");
+
+    const { data: sessionsData } = await this.supabase.client
+      .from("event_series_sessions")
+      .select("*")
+      .eq("series_id", series.id)
+      .order("session_number", { ascending: true });
+
+    const sessions = sessionsData ?? [];
+    const sessionIds = (sessions as any[]).map((s: any) => s.id);
+
+    let videosBySession: Record<string, any[]> = {};
+    if (sessionIds.length > 0) {
+      const { data: videosData } = await this.supabase.client
+        .from("session_videos" as any)
+        .select("*")
+        .in("session_id", sessionIds)
+        .eq("is_published", true)
+        .order("display_order", { ascending: true });
+
+      for (const v of (videosData ?? []) as any[]) {
+        if (!videosBySession[v.session_id]) videosBySession[v.session_id] = [];
+        videosBySession[v.session_id].push(v);
+      }
+    }
+
+    return {
+      ...series,
+      sessions: (sessions as any[]).map((s: any) => ({
+        ...s,
+        videos: videosBySession[s.id] ?? [],
+      })),
+    };
   }
 
   // ── Video access grants ───────────────────────────────────────────────────

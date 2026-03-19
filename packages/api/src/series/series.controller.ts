@@ -10,12 +10,17 @@ import {
   UnauthorizedException,
   Query,
   HttpCode,
+  UseGuards,
+  Req,
 } from "@nestjs/common";
 import { SeriesService } from "./series.service";
 import { CreateSeriesDto } from "./dto/create-series.dto";
 import { UpdateSeriesDto } from "./dto/update-series.dto";
 import { UpdateSeriesSessionDto } from "./dto/update-series-session.dto";
+import { CreateSessionVideoDto } from "./dto/create-session-video.dto";
+import { UpdateSessionVideoDto } from "./dto/update-session-video.dto";
 import { ConfigService } from "@nestjs/config";
+import { SupabaseAuthGuard } from "../auth/supabase-auth.guard";
 
 @Controller("series")
 export class SeriesController {
@@ -36,6 +41,63 @@ export class SeriesController {
     const includeUnpublished = admin === "true";
     if (includeUnpublished) this.requireAdmin(auth);
     return this.seriesService.findAll(includeUnpublished);
+  }
+
+  // ── Session videos (declared before :slug to avoid shadowing) ────────────
+
+  @Post(":id/sessions/:sessionId/videos/upload-url")
+  getVideoUploadUrl(
+    @Param("sessionId") sessionId: string,
+    @Body("title") title: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.getVideoUploadUrl(sessionId, title ?? "Untitled");
+  }
+
+  @Post(":id/sessions/:sessionId/videos")
+  createSessionVideo(
+    @Param("sessionId") sessionId: string,
+    @Body() dto: CreateSessionVideoDto,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.createSessionVideo(sessionId, dto);
+  }
+
+  @Get(":id/sessions/:sessionId/videos")
+  listSessionVideos(
+    @Param("sessionId") sessionId: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.listSessionVideos(sessionId);
+  }
+
+  @Patch(":id/sessions/:sessionId/videos/:videoId")
+  updateSessionVideo(
+    @Param("videoId") videoId: string,
+    @Body() dto: UpdateSessionVideoDto,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.updateSessionVideo(videoId, dto);
+  }
+
+  @Delete(":id/sessions/:sessionId/videos/:videoId")
+  @HttpCode(200)
+  deleteSessionVideo(
+    @Param("videoId") videoId: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.deleteSessionVideo(videoId);
+  }
+
+  @Get(":slug/recordings")
+  @UseGuards(SupabaseAuthGuard)
+  getSeriesRecordings(@Param("slug") slug: string, @Req() req: any) {
+    return this.seriesService.getSeriesRecordings(slug, req.userId);
   }
 
   // ── Access grants (declared before :slug to avoid shadowing) ─────────────

@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import CancelButtonClient from "./CancelButton";
 import CollaboratorEventsClient from "./CollaboratorEventsClient";
+import DashboardProgramsClient from "./DashboardProgramsClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -93,6 +94,42 @@ export default async function MemberDashboardPage() {
     .order("start_at", { ascending: true })
     .limit(20);
   const events = (eventsData as any[]) ?? [];
+
+  // Fetch My Programs (full_series registrations + access grants)
+  const { data: regRows } = await db
+    .from("event_registrations")
+    .select("series_id")
+    .eq("user_id", user.id)
+    .eq("registration_type", "full_series" as any)
+    .eq("status", "confirmed");
+
+  const { data: grantRows } = await db
+    .from("series_video_access_grants" as any)
+    .select("series_id")
+    .eq("user_id", user.id);
+
+  const seriesIds = [
+    ...new Set([
+      ...((regRows as any[]) ?? []).map((r: any) => r.series_id).filter(Boolean),
+      ...((grantRows as any[]) ?? []).map((r: any) => r.series_id).filter(Boolean),
+    ]),
+  ];
+
+  const { data: myProgramsRaw } =
+    seriesIds.length > 0
+      ? await db
+          .from("event_series")
+          .select(
+            `id, title, slug, cover_image_url, status,
+            event_series_sessions (
+              id, session_number, title, start_at, end_at, status,
+              session_videos (id, title, video_type, bunny_url, duration_minutes, display_order, is_published)
+            )`
+          )
+          .in("id", seriesIds)
+      : { data: [] };
+
+  const myPrograms = (myProgramsRaw as any[]) ?? [];
 
   // Fetch collaborator-assigned events (for collaborators and superadmins)
   const role: string = profile?.role ?? "event_customer";
@@ -202,6 +239,11 @@ export default async function MemberDashboardPage() {
               {/* ── Collaborator Events ───────────────────────────────────── */}
               {isCollaborator && (
                 <CollaboratorEventsClient assignedEvents={assignedEvents} />
+              )}
+
+              {/* ── My Programs ──────────────────────────────────────────────── */}
+              {myPrograms.length > 0 && (
+                <DashboardProgramsClient myPrograms={myPrograms} />
               )}
 
               {/* ── Upcoming Events ──────────────────────────────────────────── */}
