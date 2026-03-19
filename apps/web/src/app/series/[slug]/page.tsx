@@ -61,12 +61,14 @@ export default async function SeriesDetailPage({ params }: PageProps) {
   if (viewer) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("membership_type, membership_status")
+      .select("membership_type, membership_status, role")
       .eq("id", viewer.id)
       .single();
+    const p = profile as any;
     viewerIsMember =
-      (profile as any)?.membership_status === "active" &&
-      ["season_pass", "try_a_month"].includes((profile as any)?.membership_type ?? "");
+      ["superadmin", "collaborator"].includes(p?.role ?? "") ||
+      (p?.membership_status === "active" &&
+        ["season_pass", "try_a_month"].includes(p?.membership_type ?? ""));
   }
 
   // Creator profile
