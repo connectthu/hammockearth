@@ -113,13 +113,6 @@ export function Nav() {
                     >
                       Dashboard
                     </Link>
-                    <Link
-                      href="/library"
-                      className="block px-4 py-2.5 text-sm text-soil hover:bg-linen transition-colors border-t border-linen"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Library
-                    </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2.5 text-sm text-charcoal/60 hover:bg-linen transition-colors border-t border-linen"
@@ -184,13 +177,6 @@ export function Nav() {
                   </span>
                 )}
                 {authUser.name}
-              </Link>
-              <Link
-                href="/library"
-                className="block text-charcoal/70 hover:text-soil py-1"
-                onClick={() => setOpen(false)}
-              >
-                Library
               </Link>
               <button
                 onClick={handleLogout}
