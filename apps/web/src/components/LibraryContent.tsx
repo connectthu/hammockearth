@@ -120,12 +120,14 @@ function ContentCard({ item, userLevel, ogImages }: { item: ContentItem; userLev
   const preview = previewImage(item, ogImages);
 
   return (
-    <Link
-      href={`/library/${item.slug}`}
-      className="group bg-white rounded-2xl overflow-hidden border border-linen hover:shadow-md transition-shadow flex flex-col"
-    >
-      {/* Cover image */}
-      <div className="aspect-[16/9] bg-linen overflow-hidden">
+    <div className="group bg-white rounded-2xl overflow-hidden border border-linen hover:shadow-md transition-shadow flex flex-col">
+      {/* Cover image — goes to external URL if present, else slug */}
+      <a
+        href={item.external_url ?? `/library/${item.slug}`}
+        target={item.external_url ? "_blank" : undefined}
+        rel={item.external_url ? "noopener noreferrer" : undefined}
+        className="block aspect-[16/9] bg-linen overflow-hidden"
+      >
         {preview ? (
           <img
             src={preview}
@@ -137,10 +139,10 @@ function ContentCard({ item, userLevel, ogImages }: { item: ContentItem; userLev
             <span className="text-2xl opacity-30">{placeholderIcon(item)}</span>
           </div>
         )}
-      </div>
+      </a>
 
-      <div className="p-5 flex flex-col flex-1">
-        {/* Type + topic badge */}
+      {/* Text area — always goes to detail page */}
+      <Link href={`/library/${item.slug}`} className="p-5 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs font-medium text-clay bg-clay/10 px-2 py-0.5 rounded-full">
             {TYPE_LABELS[item.content_type] ?? item.content_type}
@@ -175,8 +177,8 @@ function ContentCard({ item, userLevel, ogImages }: { item: ContentItem; userLev
             →
           </span>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
 
@@ -184,13 +186,15 @@ function FeaturedHero({ item, ogImages }: { item: ContentItem; ogImages: Record<
   const time = timeLabel(item);
   const preview = previewImage(item, ogImages);
   return (
-    <Link
-      href={`/library/${item.slug}`}
-      className="group block bg-white rounded-2xl overflow-hidden border border-linen hover:shadow-lg transition-shadow mb-12"
-    >
+    <div className="group bg-white rounded-2xl overflow-hidden border border-linen hover:shadow-lg transition-shadow mb-12">
       <div className="grid md:grid-cols-5">
-        {/* Image — left 3 cols */}
-        <div className="md:col-span-3 aspect-[16/10] md:aspect-auto overflow-hidden bg-linen">
+        {/* Image — links externally if present, else slug */}
+        <a
+          href={item.external_url ?? `/library/${item.slug}`}
+          target={item.external_url ? "_blank" : undefined}
+          rel={item.external_url ? "noopener noreferrer" : undefined}
+          className="md:col-span-3 block aspect-[16/10] md:aspect-auto overflow-hidden bg-linen"
+        >
           {preview ? (
             <img
               src={preview}
@@ -202,9 +206,9 @@ function FeaturedHero({ item, ogImages }: { item: ContentItem; ogImages: Record<
               <span className="text-4xl opacity-20">{placeholderIcon(item)}</span>
             </div>
           )}
-        </div>
-        {/* Content — right 2 cols */}
-        <div className="md:col-span-2 p-8 flex flex-col justify-center">
+        </a>
+        {/* Content — always goes to detail page */}
+        <Link href={`/library/${item.slug}`} className="md:col-span-2 p-8 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xs font-medium bg-clay text-white px-2.5 py-1 rounded-full">
               Featured
@@ -230,9 +234,9 @@ function FeaturedHero({ item, ogImages }: { item: ContentItem; ogImages: Record<
               Read →
             </span>
           </div>
-        </div>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
