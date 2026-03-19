@@ -50,7 +50,7 @@ export default function DashboardProgramsClient({ myPrograms }: Props) {
 
   return (
     <div>
-      <h2 className="font-serif text-xl text-soil mb-4">My Programs</h2>
+      <h2 className="font-serif text-xl text-soil mb-4">Your Programs</h2>
       <div className="space-y-4">
         {myPrograms.map((series: any) => {
           const sessions = [...(series.event_series_sessions ?? [])].sort(
