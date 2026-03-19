@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { resizeImage } from "@/lib/resizeImage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.hammock.earth";
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -38,8 +39,9 @@ export function ImageUpload({ value, onChange, uploadEndpoint = "/upload/event-c
 
     setUploading(true);
     try {
+      const resized = await resizeImage(file, 1200, 675);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", resized, resized.name);
 
       const res = await fetch(`${API_URL}${uploadEndpoint}`, {
         method: "POST",
