@@ -23,8 +23,6 @@ async function getUserAccessLevels(): Promise<AccessLevel[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return levels;
 
-    levels.push("registered");
-
     const db = createServerClient();
     const { data: profile } = await db
       .from("profiles")
@@ -34,6 +32,10 @@ async function getUserAccessLevels(): Promise<AccessLevel[]> {
 
     if (!profile) return levels;
     const p = profile as any;
+
+    if (p.role !== 'genpop') {
+      levels.push("registered");
+    }
 
     if (
       ["farm_friend", "season_pass", "try_a_month"].includes(p.membership_type) &&

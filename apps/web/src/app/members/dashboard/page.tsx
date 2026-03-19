@@ -78,8 +78,8 @@ export default async function MemberDashboardPage() {
     .single();
   const membership = membershipData as any;
 
-  // Onboarding redirect — only for members who haven't completed onboarding
-  if (membership && profile?.onboarding_complete === false) {
+  // Onboarding redirect — for all new users who haven't completed onboarding
+  if (profile?.onboarding_complete === false) {
     redirect("/onboarding");
   }
 

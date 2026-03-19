@@ -35,8 +35,6 @@ export class ContentLibraryService {
     const levels: AccessLevel[] = ["guest"];
     if (!userId) return levels;
 
-    levels.push("registered");
-
     const { data: profile } = await this.supabase.client
       .from("profiles")
       .select("role, membership_type, membership_status")
@@ -45,6 +43,10 @@ export class ContentLibraryService {
 
     if (!profile) return levels;
     const p = profile as any;
+
+    if (p.role !== 'genpop') {
+      levels.push("registered");
+    }
 
     if (
       ["farm_friend", "season_pass", "try_a_month"].includes(p.membership_type) &&

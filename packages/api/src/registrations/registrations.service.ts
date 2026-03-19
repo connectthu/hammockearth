@@ -186,6 +186,9 @@ export class RegistrationsService {
         `<p><strong>${dto.guestName}</strong> (${dto.guestEmail}) registered for <strong>${event.title}</strong> (free).</p>`
       ).catch(() => {});
 
+      // Upgrade genpop → event_customer on first confirmed registration (fire-and-forget)
+      this.upgradeGenpopByEmail(dto.guestEmail).catch(() => {});
+
       return { status: "confirmed", registrationId: reg.id };
     }
 
@@ -503,6 +506,21 @@ export class RegistrationsService {
       }
     }
 
+    // Upgrade genpop → event_customer on first confirmed registration (fire-and-forget)
+    if (reg.guest_email) {
+      this.upgradeGenpopByEmail(reg.guest_email).catch(() => {});
+    }
+
     return reg;
+  }
+
+  private async upgradeGenpopByEmail(email: string): Promise<void> {
+    const { data: { user }, error } = await this.supabase.client.auth.admin.getUserByEmail(email);
+    if (error || !user) return;
+    await this.supabase.client
+      .from("profiles")
+      .update({ role: "event_customer" })
+      .eq("id", user.id)
+      .eq("role", "genpop");
   }
 }
