@@ -181,6 +181,12 @@ export default function AdminEventsPage() {
                       >
                         Registrations
                       </Link>
+                      <Link
+                        href={`/events/${event.id}/access-grants`}
+                        className="text-xs text-charcoal/50 hover:underline"
+                      >
+                        Grants
+                      </Link>
                       <button
                         onClick={() => handleDuplicate(event.slug)}
                         disabled={duplicating === event.slug}

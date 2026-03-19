@@ -205,4 +205,103 @@ export class SeriesService {
     if (error) throw error;
     return { success: true };
   }
+
+  // ── Video access grants ───────────────────────────────────────────────────
+
+  async searchUsersForGrant(query: string) {
+    const q = query.trim();
+    if (!q) return [];
+
+    const { data: profileRows } = await this.supabase.client
+      .from("profiles")
+      .select("id, full_name, username, avatar_url")
+      .ilike("full_name", `%${q}%`)
+      .limit(10);
+
+    let emailMatchId: string | null = null;
+    if (q.includes("@")) {
+      const { data: authUser } =
+        await this.supabase.client.auth.admin.getUserByEmail(q);
+      if (authUser?.user) emailMatchId = authUser.user.id;
+    }
+
+    let rows = [...(profileRows ?? [])] as any[];
+    if (emailMatchId && !rows.find((r) => r.id === emailMatchId)) {
+      const { data: extra } = await this.supabase.client
+        .from("profiles")
+        .select("id, full_name, username, avatar_url")
+        .eq("id", emailMatchId)
+        .single();
+      if (extra) rows.push(extra);
+    }
+
+    const { data: { users } } =
+      await this.supabase.client.auth.admin.listUsers({ perPage: 10000 });
+    const emailById = new Map(users.map((u) => [u.id, u.email ?? ""]));
+
+    return rows.map((p: any) => ({
+      id: p.id,
+      full_name: p.full_name,
+      username: p.username,
+      avatar_url: p.avatar_url,
+      email: emailById.get(p.id) ?? "",
+    }));
+  }
+
+  async listSeriesAccessGrants(seriesId: string) {
+    const { data: grants } = await this.supabase.client
+      .from("series_video_access_grants" as any)
+      .select("id, user_id, note, created_at")
+      .eq("series_id", seriesId)
+      .order("created_at", { ascending: false });
+
+    if (!grants || grants.length === 0) return [];
+
+    const userIds = (grants as any[]).map((g) => g.user_id);
+    const { data: profiles } = await this.supabase.client
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", userIds);
+
+    const { data: { users } } =
+      await this.supabase.client.auth.admin.listUsers({ perPage: 10000 });
+    const emailById = new Map(users.map((u) => [u.id, u.email ?? ""]));
+    const profileById = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+    return (grants as any[]).map((g) => {
+      const profile = profileById.get(g.user_id);
+      return {
+        id: g.id,
+        user_id: g.user_id,
+        full_name: profile?.full_name ?? null,
+        avatar_url: profile?.avatar_url ?? null,
+        email: emailById.get(g.user_id) ?? "",
+        note: g.note ?? null,
+        created_at: g.created_at,
+      };
+    });
+  }
+
+  async grantSeriesAccess(seriesId: string, userId: string, note?: string) {
+    const { data, error } = await this.supabase.client
+      .from("series_video_access_grants" as any)
+      .insert({ series_id: seriesId, user_id: userId, note: note ?? null })
+      .select()
+      .single();
+    if (error) {
+      if (error.code === "23505") throw new ConflictException("User already has access");
+      throw error;
+    }
+    return data;
+  }
+
+  async revokeSeriesAccess(seriesId: string, userId: string) {
+    const { error } = await this.supabase.client
+      .from("series_video_access_grants" as any)
+      .delete()
+      .eq("series_id", seriesId)
+      .eq("user_id", userId);
+    if (error) throw error;
+    return { success: true };
+  }
 }

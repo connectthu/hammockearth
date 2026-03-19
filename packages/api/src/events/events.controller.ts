@@ -52,6 +52,50 @@ export class EventsController {
     return this.eventsService.createOrPromoteCollaborator(email, name, linkToEventSlug);
   }
 
+  // ── Access grants (declared before :slug to avoid shadowing) ─────────────
+
+  @Get(":id/access-grants/users/search")
+  searchUsersForGrant(
+    @Param("id") _id: string,
+    @Query("q") q: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.searchUsersForGrant(q ?? "");
+  }
+
+  @Get(":id/access-grants")
+  listEventAccessGrants(
+    @Param("id") id: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.listEventAccessGrants(id);
+  }
+
+  @Post(":id/access-grants")
+  @HttpCode(201)
+  grantEventAccess(
+    @Param("id") id: string,
+    @Body("userId") userId: string,
+    @Body("note") note: string | undefined,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.grantEventAccess(id, userId, note);
+  }
+
+  @Delete(":id/access-grants/:userId")
+  @HttpCode(200)
+  revokeEventAccess(
+    @Param("id") id: string,
+    @Param("userId") userId: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.revokeEventAccess(id, userId);
+  }
+
   @Get(":slug")
   findOne(@Param("slug") slug: string) {
     return this.eventsService.findBySlug(slug);

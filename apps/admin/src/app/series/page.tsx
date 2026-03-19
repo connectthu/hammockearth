@@ -129,6 +129,9 @@ export default function AdminSeriesPage() {
                       <Link href={`/series/${s.id}/sessions`} className="text-xs text-moss hover:underline">
                         Sessions
                       </Link>
+                      <Link href={`/series/${s.id}/access-grants`} className="text-xs text-charcoal/50 hover:underline">
+                        Grants
+                      </Link>
                       {s.status !== "cancelled" && (
                         <button
                           onClick={() => handleDelete(s.id, s.title)}

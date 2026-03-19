@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "The Living Room — Hammock Earth",
   description:
-    "A curated sanctuary of knowledge, from regenerative soil practices to the art of community gathering.",
+    "A curated sanctuary of knowledge, previous workshops and classes from regenerative soil practices to nervous system reset.",
 };
 
 export const revalidate = 300;
@@ -93,9 +93,7 @@ export default async function LibraryPage() {
               The Living Room
             </h1>
             <p className="text-lg text-soil/60 max-w-2xl">
-              Resources for Growth — a curated sanctuary of knowledge, from regenerative soil
-              practices to the art of community gathering. Take a deep breath and explore at
-              your own pace.
+              Resources for Growth — a curated sanctuary of knowledge, previous workshops and classes from regenerative soil practices to nervous system reset. Take a deep breath and explore at your own pace.
             </p>
           </section>
 

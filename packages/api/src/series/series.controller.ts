@@ -9,6 +9,7 @@ import {
   Headers,
   UnauthorizedException,
   Query,
+  HttpCode,
 } from "@nestjs/common";
 import { SeriesService } from "./series.service";
 import { CreateSeriesDto } from "./dto/create-series.dto";
@@ -35,6 +36,50 @@ export class SeriesController {
     const includeUnpublished = admin === "true";
     if (includeUnpublished) this.requireAdmin(auth);
     return this.seriesService.findAll(includeUnpublished);
+  }
+
+  // ── Access grants (declared before :slug to avoid shadowing) ─────────────
+
+  @Get(":id/access-grants/users/search")
+  searchUsersForGrant(
+    @Param("id") _id: string,
+    @Query("q") q: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.searchUsersForGrant(q ?? "");
+  }
+
+  @Get(":id/access-grants")
+  listSeriesAccessGrants(
+    @Param("id") id: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.listSeriesAccessGrants(id);
+  }
+
+  @Post(":id/access-grants")
+  @HttpCode(201)
+  grantSeriesAccess(
+    @Param("id") id: string,
+    @Body("userId") userId: string,
+    @Body("note") note: string | undefined,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.grantSeriesAccess(id, userId, note);
+  }
+
+  @Delete(":id/access-grants/:userId")
+  @HttpCode(200)
+  revokeSeriesAccess(
+    @Param("id") id: string,
+    @Param("userId") userId: string,
+    @Headers("authorization") auth?: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.seriesService.revokeSeriesAccess(id, userId);
   }
 
   @Get(":slug")
