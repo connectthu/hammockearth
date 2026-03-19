@@ -15,6 +15,7 @@ import { SeriesModule } from "./series/series.module";
 import { MembershipsModule } from "./memberships/memberships.module";
 import { CommunicationsModule } from "./communications/communications.module";
 import { ContentLibraryModule } from "./content-library/content-library.module";
+import { CommunityModule } from "./community/community.module";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ContentLibraryModule } from "./content-library/content-library.module";
     MembershipsModule,
     CommunicationsModule,
     ContentLibraryModule,
+    CommunityModule,
   ],
 })
 export class AppModule {}

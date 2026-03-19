@@ -11,6 +11,7 @@ const navItems = [
   { label: "Waitlist signups", href: "/waitlist" },
   { label: "Facilitator inquiries", href: "/facilitator-inquiries" },
   { label: "Content", href: "/content" },
+  { label: "Community", href: "/community" },
   { label: "Communications", href: "/communications" },
 ];
 

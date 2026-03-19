@@ -451,6 +451,18 @@ export class EmailService {
     });
   }
 
+  async communityAskConnection(opts: {
+    templateKey: "community_ask_poster" | "community_ask_helper";
+    to: string;
+    vars: Record<string, string>;
+  }): Promise<void> {
+    const tmpl = await this.fetchTemplate(opts.templateKey);
+    if (!tmpl) return;
+    const html = this.wrapEmailBody(this.substituteVariables(tmpl.body_html, opts.vars));
+    const subject = this.substituteVariables(tmpl.subject, opts.vars);
+    return this.send({ to: opts.to, subject, html });
+  }
+
   waitlistPromotion(opts: {
     to: string;
     name: string;

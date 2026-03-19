@@ -34,6 +34,8 @@ export type ContentType =
   | "audio"
   | "link";
 export type ContentVisibility = "public" | "members_only";
+export type AskCategory = "gardening" | "advice" | "carpool" | "tools" | "veggie_swap" | "referral";
+export type AskStatus = "open" | "closed";
 export type DiscountType = "percent" | "fixed";
 export type MediaKind = "video" | "audio" | "pdf";
 export type UserRole = "superadmin" | "collaborator" | "member" | "event_customer" | "genpop";
@@ -634,6 +636,105 @@ export type Database = {
           }
         ];
       };
+      community_shoutouts: {
+        Row: {
+          id: string;
+          user_id: string;
+          body: string;
+          heart_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          body: string;
+          heart_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          body?: string;
+          heart_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      shoutout_hearts: {
+        Row: {
+          id: string;
+          shoutout_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          shoutout_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          shoutout_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      community_asks: {
+        Row: {
+          id: string;
+          user_id: string;
+          category: AskCategory;
+          title: string;
+          body: string;
+          supported_count: number;
+          status: AskStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          category: AskCategory;
+          title: string;
+          body: string;
+          supported_count?: number;
+          status?: AskStatus;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          category?: AskCategory;
+          title?: string;
+          body?: string;
+          supported_count?: number;
+          status?: AskStatus;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      ask_supporters: {
+        Row: {
+          id: string;
+          ask_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ask_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ask_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       facilitator_inquiries: {
         Row: {
           id: string;
@@ -709,6 +810,8 @@ export type Database = {
       discount_type_enum: DiscountType;
       price_window_status_enum: PriceWindowStatus;
       media_kind_enum: MediaKind;
+      ask_category_enum: AskCategory;
+      ask_status_enum: AskStatus;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -747,3 +850,5 @@ export type EventSeriesSessionInsert =
   Database["public"]["Tables"]["event_series_sessions"]["Insert"];
 export type Superpower = Database["public"]["Tables"]["superpowers"]["Row"];
 export type Offering = Database["public"]["Tables"]["offerings"]["Row"];
+export type CommunityShoutout = Database["public"]["Tables"]["community_shoutouts"]["Row"];
+export type CommunityAsk = Database["public"]["Tables"]["community_asks"]["Row"];
