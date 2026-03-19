@@ -289,39 +289,37 @@ export function LibraryContent({ items, featured, userLevel }: LibraryContentPro
       {/* Featured hero */}
       {featured && !activeType && !activeTopic && <FeaturedHero item={featured} ogImages={ogImages} />}
 
-      {/* Content type filter tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1 mb-6 scrollbar-none">
-        {CONTENT_TYPES.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveType(t.key)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm transition-colors ${
-              activeType === t.key
-                ? "bg-soil text-cream"
-                : "bg-white border border-linen text-soil/60 hover:text-soil hover:border-soil/30"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {/* Filter bar */}
+      <div className="flex items-center justify-between gap-4 mb-10 flex-wrap">
+        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+          {CONTENT_TYPES.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveType(t.key)}
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm transition-colors ${
+                activeType === t.key
+                  ? "bg-soil text-cream"
+                  : "bg-white border border-linen text-soil/60 hover:text-soil hover:border-soil/30"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-      {/* Topic pills */}
-      <div className="flex flex-wrap gap-2 mb-10">
-        <span className="text-xs text-soil/40 self-center mr-1">Explore topics:</span>
-        {TOPICS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTopic(activeTopic === t.key ? "" : t.key)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-              activeTopic === t.key
-                ? "bg-moss text-white border-moss"
-                : "bg-white border-linen text-soil/60 hover:border-moss/40 hover:text-moss"
-            }`}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-charcoal/40 whitespace-nowrap">Filter by topic</label>
+          <select
+            value={activeTopic}
+            onChange={(e) => setActiveTopic(e.target.value)}
+            className="text-sm border border-linen rounded-full px-3 py-1.5 bg-white text-charcoal/70 focus:outline-none focus:border-soil cursor-pointer"
           >
-            {t.label}
-          </button>
-        ))}
+            <option value="">All topics</option>
+            {TOPICS.map((t) => (
+              <option key={t.key} value={t.key}>{t.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Grid */}
