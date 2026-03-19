@@ -12,10 +12,8 @@ export function TeamSection() {
           </blockquote>
           <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto">
             This question sparked a shared calling between Thu Nguyen and
-            Anahita, to weave together their paths in community and land.
-          </p>
-          <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto mt-4">
-            Thu brings her work in cultivating heart-centered communities and
+            Anahita Belanger, to weave together their paths in community and land.
+	    Thu brings her work in cultivating heart-centered communities and
             spaces for inner transformation. Anahita brings her stewardship of
             land and regenerative approaches to growing and tending.
           </p>
