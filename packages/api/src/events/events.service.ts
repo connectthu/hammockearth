@@ -121,6 +121,60 @@ export class EventsService {
     return data;
   }
 
+  async duplicate(slug: string) {
+    const original = await this.findBySlug(slug);
+
+    const { data: existing } = await this.supabase.client
+      .from("events")
+      .select("slug")
+      .like("slug", `${slug}-%`);
+
+    const existingSlugs = new Set((existing ?? []).map((r: any) => r.slug));
+
+    let newSlug: string;
+    let i = 1;
+    while (true) {
+      const candidate = `${slug}-${i}`;
+      if (!existingSlugs.has(candidate)) {
+        newSlug = candidate;
+        break;
+      }
+      i++;
+    }
+
+    const payload: EventInsert = {
+      title: original.title,
+      slug: newSlug,
+      description: original.description ?? null,
+      event_type: original.event_type ?? null,
+      cover_image_url: original.cover_image_url ?? null,
+      start_at: original.start_at,
+      end_at: original.end_at ?? null,
+      location: original.location,
+      is_online: original.is_online ?? false,
+      capacity: original.capacity ?? null,
+      price_cents: original.price_cents,
+      member_price_cents: original.member_price_cents,
+      member_ticket_allowance: original.member_ticket_allowance ?? 2,
+      visibility: original.visibility ?? "public",
+      status: "draft",
+      registration_url: original.registration_url ?? null,
+      registration_note: original.registration_note ?? null,
+      confirmation_details: original.confirmation_details ?? null,
+      tags: original.tags ?? [],
+      created_by: null,
+    };
+
+    const { data, error } = await this.supabase.client
+      .from("events")
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async remove(slug: string) {
     const { error } = await this.supabase.client
       .from("events")

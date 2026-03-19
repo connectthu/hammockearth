@@ -87,6 +87,16 @@ export class EventsController {
     return this.eventsService.removeEventCollaborator(slug, userId);
   }
 
+  @Post(":slug/duplicate")
+  @HttpCode(201)
+  duplicateEvent(
+    @Headers("authorization") auth: string,
+    @Param("slug") slug: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.eventsService.duplicate(slug);
+  }
+
   @Post()
   create(
     @Headers("authorization") auth: string,

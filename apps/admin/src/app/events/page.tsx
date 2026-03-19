@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AdminShell } from "@/components/AdminShell";
-import { apiGet, apiDelete } from "@/lib/api";
+import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import type { Event } from "@hammock/database";
 
 function formatDate(iso: string) {
@@ -25,10 +26,12 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminEventsPage() {
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [duplicating, setDuplicating] = useState<string | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -43,6 +46,18 @@ export default function AdminEventsPage() {
       setError("Failed to load events. Check your admin password.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDuplicate(slug: string) {
+    setDuplicating(slug);
+    try {
+      const created = await apiPost<Event>(`/events/${slug}/duplicate`, {});
+      router.push(`/events/${created.id}/edit`);
+    } catch {
+      alert("Failed to duplicate event.");
+    } finally {
+      setDuplicating(null);
     }
   }
 
@@ -166,6 +181,13 @@ export default function AdminEventsPage() {
                       >
                         Registrations
                       </Link>
+                      <button
+                        onClick={() => handleDuplicate(event.slug)}
+                        disabled={duplicating === event.slug}
+                        className="text-xs text-charcoal/60 hover:underline disabled:opacity-50"
+                      >
+                        {duplicating === event.slug ? "Duplicating…" : "Duplicate"}
+                      </button>
                       {event.status !== "cancelled" && (
                         <button
                           onClick={() => handleDelete(event.slug, event.title)}
