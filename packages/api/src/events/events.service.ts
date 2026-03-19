@@ -191,6 +191,7 @@ export class EventsService {
     userId: string,
     title: string,
     description: string | undefined,
+    confirmationDetails: string | undefined,
   ) {
     const event = await this.findBySlug(slug);
 
@@ -205,7 +206,11 @@ export class EventsService {
 
     const { data, error } = await this.supabase.client
       .from("events")
-      .update({ title, ...(description !== undefined && { description }) })
+      .update({
+        title,
+        ...(description !== undefined && { description }),
+        ...(confirmationDetails !== undefined && { confirmation_details: confirmationDetails }),
+      })
       .eq("id", event.id)
       .select()
       .single();

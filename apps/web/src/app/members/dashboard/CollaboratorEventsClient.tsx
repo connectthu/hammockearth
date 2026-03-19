@@ -33,6 +33,7 @@ export default function CollaboratorEventsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editConfirmationDetails, setEditConfirmationDetails] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +41,7 @@ export default function CollaboratorEventsClient({
     setEditingId(event.id);
     setEditTitle(event.title);
     setEditDescription(event.description ?? "");
+    setEditConfirmationDetails(event.confirmation_details ?? "");
     setError(null);
   }
 
@@ -62,7 +64,7 @@ export default function CollaboratorEventsClient({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: editTitle, description: editDescription }),
+        body: JSON.stringify({ title: editTitle, description: editDescription, confirmationDetails: editConfirmationDetails }),
       });
 
       if (!res.ok) {
@@ -73,7 +75,7 @@ export default function CollaboratorEventsClient({
       setEvents((prev) =>
         prev.map((e) =>
           e.id === event.id
-            ? { ...e, title: editTitle, description: editDescription }
+            ? { ...e, title: editTitle, description: editDescription, confirmation_details: editConfirmationDetails }
             : e
         )
       );
@@ -169,6 +171,20 @@ export default function CollaboratorEventsClient({
                       rows={4}
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
+                      className="w-full rounded-lg border border-linen bg-cream px-3 py-2 text-sm text-soil focus:outline-none focus:ring-2 focus:ring-clay/30 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-charcoal/60 mb-1">
+                      Confirmation details
+                    </label>
+                    <p className="text-xs text-charcoal/40 mb-1.5">
+                      Included in the booking confirmation email (e.g. Zoom link, what to bring, etc.)
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={editConfirmationDetails}
+                      onChange={(e) => setEditConfirmationDetails(e.target.value)}
                       className="w-full rounded-lg border border-linen bg-cream px-3 py-2 text-sm text-soil focus:outline-none focus:ring-2 focus:ring-clay/30 resize-none"
                     />
                   </div>

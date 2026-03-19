@@ -146,7 +146,7 @@ export default async function MemberDashboardPage() {
     if (eventIds.length > 0) {
       const { data: eventsAssigned } = await db
         .from("events")
-        .select("id, slug, title, description, start_at, end_at, location, cover_image_url, status")
+        .select("id, slug, title, description, confirmation_details, start_at, end_at, location, cover_image_url, status")
         .in("id", eventIds)
         .order("start_at", { ascending: true });
       assignedEvents = (eventsAssigned as any[]) ?? [];

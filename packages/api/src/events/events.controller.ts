@@ -161,8 +161,9 @@ export class EventsController {
     @Req() req: any,
     @Body("title") title: string,
     @Body("description") description: string | undefined,
+    @Body("confirmationDetails") confirmationDetails: string | undefined,
   ) {
-    return this.eventsService.collaboratorUpdate(slug, req.userId, title, description);
+    return this.eventsService.collaboratorUpdate(slug, req.userId, title, description, confirmationDetails);
   }
 
   @Patch(":slug")
