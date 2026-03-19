@@ -515,12 +515,14 @@ export class RegistrationsService {
   }
 
   private async upgradeGenpopByEmail(email: string): Promise<void> {
-    const { data: { user }, error } = await this.supabase.client.auth.admin.getUserByEmail(email);
-    if (error || !user) return;
+    const { data, error } = await this.supabase.client.auth.admin.listUsers({ perPage: 10000 });
+    if (error || !data) return;
+    const user = data.users.find((u) => u.email === email);
+    if (!user) return;
     await this.supabase.client
       .from("profiles")
-      .update({ role: "event_customer" })
+      .update({ role: "event_customer" as any })
       .eq("id", user.id)
-      .eq("role", "genpop");
+      .eq("role", "genpop" as any);
   }
 }

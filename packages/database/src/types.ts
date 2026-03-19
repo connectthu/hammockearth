@@ -33,7 +33,7 @@ export type ContentType =
 export type ContentVisibility = "public" | "members_only";
 export type DiscountType = "percent" | "fixed";
 export type MediaKind = "video" | "audio" | "pdf";
-export type UserRole = "superadmin" | "collaborator" | "member" | "event_customer";
+export type UserRole = "superadmin" | "collaborator" | "member" | "event_customer" | "genpop";
 
 // ============================================================
 // Database type (matches @supabase/supabase-js v2 shape)
