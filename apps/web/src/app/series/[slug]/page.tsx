@@ -1,4 +1,5 @@
 import { createServerClient } from "@hammock/database";
+import { createClient } from "@/lib/supabase/server";
 import sanitizeHtml from "sanitize-html";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -52,6 +53,21 @@ export default async function SeriesDetailPage({ params }: PageProps) {
     .select("*", { count: "exact", head: true })
     .eq("series_id", series.id)
     .eq("status", "confirmed");
+
+  // Check viewer membership
+  const authSupabase = createClient();
+  const { data: { user: viewer } } = await authSupabase.auth.getUser();
+  let viewerIsMember = false;
+  if (viewer) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("membership_type, membership_status")
+      .eq("id", viewer.id)
+      .single();
+    viewerIsMember =
+      (profile as any)?.membership_status === "active" &&
+      ["season_pass", "try_a_month"].includes((profile as any)?.membership_type ?? "");
+  }
 
   // Creator profile
   let creator: { full_name: string | null; avatar_url: string | null } | null = null;
@@ -188,14 +204,23 @@ export default async function SeriesDetailPage({ params }: PageProps) {
                     <>
                       <div className="mb-5 space-y-1.5">
                         <div>
-                          <p className="text-3xl font-bold text-soil">{formatPrice(series.price_cents)}</p>
-                          <p className="text-xs text-charcoal/40 mt-0.5">Full series</p>
+                          {viewerIsMember && series.member_price_cents != null && series.member_price_cents < series.price_cents ? (
+                            <>
+                              <p className="text-3xl font-bold text-soil">{formatPrice(series.member_price_cents)}</p>
+                              <p className="text-sm text-moss font-medium mt-1">Member price applied ✓</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-3xl font-bold text-soil">{formatPrice(series.price_cents)}</p>
+                              <p className="text-xs text-charcoal/40 mt-0.5">Full series</p>
+                              {series.member_price_cents < series.price_cents && (
+                                <p className="text-sm text-moss font-medium mt-1">
+                                  Members: {formatPrice(series.member_price_cents)}
+                                </p>
+                              )}
+                            </>
+                          )}
                         </div>
-                        {series.member_price_cents < series.price_cents && (
-                          <p className="text-sm text-moss font-medium">
-                            Members: {formatPrice(series.member_price_cents)}
-                          </p>
-                        )}
                         {series.drop_in_enabled && series.drop_in_price_cents != null && (
                           <p className="text-sm text-charcoal/50">
                             Drop-in per session: {formatPrice(series.drop_in_price_cents)}
@@ -208,7 +233,9 @@ export default async function SeriesDetailPage({ params }: PageProps) {
                           slug: series.slug,
                           title: series.title,
                           price_cents: series.price_cents,
+                          member_price_cents: series.member_price_cents ?? null,
                         }}
+                        isMember={viewerIsMember}
                       />
                     </>
                   )}
