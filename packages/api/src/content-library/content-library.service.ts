@@ -67,6 +67,7 @@ export class ContentLibraryService {
   }
 
   canAccess(visibleTo: string[], levels: AccessLevel[]): boolean {
+    if (visibleTo.includes("public")) return true;
     return visibleTo.some((v) => levels.includes(v as AccessLevel));
   }
 
