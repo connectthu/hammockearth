@@ -162,18 +162,18 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
     const payload = {
       title: values.title,
       slug: values.slug,
-      summary: values.summary || null,
-      body: values.body || null,
-      cover_image_url: values.cover_image_url || null,
+      summary: values.summary || undefined,
+      body: values.body || undefined,
+      cover_image_url: values.cover_image_url || undefined,
       content_type: values.content_type,
-      media_url: values.media_url || null,
-      media_kind: values.media_kind || null,
+      media_url: values.media_url || undefined,
+      media_kind: values.media_kind || undefined,
       topics: values.topics,
       visible_to: values.visible_to,
       is_featured: values.is_featured,
-      read_time_minutes: values.read_time_minutes ? Number(values.read_time_minutes) : null,
-      watch_listen_minutes: values.watch_listen_minutes ? Number(values.watch_listen_minutes) : null,
-      published_at: values.published_at || null,
+      read_time_minutes: values.read_time_minutes ? Number(values.read_time_minutes) : undefined,
+      watch_listen_minutes: values.watch_listen_minutes ? Number(values.watch_listen_minutes) : undefined,
+      published_at: values.published_at || undefined,
     };
 
     try {
