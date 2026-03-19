@@ -137,7 +137,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const unitPrice =
-    isMember && event.member_price_cents && event.member_price_cents < event.price_cents
+    isMember && event.member_price_cents != null && event.member_price_cents < event.price_cents
       ? event.member_price_cents
       : event.price_cents;
   const baseTotal = unitPrice * quantity;
@@ -372,7 +372,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
 
               {/* Price breakdown */}
               <div className="bg-linen rounded-xl p-4 space-y-1 text-sm">
-                {event.price_cents === 0 ? (
+                {total === 0 ? (
                   <div className="flex justify-between font-semibold text-soil">
                     <span>Total</span>
                     <span>Free</span>
