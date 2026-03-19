@@ -121,7 +121,7 @@ function ShoutoutCard({
   currentUserId: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-linen p-5 break-inside-avoid mb-4">
+    <div className="bg-white rounded-2xl border border-linen p-5">
       <div className="flex items-start gap-3 mb-3">
         <Avatar profile={item.profiles} />
         <div className="flex-1 min-w-0">
@@ -240,7 +240,7 @@ function AskCard({
   const categoryColor = CATEGORY_COLORS[item.category] ?? "bg-linen text-charcoal/60 border-linen";
 
   return (
-    <div className={`bg-white rounded-2xl border p-5 break-inside-avoid mb-4 ${item.status === "closed" ? "opacity-60" : "border-linen"}`}>
+    <div className={`bg-white rounded-2xl border p-5 ${item.status === "closed" ? "opacity-60" : "border-linen"}`}>
       <div className="flex items-start gap-3 mb-3">
         <Avatar profile={item.profiles} />
         <div className="flex-1 min-w-0">
@@ -424,7 +424,7 @@ function AskCompose({ onPost }: { onPost: (data: { category: string; title: stri
 
 function BeTheChangeCard() {
   return (
-    <div className="bg-gradient-to-br from-moss/15 to-clay/10 rounded-2xl border border-moss/20 p-6 break-inside-avoid mb-4">
+    <div className="bg-gradient-to-br from-moss/15 to-clay/10 rounded-2xl border border-moss/20 p-6">
       <div className="text-2xl mb-3">🌱</div>
       <h3 className="font-serif text-lg text-soil mb-2">Be the Change</h3>
       <p className="text-sm text-charcoal/60 leading-relaxed">
@@ -606,9 +606,9 @@ export function CommunityBoard({ isMember, userId }: { isMember: boolean; userId
           <ShoutoutCompose onPost={handlePostShoutout} />
 
           {loadingShoutouts ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-linen/60 rounded-2xl h-32 mb-4 animate-pulse break-inside-avoid" />
+                <div key={i} className="bg-linen/60 rounded-2xl h-32 animate-pulse" />
               ))}
             </div>
           ) : shoutouts.length === 0 ? (
@@ -617,7 +617,7 @@ export function CommunityBoard({ isMember, userId }: { isMember: boolean; userId
               <p>Be the first to share a shoutout!</p>
             </div>
           ) : (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <BeTheChangeCard />
               {shoutouts.map((s) => (
                 <ShoutoutCard
@@ -656,9 +656,9 @@ export function CommunityBoard({ isMember, userId }: { isMember: boolean; userId
           </div>
 
           {loadingAsks ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-linen/60 rounded-2xl h-40 mb-4 animate-pulse break-inside-avoid" />
+                <div key={i} className="bg-linen/60 rounded-2xl h-40 animate-pulse" />
               ))}
             </div>
           ) : asks.length === 0 ? (
@@ -667,7 +667,7 @@ export function CommunityBoard({ isMember, userId }: { isMember: boolean; userId
               <p>No asks yet — post one above!</p>
             </div>
           ) : (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {asks.map((a) => (
                 <AskCard
                   key={a.id}
