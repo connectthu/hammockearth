@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { AdminShell } from "@/components/AdminShell";
 import { apiGet, apiPatch } from "@/lib/api";
 import { DateTimePicker } from "@/components/DateTimePicker";
+import { torontoNaiveToUTC, utcToTorontoNaive } from "@/lib/dateUtils";
 
 type Session = {
   id: string;
@@ -18,7 +19,7 @@ type Session = {
 };
 
 function formatDatetimeLocal(iso: string) {
-  return new Date(iso).toISOString().slice(0, 16);
+  return utcToTorontoNaive(iso);
 }
 
 export default function ManageSessionsPage() {
@@ -68,8 +69,8 @@ export default function ManageSessionsPage() {
       if (edit.title !== undefined) payload.title = edit.title;
       if (edit.meeting_url !== undefined) payload.meetingUrl = edit.meeting_url;
       if (edit.location !== undefined) payload.location = edit.location;
-      if (edit.start_at !== undefined) payload.startAt = new Date(edit.start_at).toISOString();
-      if (edit.end_at !== undefined) payload.endAt = new Date(edit.end_at).toISOString();
+      if (edit.start_at !== undefined) payload.startAt = torontoNaiveToUTC(edit.start_at);
+      if (edit.end_at !== undefined) payload.endAt = torontoNaiveToUTC(edit.end_at);
       if (edit.status !== undefined) payload.status = edit.status;
 
       await apiPatch(`/series/${id}/sessions/${session.id}`, payload);

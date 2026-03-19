@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUpload } from "./ImageUpload";
 import { DateTimePicker } from "./DateTimePicker";
+import { torontoNaiveToUTC } from "@/lib/dateUtils";
 
 type SeriesFormData = {
   title: string;
@@ -127,7 +128,7 @@ export function SeriesForm({ initialData, onSubmit, submitLabel = "Save Series",
         payload.durationWeeks = parseInt(form.duration_weeks) || 1;
         payload.sessionCount = parseInt(form.session_count) || 1;
         payload.firstSessionAt = form.first_session_at
-          ? new Date(form.first_session_at).toISOString()
+          ? torontoNaiveToUTC(form.first_session_at)
           : undefined;
         payload.sessionFrequency = form.session_frequency;
         payload.sessionDurationMinutes = parseInt(form.session_duration_minutes) || 90;
