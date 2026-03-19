@@ -52,6 +52,7 @@ async function getUserAccessLevels(): Promise<AccessLevel[]> {
 }
 
 function canAccess(visibleTo: string[], levels: AccessLevel[]): boolean {
+  if ((visibleTo ?? []).includes("public")) return true;
   return (visibleTo ?? []).some((v) => levels.includes(v as AccessLevel));
 }
 
@@ -64,7 +65,7 @@ export default async function LibraryPage() {
   const { data: rawItems } = await db
     .from("content_library" as any)
     .select(
-      "id,slug,title,summary,cover_image_url,content_type,topics,visible_to,is_featured,heart_count,read_time_minutes,watch_listen_minutes,published_at"
+      "id,slug,title,summary,cover_image_url,content_type,media_kind,external_url,topics,visible_to,is_featured,heart_count,read_time_minutes,watch_listen_minutes,published_at"
     )
     .not("published_at", "is", null)
     .order("is_featured", { ascending: false })

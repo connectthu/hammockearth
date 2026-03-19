@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const CONTENT_TYPES = [
@@ -12,6 +12,7 @@ const CONTENT_TYPES = [
   { key: "reflection", label: "Reflections" },
   { key: "guide", label: "Guides" },
   { key: "audio", label: "Audio" },
+  { key: "link", label: "Links" },
 ];
 
 const TOPICS = [
@@ -33,6 +34,7 @@ const TYPE_LABELS: Record<string, string> = {
   reflection: "Reflection",
   guide: "Guide",
   audio: "Audio",
+  link: "Link",
 };
 
 interface ContentItem {
@@ -42,6 +44,8 @@ interface ContentItem {
   summary: string | null;
   cover_image_url: string | null;
   content_type: string;
+  media_kind: string | null;
+  external_url: string | null;
   topics: string[];
   visible_to: string[];
   is_featured: boolean;
@@ -50,6 +54,35 @@ interface ContentItem {
   watch_listen_minutes: number | null;
   published_at: string;
   locked: boolean;
+}
+
+const MEDIA_ICONS: Record<string, string> = {
+  video: "🎬",
+  audio: "🎵",
+  pdf: "📄",
+  link: "🔗",
+};
+
+function getYoutubeThumbnail(url: string): string | null {
+  const match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/
+  );
+  return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+}
+
+function previewImage(item: ContentItem, ogImages: Record<string, string>): string | null {
+  if (item.cover_image_url) return item.cover_image_url;
+  if (item.external_url) {
+    const yt = getYoutubeThumbnail(item.external_url);
+    if (yt) return yt;
+    return ogImages[item.external_url] ?? null;
+  }
+  return null;
+}
+
+function placeholderIcon(item: ContentItem): string {
+  if (item.external_url && !getYoutubeThumbnail(item.external_url)) return "🔗";
+  return MEDIA_ICONS[item.media_kind ?? ""] ?? "🌿";
 }
 
 interface LibraryContentProps {
@@ -82,8 +115,9 @@ function LockBadge({ visibleTo, userLevel }: { visibleTo: string[]; userLevel: s
   return null;
 }
 
-function ContentCard({ item, userLevel }: { item: ContentItem; userLevel: string }) {
+function ContentCard({ item, userLevel, ogImages }: { item: ContentItem; userLevel: string; ogImages: Record<string, string> }) {
   const time = timeLabel(item);
+  const preview = previewImage(item, ogImages);
 
   return (
     <Link
@@ -92,15 +126,15 @@ function ContentCard({ item, userLevel }: { item: ContentItem; userLevel: string
     >
       {/* Cover image */}
       <div className="aspect-[16/9] bg-linen overflow-hidden">
-        {item.cover_image_url ? (
+        {preview ? (
           <img
-            src={item.cover_image_url}
+            src={preview}
             alt={item.title}
             className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-linen to-cream flex items-center justify-center">
-            <span className="text-2xl opacity-30">🌿</span>
+            <span className="text-2xl opacity-30">{placeholderIcon(item)}</span>
           </div>
         )}
       </div>
@@ -146,8 +180,9 @@ function ContentCard({ item, userLevel }: { item: ContentItem; userLevel: string
   );
 }
 
-function FeaturedHero({ item }: { item: ContentItem }) {
+function FeaturedHero({ item, ogImages }: { item: ContentItem; ogImages: Record<string, string> }) {
   const time = timeLabel(item);
+  const preview = previewImage(item, ogImages);
   return (
     <Link
       href={`/library/${item.slug}`}
@@ -156,14 +191,16 @@ function FeaturedHero({ item }: { item: ContentItem }) {
       <div className="grid md:grid-cols-5">
         {/* Image — left 3 cols */}
         <div className="md:col-span-3 aspect-[16/10] md:aspect-auto overflow-hidden bg-linen">
-          {item.cover_image_url ? (
+          {preview ? (
             <img
-              src={item.cover_image_url}
+              src={preview}
               alt={item.title}
               className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-linen to-cream min-h-64" />
+            <div className="w-full h-full bg-gradient-to-br from-linen to-cream min-h-64 flex items-center justify-center">
+              <span className="text-4xl opacity-20">{placeholderIcon(item)}</span>
+            </div>
           )}
         </div>
         {/* Content — right 2 cols */}
@@ -202,6 +239,32 @@ function FeaturedHero({ item }: { item: ContentItem }) {
 export function LibraryContent({ items, featured, userLevel }: LibraryContentProps) {
   const [activeType, setActiveType] = useState("");
   const [activeTopic, setActiveTopic] = useState("");
+  const [ogImages, setOgImages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const urlsToFetch = items
+      .filter((i) => i.external_url && !i.cover_image_url && !getYoutubeThumbnail(i.external_url))
+      .map((i) => i.external_url!);
+    if (urlsToFetch.length === 0) return;
+
+    Promise.all(
+      urlsToFetch.map(async (url) => {
+        try {
+          const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+          const json = await res.json();
+          const image: string | undefined = json?.data?.image?.url;
+          if (image) return [url, image] as const;
+        } catch {}
+        return null;
+      })
+    ).then((results) => {
+      const map: Record<string, string> = {};
+      for (const r of results) {
+        if (r) map[r[0]] = r[1];
+      }
+      if (Object.keys(map).length > 0) setOgImages(map);
+    });
+  }, [items]);
 
   const filtered = items.filter((item) => {
     if (activeType && item.content_type !== activeType) return false;
@@ -217,7 +280,7 @@ export function LibraryContent({ items, featured, userLevel }: LibraryContentPro
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
       {/* Featured hero */}
-      {featured && !activeType && !activeTopic && <FeaturedHero item={featured} />}
+      {featured && !activeType && !activeTopic && <FeaturedHero item={featured} ogImages={ogImages} />}
 
       {/* Content type filter tabs */}
       <div className="flex gap-1 overflow-x-auto pb-1 mb-6 scrollbar-none">
@@ -260,7 +323,7 @@ export function LibraryContent({ items, featured, userLevel }: LibraryContentPro
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {gridItems.map((item) => (
-            <ContentCard key={item.id} item={item} userLevel={userLevel} />
+            <ContentCard key={item.id} item={item} userLevel={userLevel} ogImages={ogImages} />
           ))}
         </div>
       )}
