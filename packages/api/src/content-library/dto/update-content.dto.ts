@@ -9,7 +9,7 @@ import {
   IsIn,
 } from "class-validator";
 
-const CONTENT_TYPES = ["blog_post", "meditation", "video", "recipe", "reflection", "guide", "audio"];
+const CONTENT_TYPES = ["blog_post", "meditation", "video", "recipe", "reflection", "guide", "audio", "link"];
 const MEDIA_KINDS = ["video", "audio", "pdf"];
 
 export class UpdateContentDto {
@@ -74,4 +74,8 @@ export class UpdateContentDto {
   @IsOptional()
   @IsDateString()
   published_at?: string | null;
+
+  @IsOptional()
+  @IsString()
+  external_url?: string;
 }

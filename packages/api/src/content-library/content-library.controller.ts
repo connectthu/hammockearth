@@ -13,9 +13,9 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { ContentLibraryService } from "./content-library.service";
-import type { CreateContentDto } from "./dto/create-content.dto";
-import type { UpdateContentDto } from "./dto/update-content.dto";
-import type { CreateCommentDto } from "./dto/create-comment.dto";
+import { CreateContentDto } from "./dto/create-content.dto";
+import { UpdateContentDto } from "./dto/update-content.dto";
+import { CreateCommentDto } from "./dto/create-comment.dto";
 
 @Controller("content")
 export class ContentLibraryController {

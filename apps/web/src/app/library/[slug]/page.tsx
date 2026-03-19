@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ContentSocialLayer } from "@/components/ContentSocialLayer";
+import { ExternalContent } from "@/components/ExternalContent";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -75,6 +76,7 @@ const TYPE_LABELS: Record<string, string> = {
   reflection: "Reflection",
   guide: "Guide",
   audio: "Audio",
+  link: "Link",
 };
 
 const TOPIC_LABELS: Record<string, string> = {
@@ -243,6 +245,11 @@ export default async function ContentItemPage({ params }: PageProps) {
                     <span>📄</span> Open PDF
                   </a>
                 </div>
+              )}
+
+              {/* External link / embed */}
+              {item.external_url && (
+                <ExternalContent url={item.external_url} summary={item.summary} />
               )}
 
               {/* Body */}

@@ -324,6 +324,7 @@ export class ContentLibraryService {
         read_time_minutes: dto.read_time_minutes ?? null,
         watch_listen_minutes: dto.watch_listen_minutes ?? null,
         published_at: dto.published_at ?? null,
+        external_url: dto.external_url ?? null,
         created_by: null,
       })
       .select()
@@ -347,7 +348,7 @@ export class ContentLibraryService {
     const fields: (keyof UpdateContentDto)[] = [
       "title", "slug", "summary", "body", "cover_image_url", "content_type",
       "media_url", "media_kind", "topics", "visible_to", "is_featured",
-      "read_time_minutes", "watch_listen_minutes", "published_at",
+      "read_time_minutes", "watch_listen_minutes", "published_at", "external_url",
     ];
 
     for (const f of fields) {

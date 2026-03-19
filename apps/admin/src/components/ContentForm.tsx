@@ -16,6 +16,7 @@ const CONTENT_TYPES = [
   { value: "reflection", label: "Reflection" },
   { value: "guide", label: "Guide" },
   { value: "audio", label: "Audio" },
+  { value: "link", label: "Link" },
 ];
 
 const TOPICS = [
@@ -55,6 +56,7 @@ export interface ContentFormValues {
   content_type: string;
   media_url: string;
   media_kind: string;
+  external_url: string;
   topics: string[];
   visible_to: string[];
   is_featured: boolean;
@@ -79,6 +81,7 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
     content_type: "blog_post",
     media_url: "",
     media_kind: "",
+    external_url: "",
     topics: [],
     visible_to: ["public"],
     is_featured: false,
@@ -168,6 +171,7 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
       content_type: values.content_type,
       media_url: values.media_url || undefined,
       media_kind: values.media_kind || undefined,
+      external_url: values.external_url || undefined,
       topics: values.topics,
       visible_to: values.visible_to,
       is_featured: values.is_featured,
@@ -418,6 +422,19 @@ export function ContentForm({ initialValues, mode }: ContentFormProps) {
             )}
           </label>
         )}
+      </div>
+
+      {/* External URL */}
+      <div>
+        <label className="block text-sm font-medium text-soil mb-1">External URL</label>
+        <input
+          type="url"
+          value={values.external_url}
+          onChange={(e) => set("external_url", e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-linen text-sm focus:outline-none focus:ring-2 focus:ring-clay/30"
+          placeholder="https://…"
+        />
+        <p className="text-xs text-soil/40 mt-1">For Link type: shown as a visit card or embedded player (YouTube/Vimeo)</p>
       </div>
 
       {/* Body */}

@@ -25,11 +25,14 @@ export type EventVisibility = "public" | "members_only";
 export type EventStatus = "draft" | "published" | "cancelled";
 export type RegistrationStatus = "pending" | "confirmed" | "waitlisted" | "cancelled";
 export type ContentType =
-  | "recipe"
-  | "homesteading"
-  | "nervous_system"
+  | "blog_post"
   | "meditation"
-  | "guide";
+  | "video"
+  | "recipe"
+  | "reflection"
+  | "guide"
+  | "audio"
+  | "link";
 export type ContentVisibility = "public" | "members_only";
 export type DiscountType = "percent" | "fixed";
 export type MediaKind = "video" | "audio" | "pdf";
@@ -581,6 +584,7 @@ export type Database = {
           content_type: ContentType;
           media_url: string | null;
           media_kind: MediaKind | null;
+          external_url: string | null;
           visibility: ContentVisibility;
           tags: string[];
           published_at: string | null;
@@ -597,6 +601,7 @@ export type Database = {
           content_type: ContentType;
           media_url?: string | null;
           media_kind?: MediaKind | null;
+          external_url?: string | null;
           visibility?: ContentVisibility;
           tags?: string[];
           published_at?: string | null;
@@ -613,6 +618,7 @@ export type Database = {
           content_type?: ContentType;
           media_url?: string | null;
           media_kind?: MediaKind | null;
+          external_url?: string | null;
           visibility?: ContentVisibility;
           tags?: string[];
           published_at?: string | null;
