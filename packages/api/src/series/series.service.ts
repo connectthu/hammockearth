@@ -218,11 +218,14 @@ export class SeriesService {
       .ilike("full_name", `%${q}%`)
       .limit(10);
 
+    const { data: { users } } =
+      await this.supabase.client.auth.admin.listUsers({ perPage: 10000 });
+    const emailById = new Map(users.map((u) => [u.id, u.email ?? ""]));
+
     let emailMatchId: string | null = null;
     if (q.includes("@")) {
-      const { data: authUser } =
-        await this.supabase.client.auth.admin.getUserByEmail(q);
-      if (authUser?.user) emailMatchId = authUser.user.id;
+      const match = users.find((u) => u.email === q);
+      if (match) emailMatchId = match.id;
     }
 
     let rows = [...(profileRows ?? [])] as any[];
@@ -234,10 +237,6 @@ export class SeriesService {
         .single();
       if (extra) rows.push(extra);
     }
-
-    const { data: { users } } =
-      await this.supabase.client.auth.admin.listUsers({ perPage: 10000 });
-    const emailById = new Map(users.map((u) => [u.id, u.email ?? ""]));
 
     return rows.map((p: any) => ({
       id: p.id,

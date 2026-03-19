@@ -185,7 +185,7 @@ export class EventsController {
     return this.eventsService.remove(slug);
   }
 
-  private requireAdmin(auth: string) {
+  private requireAdmin(auth: string | undefined) {
     const expected = `Bearer ${this.config.get("ADMIN_SECRET")}`;
     if (auth !== expected) throw new UnauthorizedException();
   }
