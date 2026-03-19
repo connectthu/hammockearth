@@ -27,14 +27,15 @@ export default async function CommunityPage() {
   const db = createServerClient();
   const { data: profileData } = await db
     .from("profiles")
-    .select("membership_type, membership_status")
+    .select("role, membership_type, membership_status")
     .eq("id", user.id)
     .single();
 
   const profile = profileData as any;
   const isMember =
-    ["farm_friend", "season_pass", "try_a_month"].includes(profile?.membership_type) &&
-    profile?.membership_status === "active";
+    profile?.role !== "genpop" ||
+    (["farm_friend", "season_pass", "try_a_month"].includes(profile?.membership_type) &&
+      profile?.membership_status === "active");
 
   return (
     <>

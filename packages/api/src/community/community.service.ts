@@ -35,14 +35,15 @@ export class CommunityService {
   async requireMember(userId: string): Promise<void> {
     const { data: profile } = await this.supabase.client
       .from("profiles" as any)
-      .select("membership_type, membership_status")
+      .select("role, membership_type, membership_status")
       .eq("id", userId)
       .single();
 
     const p = profile as any;
     const ok =
-      ["farm_friend", "season_pass", "try_a_month"].includes(p?.membership_type) &&
-      p?.membership_status === "active";
+      p?.role !== "genpop" ||
+      (["farm_friend", "season_pass", "try_a_month"].includes(p?.membership_type) &&
+        p?.membership_status === "active");
     if (!ok) throw new ForbiddenException("Active membership required");
   }
 
