@@ -74,20 +74,31 @@ export default async function EventDetailPage({ params }: PageProps) {
     .filter((p: any) => p && p.profile_visibility === "public" && p.avatar_url)
     .slice(0, 6) as { id: string; full_name: string | null; avatar_url: string; username: string | null }[];
 
-  // Check if the current viewer has a confirmed registration
+  // Check if the current viewer has a confirmed registration + active membership
   const authSupabase = createClient();
   const { data: { user: viewer } } = await authSupabase.auth.getUser();
   let hasRegistered = false;
+  let viewerIsMember = false;
   if (viewer) {
-    const { data: reg } = await supabase
-      .from("event_registrations")
-      .select("id")
-      .eq("event_id", event.id)
-      .eq("user_id", viewer.id)
-      .eq("status", "confirmed")
-      .limit(1)
-      .maybeSingle();
+    const [{ data: reg }, { data: profile }] = await Promise.all([
+      supabase
+        .from("event_registrations")
+        .select("id")
+        .eq("event_id", event.id)
+        .eq("user_id", viewer.id)
+        .eq("status", "confirmed")
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("membership_type, membership_status")
+        .eq("id", viewer.id)
+        .single(),
+    ]);
     hasRegistered = !!reg;
+    viewerIsMember =
+      (profile as any)?.membership_status === "active" &&
+      ["season_pass", "try_a_month"].includes((profile as any)?.membership_type ?? "");
   }
 
   // Creator profile + collaborators (fetched in parallel)
@@ -312,11 +323,20 @@ export default async function EventDetailPage({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="mb-5">
-                        <p className="text-3xl font-bold text-soil">{formatPrice(event.price_cents)}</p>
-                        {event.member_price_cents > 0 && event.member_price_cents < event.price_cents && (
-                          <p className="text-sm text-moss font-medium mt-1">
-                            Members: {formatPrice(event.member_price_cents)}
-                          </p>
+                        {viewerIsMember && event.member_price_cents != null && event.member_price_cents < event.price_cents ? (
+                          <>
+                            <p className="text-3xl font-bold text-soil">{formatPrice(event.member_price_cents)}</p>
+                            <p className="text-sm text-moss font-medium mt-1">Member price applied ✓</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-3xl font-bold text-soil">{formatPrice(event.price_cents)}</p>
+                            {event.member_price_cents > 0 && event.member_price_cents < event.price_cents && (
+                              <p className="text-sm text-moss font-medium mt-1">
+                                Members: {formatPrice(event.member_price_cents)}
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
 
@@ -336,7 +356,7 @@ export default async function EventDetailPage({ params }: PageProps) {
                       ) : isAtCapacity ? (
                         <WaitlistButton event={event} />
                       ) : (
-                        <RegisterButton event={event} spotsRemaining={spotsRemaining} />
+                        <RegisterButton event={event} spotsRemaining={spotsRemaining} isMember={viewerIsMember} />
                       )}
                     </>
                   )}

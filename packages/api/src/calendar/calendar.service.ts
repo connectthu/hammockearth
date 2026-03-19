@@ -25,8 +25,12 @@ export class CalendarService {
       `LOCATION:${this.escapeText(event.location)}`,
     ];
 
-    if (event.description) {
-      lines.push(`DESCRIPTION:${this.escapeText(event.description)}`);
+    const descParts: string[] = [];
+    if (event.description) descParts.push(event.description);
+    const confirmationDetails = (event as any).confirmation_details as string | null | undefined;
+    if (confirmationDetails) descParts.push(this.stripHtml(confirmationDetails));
+    if (descParts.length) {
+      lines.push(`DESCRIPTION:${this.escapeText(descParts.join("\n\n"))}`);
     }
 
     lines.push("END:VEVENT", "END:VCALENDAR");
@@ -65,6 +69,19 @@ export class CalendarService {
 
   private formatDate(date: Date): string {
     return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  }
+
+  private stripHtml(html: string): string {
+    return html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
   private escapeText(text: string): string {

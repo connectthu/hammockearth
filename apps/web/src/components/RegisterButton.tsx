@@ -8,34 +8,25 @@ import type { Event } from "@hammock/database";
 interface RegisterButtonProps {
   event: Event;
   spotsRemaining?: number | null;
+  isMember?: boolean;
 }
 
-export function RegisterButton({ event, spotsRemaining }: RegisterButtonProps) {
+export function RegisterButton({ event, spotsRemaining, isMember: isMemberProp = false }: RegisterButtonProps) {
   const [open, setOpen] = useState(false);
-  const [isMember, setIsMember] = useState(false);
+  const [isMember, setIsMember] = useState(isMemberProp);
   const [authToken, setAuthToken] = useState<string | undefined>();
 
   const handleClick = async () => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
-    let memberStatus = false;
     let token: string | undefined;
 
     if (session?.user) {
       token = session.access_token;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("membership_type, membership_status")
-        .eq("id", session.user.id)
-        .single();
-      memberStatus =
-        profile?.membership_status === "active" &&
-        ["season_pass", "try_a_month"].includes(profile?.membership_type ?? "");
     }
 
     setAuthToken(token);
-    setIsMember(memberStatus);
     setOpen(true);
   };
 
