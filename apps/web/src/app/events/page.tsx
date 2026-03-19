@@ -91,7 +91,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
           <div className="bg-linen border-b border-linen py-16 text-center">
             <p className="section-label mb-3">On the Land &amp; Online</p>
             <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-4">
-              Events &amp; Dinners
+              All Events
             </h1>
             <p className="text-charcoal/70 max-w-xl mx-auto">
               Seasonal gatherings, farm tours, communal meals, and immersive

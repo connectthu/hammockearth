@@ -116,7 +116,7 @@ export function OnlineProgramsClient({ events, seriesList = [] }: { events: Even
     <section id="programs" className="py-24 bg-soil">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <p className="section-label text-moss mb-4">From Anywhere</p>
+          <p className="section-label text-moss mb-4">Online</p>
           <h2 className="font-serif text-3xl sm:text-4xl text-cream mb-4">
             Programs
           </h2>
@@ -146,7 +146,7 @@ export function OnlineProgramsClient({ events, seriesList = [] }: { events: Even
                   tags={event.tags ?? []}
                 />
               ))}
-              {seriesList.slice(0, 3).map((s) => {
+              {seriesList.slice(0, Math.max(0, 3 - Math.min(events.length, 3))).map((s) => {
                 const firstSession = [...(s.event_series_sessions ?? [])]
                   .sort((a, b) => a.session_number - b.session_number)[0];
                 return (
