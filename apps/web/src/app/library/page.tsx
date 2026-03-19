@@ -86,7 +86,7 @@ export default async function LibraryPage() {
       <Nav />
       <div className="pt-16 flex">
         {isLoggedIn && <MemberSidebar />}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 pb-16 md:pb-0">
           {/* Hero */}
           <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <h1 className="font-serif text-4xl sm:text-5xl text-soil mb-3">

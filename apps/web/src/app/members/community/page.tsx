@@ -42,7 +42,7 @@ export default async function CommunityPage() {
       <Nav />
       <div className="pt-16 min-h-screen bg-cream flex">
         <MemberSidebar />
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 pb-16 md:pb-0">
           <CommunityBoard isMember={isMember} userId={user.id} />
         </main>
       </div>

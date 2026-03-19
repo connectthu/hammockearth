@@ -130,7 +130,7 @@ export default async function MemberDashboardPage() {
       <Nav />
       <div className="pt-16 min-h-screen bg-cream flex">
         <MemberSidebar />
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 pb-16 md:pb-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
           {/* ── Header ─────────────────────────────────────────────────────── */}
