@@ -11,22 +11,16 @@ interface RegisterButtonProps {
   isMember?: boolean;
 }
 
-export function RegisterButton({ event, spotsRemaining, isMember: isMemberProp = false }: RegisterButtonProps) {
+export function RegisterButton({ event, spotsRemaining, isMember = false }: RegisterButtonProps) {
   const [open, setOpen] = useState(false);
-  const [isMember, setIsMember] = useState(isMemberProp);
   const [authToken, setAuthToken] = useState<string | undefined>();
 
   const handleClick = async () => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
-
-    let token: string | undefined;
-
     if (session?.user) {
-      token = session.access_token;
+      setAuthToken(session.access_token);
     }
-
-    setAuthToken(token);
     setOpen(true);
   };
 
