@@ -281,11 +281,44 @@ export class ContentLibraryService {
   async listAll() {
     const { data, error } = await this.supabase.client
       .from("content_library" as any)
-      .select("id,slug,title,content_type,topics,visible_to,is_featured,heart_count,published_at,created_at")
+      .select("id,slug,title,content_type,topics,visible_to,is_featured,heart_count,published_at,created_at,created_by,profiles(username,full_name)")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data ?? [];
+  }
+
+  async submitResource(userId: string, dto: { external_url: string; summary: string }) {
+    // Derive a display title from the URL hostname
+    let hostname = dto.external_url;
+    try {
+      hostname = new URL(dto.external_url).hostname.replace(/^www\./, "");
+    } catch {}
+
+    // Generate a unique slug: hostname-sanitised + random suffix
+    const base = hostname.replace(/[^a-z0-9]+/gi, "-").toLowerCase().slice(0, 40);
+    const suffix = Math.random().toString(36).slice(2, 8);
+    const slug = `submitted-${base}-${suffix}`;
+
+    const { data, error } = await this.supabase.client
+      .from("content_library" as any)
+      .insert({
+        title: hostname,
+        slug,
+        summary: dto.summary,
+        content_type: "link",
+        external_url: dto.external_url,
+        topics: [],
+        visible_to: ["member"],
+        is_featured: false,
+        published_at: null, // draft — not visible in library until admin publishes
+        created_by: userId,
+      })
+      .select("id, slug")
+      .single();
+
+    if (error) throw error;
+    return { success: true, id: (data as any).id };
   }
 
   async getById(id: string) {

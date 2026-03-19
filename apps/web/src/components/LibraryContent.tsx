@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.hammock.earth";
 
 const CONTENT_TYPES = [
   { key: "", label: "All" },
@@ -332,20 +335,125 @@ export function LibraryContent({ items, featured, userLevel }: LibraryContentPro
         </div>
       )}
 
-      {/* CTA */}
-      <div className="mt-20 bg-white rounded-2xl border border-linen p-10 text-center">
-        <h2 className="font-serif text-2xl text-soil mb-3">Seeking something specific?</h2>
-        <p className="text-soil/60 max-w-xl mx-auto mb-6">
-          If you can't find what you're looking for, reach out to the Community Stewards.
-          We are constantly expanding our library with member-requested topics.
+      {/* Submit a Resource */}
+      <SubmitResourceSection userLevel={userLevel} />
+    </div>
+  );
+}
+
+function SubmitResourceSection({ userLevel }: { userLevel: string }) {
+  const isLoggedIn = userLevel !== "guest";
+  const [url, setUrl] = useState("");
+  const [summary, setSummary] = useState("");
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!url.trim() || !summary.trim()) return;
+    setStatus("submitting");
+    setErrorMsg("");
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Not signed in");
+
+      const res = await fetch(`${API}/content/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ external_url: url.trim(), summary: summary.trim() }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(Array.isArray(body.message) ? body.message[0] : (body.message ?? `${res.status}`));
+      }
+      setStatus("success");
+      setUrl("");
+      setSummary("");
+    } catch (err: any) {
+      setErrorMsg(err.message ?? "Something went wrong");
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="mt-20 bg-white rounded-2xl border border-linen p-10">
+      <div className="max-w-xl mx-auto text-center">
+        <h2 className="font-serif text-2xl text-soil mb-3">Share a resource</h2>
+        <p className="text-soil/60 mb-8">
+          Found something that belongs here? Submit a link and a short note — our team will review it for the library.
         </p>
-        <a
-          href="mailto:hello@hammock.earth"
-          className="inline-block bg-clay text-white font-medium px-6 py-3 rounded-full hover:bg-clay/90 transition-colors"
-        >
-          Request a Resource
-        </a>
       </div>
+
+      {!isLoggedIn ? (
+        <div className="max-w-sm mx-auto text-center">
+          <Link
+            href="/members/login?next=/library"
+            className="inline-block bg-clay text-white font-medium px-6 py-3 rounded-full hover:bg-clay/90 transition-colors text-sm"
+          >
+            Sign in to submit a resource
+          </Link>
+        </div>
+      ) : status === "success" ? (
+        <div className="max-w-sm mx-auto text-center">
+          <div className="text-3xl mb-3">🌿</div>
+          <p className="text-soil font-medium mb-1">Thank you!</p>
+          <p className="text-soil/60 text-sm mb-4">Your submission is in for review.</p>
+          <button
+            onClick={() => setStatus("idle")}
+            className="text-sm text-clay hover:underline"
+          >
+            Submit another
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-4">
+          <div>
+            <label className="text-xs font-medium text-soil/50 uppercase tracking-widest block mb-1.5">
+              Link URL
+            </label>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://..."
+              required
+              className="w-full px-4 py-3 rounded-xl border border-linen bg-cream/50 text-sm text-soil placeholder-soil/30 outline-none focus:ring-2 focus:ring-clay/20 focus:border-clay/30"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-soil/50 uppercase tracking-widest block mb-1.5">
+              Why does this belong here?
+            </label>
+            <textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value.slice(0, 300))}
+              placeholder="A short description of what this is and why it's worth sharing..."
+              rows={3}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-linen bg-cream/50 text-sm text-soil placeholder-soil/30 outline-none focus:ring-2 focus:ring-clay/20 focus:border-clay/30 resize-none"
+            />
+            <p className={`text-xs mt-1 text-right ${summary.length > 280 ? "text-clay" : "text-soil/30"}`}>
+              {300 - summary.length}
+            </p>
+          </div>
+          {status === "error" && (
+            <p className="text-sm text-red-600">{errorMsg}</p>
+          )}
+          <div className="text-center pt-2">
+            <button
+              type="submit"
+              disabled={status === "submitting" || !url.trim() || !summary.trim()}
+              className="bg-clay text-white font-medium px-8 py-3 rounded-full hover:bg-clay/90 transition-colors disabled:opacity-50 text-sm"
+            >
+              {status === "submitting" ? "Submitting…" : "Submit Resource"}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

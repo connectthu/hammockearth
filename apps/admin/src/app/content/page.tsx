@@ -16,6 +16,8 @@ interface ContentItem {
   heart_count: number;
   published_at: string | null;
   created_at: string;
+  created_by: string | null;
+  profiles: { username: string | null; full_name: string | null } | null;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -26,6 +28,7 @@ const TYPE_LABELS: Record<string, string> = {
   reflection: "Reflection",
   guide: "Guide",
   audio: "Audio",
+  link: "Link",
 };
 
 function formatDate(iso: string) {
@@ -87,6 +90,7 @@ export default function ContentListPage() {
                   <th className="px-5 py-3 font-medium text-soil/60">Visibility</th>
                   <th className="px-5 py-3 font-medium text-soil/60">Status</th>
                   <th className="px-5 py-3 font-medium text-soil/60">♡</th>
+                  <th className="px-5 py-3 font-medium text-soil/60">Submitted by</th>
                   <th className="px-5 py-3"></th>
                 </tr>
               </thead>
@@ -136,6 +140,13 @@ export default function ContentListPage() {
                       )}
                     </td>
                     <td className="px-5 py-4 text-soil/40">{item.heart_count}</td>
+                    <td className="px-5 py-4 text-soil/50 text-xs">
+                      {item.profiles ? (
+                        <span title={item.profiles.full_name ?? undefined}>
+                          @{item.profiles.username ?? item.profiles.full_name ?? "member"}
+                        </span>
+                      ) : "—"}
+                    </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center gap-3 justify-end">
                         <Link

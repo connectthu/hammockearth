@@ -16,6 +16,7 @@ import { ContentLibraryService } from "./content-library.service";
 import { CreateContentDto } from "./dto/create-content.dto";
 import { UpdateContentDto } from "./dto/update-content.dto";
 import { CreateCommentDto } from "./dto/create-comment.dto";
+import { SubmitResourceDto } from "./dto/submit-resource.dto";
 
 @Controller("content")
 export class ContentLibraryController {
@@ -74,6 +75,15 @@ export class ContentLibraryController {
   ) {
     const userId = await this.requireUser(auth);
     return this.content.addComment(id, userId, dto);
+  }
+
+  @Post("submit")
+  async submitResource(
+    @Headers("authorization") auth: string | undefined,
+    @Body() dto: SubmitResourceDto
+  ) {
+    const userId = await this.requireUser(auth);
+    return this.content.submitResource(userId, dto);
   }
 
   @Delete(":id/comments/:commentId")
