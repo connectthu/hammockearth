@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
   Logger,
 } from "@nestjs/common";
 import { SupabaseService } from "../supabase/supabase.service";
@@ -183,6 +184,34 @@ export class EventsService {
 
     if (error) throw error;
     return { success: true };
+  }
+
+  async collaboratorUpdate(
+    slug: string,
+    userId: string,
+    title: string,
+    description: string | undefined,
+  ) {
+    const event = await this.findBySlug(slug);
+
+    const { data: link } = await this.supabase.client
+      .from("collaborator_events")
+      .select("collaborator_id")
+      .eq("event_id", event.id)
+      .eq("collaborator_id", userId)
+      .single();
+
+    if (!link) throw new ForbiddenException("Not a collaborator on this event");
+
+    const { data, error } = await this.supabase.client
+      .from("events")
+      .update({ title, ...(description !== undefined && { description }) })
+      .eq("id", event.id)
+      .select()
+      .single();
+
+    if (error || !data) throw error ?? new Error("Update failed");
+    return data;
   }
 
   // ── Collaborator management ───────────────────────────────────────────────

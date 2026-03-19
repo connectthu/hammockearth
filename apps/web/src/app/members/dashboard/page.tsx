@@ -6,6 +6,7 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import CancelButtonClient from "./CancelButton";
+import CollaboratorEventsClient from "./CollaboratorEventsClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -108,7 +109,7 @@ export default async function MemberDashboardPage() {
     if (eventIds.length > 0) {
       const { data: eventsAssigned } = await db
         .from("events")
-        .select("id, slug, title, start_at, end_at, location, cover_image_url, status")
+        .select("id, slug, title, description, start_at, end_at, location, cover_image_url, status")
         .in("id", eventIds)
         .order("start_at", { ascending: true });
       assignedEvents = (eventsAssigned as any[]) ?? [];
@@ -200,57 +201,7 @@ export default async function MemberDashboardPage() {
             <div className="space-y-8">
               {/* ── Collaborator Events ───────────────────────────────────── */}
               {isCollaborator && (
-                <div>
-                  <h2 className="font-serif text-xl text-soil mb-4">Your Events</h2>
-
-                  {assignedEvents.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-linen p-8 text-center text-charcoal/50">
-                      No events assigned yet. An admin will link events to your account.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {assignedEvents.map((event: any) => (
-                        <Link
-                          key={event.id}
-                          href={`/events/${event.slug}`}
-                          className="block bg-white rounded-2xl border border-linen p-5 hover:border-clay/30 transition-colors group"
-                        >
-                          <div className="flex gap-4">
-                            {event.cover_image_url ? (
-                              <img
-                                src={event.cover_image_url}
-                                alt={event.title}
-                                className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-xl bg-linen flex items-center justify-center flex-shrink-0 text-2xl">
-                                🌿
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2 mb-1">
-                                <h3 className="font-medium text-soil group-hover:text-clay transition-colors leading-snug">
-                                  {event.title}
-                                </h3>
-                                <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  event.status === "published"
-                                    ? "bg-green-50 text-green-700"
-                                    : "bg-linen text-charcoal/50"
-                                }`}>
-                                  {event.status}
-                                </span>
-                              </div>
-                              <p className="text-xs text-charcoal/50 mb-0.5">
-                                {formatDate(event.start_at)} · {formatTime(event.start_at)}
-                              </p>
-                              <p className="text-xs text-charcoal/50">{event.location}</p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <CollaboratorEventsClient assignedEvents={assignedEvents} />
               )}
 
               {/* ── Upcoming Events ──────────────────────────────────────────── */}
@@ -367,7 +318,7 @@ export default async function MemberDashboardPage() {
               )}
 
               {/* No membership */}
-              {!membership && (
+              {!membership && !isCollaborator && (
                 <div className="bg-linen rounded-2xl border border-linen p-5 text-center">
                   <p className="text-sm text-charcoal/60 mb-4">
                     You don't have an active membership.
@@ -378,6 +329,19 @@ export default async function MemberDashboardPage() {
                   >
                     Explore membership options →
                   </a>
+                </div>
+              )}
+
+              {/* Collaborator thank-you */}
+              {isCollaborator && !membership && (
+                <div className="bg-moss/10 rounded-2xl border border-moss/20 p-5 text-center">
+                  <div className="text-2xl mb-2">🌿</div>
+                  <p className="text-sm font-medium text-soil mb-1">
+                    Thank you for being a Hammock Earth Collaborator!
+                  </p>
+                  <p className="text-xs text-charcoal/50">
+                    We're grateful for your contributions to our community.
+                  </p>
                 </div>
               )}
 

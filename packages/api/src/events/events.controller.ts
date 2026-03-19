@@ -8,6 +8,8 @@ import {
   Body,
   Query,
   Headers,
+  Req,
+  UseGuards,
   UnauthorizedException,
   HttpCode,
 } from "@nestjs/common";
@@ -15,6 +17,7 @@ import { ConfigService } from "@nestjs/config";
 import { EventsService } from "./events.service";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
+import { SupabaseAuthGuard } from "../auth/supabase-auth.guard";
 
 @Controller("events")
 export class EventsController {
@@ -148,6 +151,18 @@ export class EventsController {
   ) {
     this.requireAdmin(auth);
     return this.eventsService.create(dto);
+  }
+
+  @Patch(":slug/collaborator")
+  @UseGuards(SupabaseAuthGuard)
+  @HttpCode(200)
+  collaboratorUpdate(
+    @Param("slug") slug: string,
+    @Req() req: any,
+    @Body("title") title: string,
+    @Body("description") description: string | undefined,
+  ) {
+    return this.eventsService.collaboratorUpdate(slug, req.userId, title, description);
   }
 
   @Patch(":slug")
