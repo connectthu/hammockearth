@@ -471,20 +471,6 @@ export class BookingService {
   }
 
   async adminUpsertProfile(dto: Record<string, unknown>) {
-    // If no user_id supplied (admin tool has no user context), auto-assign
-    // the first superadmin's profile ID so the FK constraint is satisfied.
-    if (!dto["user_id"]) {
-      const { data: superadmin } = await this.supabase.client
-        .from("profiles" as any)
-        .select("id")
-        .eq("role", "superadmin")
-        .limit(1)
-        .single();
-      if (superadmin) {
-        dto = { ...dto, user_id: (superadmin as any).id };
-      }
-    }
-
     if (dto["id"]) {
       const { id, ...rest } = dto;
       const { data, error } = await this.supabase.client

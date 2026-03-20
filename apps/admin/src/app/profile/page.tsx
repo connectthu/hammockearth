@@ -91,6 +91,13 @@ function formatDateTime(iso: string, tz: string): string {
   });
 }
 
+interface UserOption {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+}
+
 // ── Tab: Profile Details ──────────────────────────────────────────────────────
 
 function ProfileTab({
@@ -110,17 +117,29 @@ function ProfileTab({
     buffer_minutes: 15,
     cancellation_notice_hours: 0,
   });
+  const [users, setUsers] = useState<UserOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (profile) setForm(profile);
+    if (profile) {
+      setForm(profile);
+    } else {
+      // Load users so admin can pick who gets the bookable profile
+      apiGet<UserOption[]>("/memberships/users")
+        .then((data) => setUsers(data))
+        .catch(() => {});
+    }
   }, [profile]);
 
   const set = (key: keyof BookableProfile, value: unknown) =>
     setForm((f) => ({ ...f, [key]: value }));
 
   const handleSave = async () => {
+    if (!profile && !form.user_id) {
+      alert("Please select a user for this booking profile.");
+      return;
+    }
     setSaving(true);
     try {
       const payload = { ...form };
@@ -129,7 +148,7 @@ function ProfileTab({
       onChange(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
+    } catch {
       alert("Failed to save profile");
     } finally {
       setSaving(false);
@@ -152,6 +171,29 @@ function ProfileTab({
           </div>
         </label>
       </div>
+
+      {!profile && (
+        <Field label="Member">
+          <select
+            value={(form.user_id as string) ?? ""}
+            onChange={(e) => set("user_id", e.target.value)}
+            className={inputCls}
+          >
+            <option value="">— Select a member —</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.full_name ?? u.email} ({u.email}) · {u.role}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
+
+      {profile && (
+        <p className="text-xs text-soil/40">
+          User ID: <span className="font-mono">{profile.user_id}</span>
+        </p>
+      )}
 
       <Field label="URL slug (e.g. 'thu' → /profile/thu)">
         <input
