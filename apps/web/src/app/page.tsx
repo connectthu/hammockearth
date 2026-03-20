@@ -24,11 +24,11 @@ export default function HomePage() {
         <HeroSection />
         <AboutSection />
         <VisionSection />
+        <TeamMosaicSection />
         <EventsSection />
         <OnlineProgramsSection />
         <MembershipSection checkoutLinks />
         <VisitSection />
-        <TeamMosaicSection />
         <TeamSection />
         <MissionSection />
         <ValuesSection />
