@@ -13,6 +13,7 @@ const navItems = [
   { label: "Content", href: "/content" },
   { label: "Community", href: "/community" },
   { label: "Communications", href: "/communications" },
+  { label: "Discount Codes", href: "/discount-codes" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
