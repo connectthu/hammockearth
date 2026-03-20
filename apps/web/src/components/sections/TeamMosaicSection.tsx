@@ -41,7 +41,7 @@ const team = [
     objPos: "object-top",
   },
   {
-    name: "Bela Shah",
+    name: "Bela",
     desc: "Coach, self-compassion & authentic leadership",
     img: "/images/team/bela.jpg",
     span: "",
@@ -60,13 +60,13 @@ const team = [
     objPos: "object-top",
   },
   {
-    name: "Jasjit Sangha",
+    name: "Jasjit",
     desc: "Mindfulness teacher & community cultivator",
     img: "/images/team/jasjit.jpg",
     span: "",
   },
   {
-    name: "Chenny Xia",
+    name: "Chenny",
     desc: "Entrepreneur & health and gender equity advocate",
     img: "/images/team/chenny.jpg",
     span: "lg:row-span-2",
