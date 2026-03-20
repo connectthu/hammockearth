@@ -8,10 +8,8 @@ import { MemberBottomNav } from "./MemberBottomNav";
 const publicLinks = [
   { label: "About", href: "/#about" },
   { label: "Events", href: "/events" },
-  { label: "Programs", href: "/#programs" },
   { label: "Membership", href: "/#membership" },
   { label: "Visit", href: "/#visit" },
-  { label: "Team", href: "/#team" },
   { label: "Connect", href: "/#newsletter" },
 ];
 
