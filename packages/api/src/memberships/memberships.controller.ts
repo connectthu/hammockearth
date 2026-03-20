@@ -42,6 +42,18 @@ export class MembershipsController {
     return this.membershipsService.cancel(req.userId);
   }
 
+  @Post("try-a-month/renew")
+  @UseGuards(SupabaseAuthGuard)
+  renewTryAMonth(@Req() req: any) {
+    return this.membershipsService.renewTryAMonth(req.userId);
+  }
+
+  @Delete("try-a-month/auto-renew")
+  @UseGuards(SupabaseAuthGuard)
+  cancelTryAMonthAutoRenew(@Req() req: any) {
+    return this.membershipsService.cancelTryAMonthAutoRenew(req.userId);
+  }
+
   // ── Admin endpoints (bearer token) ────────────────────────────────────────
 
   @Get()

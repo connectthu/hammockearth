@@ -1,8 +1,12 @@
 import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateMembershipCheckoutDto {
-  @IsIn(["season_pass", "farm_friend"])
-  membershipType!: "season_pass" | "farm_friend";
+  @IsIn(["season_pass", "farm_friend", "try_a_month"])
+  membershipType!: "season_pass" | "farm_friend" | "try_a_month";
+
+  @IsOptional()
+  @IsIn(["one_time", "recurring"])
+  billingMode?: "one_time" | "recurring";
 
   @IsOptional()
   @IsString()

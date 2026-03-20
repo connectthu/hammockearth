@@ -27,6 +27,9 @@ export class MembershipsService {
     if (dto.membershipType === "season_pass") {
       return this.checkoutSeasonPass(dto);
     }
+    if (dto.membershipType === "try_a_month") {
+      return this.checkoutTryAMonth(dto);
+    }
     return this.checkoutFarmFriend(dto);
   }
 
@@ -147,9 +150,92 @@ export class MembershipsService {
     };
   }
 
+  private async checkoutTryAMonth(dto: CreateMembershipCheckoutDto) {
+    const isRecurring = dto.billingMode === "recurring";
+
+    if (isRecurring) {
+      const priceId = this.config.get<string>("STRIPE_TRY_A_MONTH_RECURRING_PRICE_ID");
+      if (!priceId) throw new BadRequestException("Monthly membership price not configured");
+
+      const customer = await this.stripe.createCustomer(dto.email, { name: dto.name });
+      const subscription = await this.stripe.createSubscription(customer.id, priceId, {
+        type: "try_a_month",
+        billingMode: "recurring",
+        name: dto.name,
+        email: dto.email,
+      });
+
+      const clientSecret = subscription.latest_invoice?.payment_intent?.client_secret;
+      if (!clientSecret) throw new BadRequestException("Failed to create subscription payment intent");
+
+      return { clientSecret, amountCents: 14000 };
+    }
+
+    // One-time $150
+    const paymentIntent = await this.stripe.createPaymentIntent(15000, {
+      type: "try_a_month",
+      billingMode: "one_time",
+      name: dto.name,
+      email: dto.email,
+    });
+
+    return { clientSecret: paymentIntent.client_secret, amountCents: 15000 };
+  }
+
+  async renewTryAMonth(userId: string): Promise<{ clientSecret: string; amountCents: number }> {
+    // Fetch current membership to know the current valid_until
+    const { data: membershipData } = await this.supabase.client
+      .from("memberships")
+      .select("valid_until")
+      .eq("user_id", userId)
+      .eq("membership_type", "try_a_month" as any)
+      .in("status", ["active", "expired"] as any)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    const currentValidUntil = (membershipData as any)?.valid_until ?? null;
+
+    const paymentIntent = await this.stripe.createPaymentIntent(15000, {
+      type: "try_a_month_renewal",
+      userId,
+      currentValidUntil: currentValidUntil ?? "",
+    });
+
+    return { clientSecret: paymentIntent.client_secret!, amountCents: 15000 };
+  }
+
+  async cancelTryAMonthAutoRenew(userId: string): Promise<{ success: boolean }> {
+    const { data: membershipData } = await this.supabase.client
+      .from("memberships")
+      .select("id, stripe_subscription_id")
+      .eq("user_id", userId)
+      .eq("membership_type", "try_a_month" as any)
+      .eq("billing_type", "monthly" as any)
+      .eq("status", "active" as any)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!membershipData) throw new NotFoundException("No active monthly membership found");
+    const membership = membershipData as any;
+    if (!membership.stripe_subscription_id) throw new BadRequestException("No subscription ID found");
+
+    await this.stripe.cancelSubscription(membership.stripe_subscription_id);
+
+    await this.supabase.client
+      .from("memberships")
+      .update({ status: "cancelled" as any })
+      .eq("id", membership.id);
+
+    await this.updateProfile(userId, "none", null);
+
+    return { success: true };
+  }
+
   async activateMembership(opts: {
     userId: string;
-    membershipType: "season_pass" | "farm_friend";
+    membershipType: "season_pass" | "farm_friend" | "try_a_month";
     billingType: "one_time" | "monthly";
     priceWindowSlug?: string;
     stripePaymentId?: string;

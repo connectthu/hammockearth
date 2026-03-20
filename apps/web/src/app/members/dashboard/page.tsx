@@ -6,6 +6,7 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import CancelButtonClient from "./CancelButton";
+import TryAMonthClient from "./TryAMonthClient";
 import CollaboratorEventsClient from "./CollaboratorEventsClient";
 import type { Metadata } from "next";
 
@@ -125,6 +126,7 @@ export default async function MemberDashboardPage() {
 
   const isFarmFriend = membership?.membership_type === "farm_friend";
   const isSeasonPass = membership?.membership_type === "season_pass";
+  const isTryAMonth = membership?.membership_type === "try_a_month";
 
   return (
     <>
@@ -191,6 +193,16 @@ export default async function MemberDashboardPage() {
                   )}
                   {isFarmFriend && (
                     <p className="text-charcoal/60">$10/month · Renews automatically</p>
+                  )}
+                  {isTryAMonth && membership.valid_until && (
+                    <p className="text-charcoal/60">
+                      {membership.billing_type === "monthly" ? "Renews" : "Expires"}{" "}
+                      <strong className="text-soil">
+                        {new Date(membership.valid_until).toLocaleDateString("en-CA", {
+                          month: "long", day: "numeric", year: "numeric",
+                        })}
+                      </strong>
+                    </p>
                   )}
                 </div>
               )}
@@ -309,10 +321,24 @@ export default async function MemberDashboardPage() {
                         <span className="font-medium text-soil">$10/month</span>
                       </div>
                     )}
+                    {isTryAMonth && (
+                      <div className="flex justify-between">
+                        <span>Billing</span>
+                        <span className="font-medium text-soil">
+                          {membership.billing_type === "monthly" ? "$140/month" : "One-time $150"}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {isFarmFriend && membership.status === "active" && (
                     <CancelButtonClient />
+                  )}
+                  {isTryAMonth && (
+                    <TryAMonthClient
+                      billingType={membership.billing_type ?? "one_time"}
+                      validUntil={membership.valid_until ?? null}
+                    />
                   )}
                 </div>
               )}

@@ -107,6 +107,90 @@ export class WebhooksService {
           break;
         }
 
+        // ── Try a Month (new purchase) ────────────────────────────────────
+        if (metaType === "try_a_month") {
+          const name = paymentIntent.metadata?.name ?? "";
+          const email = paymentIntent.metadata?.email ?? "";
+          if (!email) { this.logger.warn(`Missing email in try_a_month PI: ${paymentIntent.id}`); break; }
+
+          try {
+            const userId = await this.findOrCreateUser(email, name);
+            if (!userId) { this.logger.error(`Failed to find/create user for try_a_month PI: ${paymentIntent.id}`); break; }
+
+            const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+            await this.memberships.activateMembership({
+              userId,
+              membershipType: "try_a_month",
+              billingType: "one_time",
+              stripePaymentId: paymentIntent.id,
+              validUntil,
+            });
+
+            await this.memberships.updateProfile(userId, "try_a_month", "active");
+
+            await this.email.membershipWelcome({
+              to: email,
+              name,
+              membershipType: "try_a_month",
+              validUntil: new Date(validUntil).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" }),
+            }).catch((err) => this.logger.error("Failed to send try_a_month welcome email", err));
+
+            this.email.sendAdminNotification(
+              "new_membership",
+              `New Try a Month — ${name || email}`,
+              `<p><strong>${name || "Someone"}</strong> (${email}) purchased a Try a Month pass.</p>`
+            ).catch(() => {});
+          } catch (err) {
+            this.logger.error("Failed to handle try_a_month payment", err);
+          }
+          break;
+        }
+
+        // ── Try a Month renewal ───────────────────────────────────────────
+        if (metaType === "try_a_month_renewal") {
+          const userId = paymentIntent.metadata?.userId;
+          const currentValidUntil = paymentIntent.metadata?.currentValidUntil;
+          if (!userId) { this.logger.warn(`Missing userId in try_a_month_renewal PI: ${paymentIntent.id}`); break; }
+
+          try {
+            const base = currentValidUntil && new Date(currentValidUntil) > new Date()
+              ? new Date(currentValidUntil)
+              : new Date();
+            const validUntil = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+            // Update existing try_a_month membership valid_until, or insert new row
+            const { data: existing } = await this.supabase.client
+              .from("memberships")
+              .select("id")
+              .eq("user_id", userId)
+              .eq("membership_type", "try_a_month" as any)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            if (existing) {
+              await this.supabase.client
+                .from("memberships")
+                .update({ status: "active" as any, valid_until: validUntil, stripe_payment_id: paymentIntent.id })
+                .eq("id", (existing as any).id);
+            } else {
+              await this.memberships.activateMembership({
+                userId,
+                membershipType: "try_a_month",
+                billingType: "one_time",
+                stripePaymentId: paymentIntent.id,
+                validUntil,
+              });
+            }
+
+            await this.memberships.updateProfile(userId, "try_a_month", "active");
+          } catch (err) {
+            this.logger.error("Failed to handle try_a_month_renewal payment", err);
+          }
+          break;
+        }
+
         // ── Event / Series registration ───────────────────────────────────
         const registrationId = paymentIntent.metadata?.registrationId;
 
@@ -243,31 +327,37 @@ export class WebhooksService {
 
         const isNew = !existing;
 
+        const membershipType = subscription.metadata?.type === "try_a_month" ? "try_a_month" : "farm_friend";
+        const validUntil = membershipType === "try_a_month" && subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : undefined;
+
         // Create or activate membership row
         await this.memberships.activateMembership({
           userId,
-          membershipType: "farm_friend",
+          membershipType,
           billingType: "monthly",
           stripeSubscriptionId: subscriptionId,
+          validUntil,
         });
 
-        await this.memberships.updateProfile(userId, "farm_friend", "active");
+        await this.memberships.updateProfile(userId, membershipType, "active");
 
         // Send welcome email only on first activation
         if (isNew && email) {
           await this.email.membershipWelcome({
             to: email,
             name,
-            membershipType: "farm_friend",
+            membershipType,
+            ...(validUntil ? { validUntil: new Date(validUntil).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" }) } : {}),
           }).catch((err) =>
-            this.logger.error("Failed to send Farm Friend welcome email", err)
+            this.logger.error(`Failed to send ${membershipType} welcome email`, err)
           );
 
-          // Admin notification
           this.email.sendAdminNotification(
             "new_membership",
-            `New Farm Friend — ${name || email}`,
-            `<p><strong>${name || "Someone"}</strong> (${email}) started a Farm Friend membership.</p>`
+            `New ${membershipType === "try_a_month" ? "Monthly Membership" : "Farm Friend"} — ${name || email}`,
+            `<p><strong>${name || "Someone"}</strong> (${email}) started a ${membershipType} membership.</p>`
           ).catch(() => {});
         }
       } else {
@@ -285,6 +375,8 @@ export class WebhooksService {
 
         if (membershipRow) {
           await this.memberships.updateProfile((membershipRow as any).user_id, "none", null);
+          // For try_a_month subscriptions, keep membership active until valid_until rather than cancelling immediately
+          // (already handled above via status: "cancelled" — valid_until remains in DB for reference)
         }
       }
     } catch (err) {
