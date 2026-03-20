@@ -183,17 +183,17 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
           <div className="bg-linen rounded-2xl p-8 border border-linen">
             <div className="text-2xl mb-3">🌱</div>
             <h3 className="font-serif text-xl text-soil mb-2">Try a Month</h3>
-            <div className="text-2xl font-serif text-soil mb-3">$150/month</div>
+            <div className="text-2xl font-serif text-soil mb-3">$150 <span className="text-base font-sans text-charcoal/50">or $140/mo</span></div>
             <p className="text-sm text-charcoal/70 mb-6 leading-relaxed">
               Not sure yet? Experience full season pass membership for one
               month. Your $150 is fully credited toward a season pass if you
               decide to join.
             </p>
             <a
-              href={checkoutLinks ? "mailto:hello@hammock.earth?subject=Try a Month" : "/members#try-a-month"}
+              href={checkoutLinks ? "/members/checkout?tier=try_a_month" : "/members#try-a-month"}
               className="block text-center py-3 px-6 rounded-full font-medium text-sm bg-moss/10 text-moss hover:bg-moss/20 transition-colors border border-moss/20"
             >
-              Contact Us
+              Try a Month
             </a>
           </div>
         </div>

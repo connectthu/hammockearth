@@ -106,13 +106,15 @@ function PaymentForm({
 // ── Main checkout page ────────────────────────────────────────────────────────
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const tier = searchParams.get("tier") ?? "season_pass"; // 'season_pass' | 'farm_friend'
+  const tier = searchParams.get("tier") ?? "season_pass"; // 'season_pass' | 'farm_friend' | 'try_a_month'
   const window = searchParams.get("window") ?? "founding"; // price window slug
+  const isTryAMonth = tier === "try_a_month";
 
+  const [billingMode, setBillingMode] = useState<"one_time" | "recurring">("one_time");
   const [step, setStep] = useState<"details" | "payment" | "success">("details");
   const [clientSecret, setClientSecret] = useState("");
   const [amountCents, setAmountCents] = useState(
-    tier === "farm_friend" ? 1000 : TIER_PRICES[window] ?? 80000
+    tier === "farm_friend" ? 1000 : isTryAMonth ? 15000 : TIER_PRICES[window] ?? 80000
   );
 
   const [name, setName] = useState("");
@@ -133,12 +135,18 @@ function CheckoutContent() {
   const tierLabel =
     tier === "farm_friend"
       ? "Farm Friend"
+      : isTryAMonth
+      ? "Try a Month"
       : `${TIER_LABELS[window] ?? "Seasons Pass"} — Seasons Pass`;
 
   const priceDisplay =
-    tier === "farm_friend" ? "$10/month" : formatPrice(amountCents);
+    tier === "farm_friend"
+      ? "$10/month"
+      : isTryAMonth
+      ? billingMode === "recurring" ? "$140/month" : "$150 CAD"
+      : formatPrice(amountCents);
 
-  const basePrice = tier === "farm_friend" ? 1000 : TIER_PRICES[window] ?? 80000;
+  const basePrice = tier === "farm_friend" ? 1000 : isTryAMonth ? (billingMode === "recurring" ? 14000 : 15000) : TIER_PRICES[window] ?? 80000;
   const discountedPrice = appliedCoupon
     ? Math.max(0, basePrice - appliedCoupon.discountCents)
     : basePrice;
@@ -191,6 +199,9 @@ function CheckoutContent() {
       };
       if (tier === "season_pass") {
         body.priceWindowSlug = window;
+      }
+      if (isTryAMonth) {
+        body.billingMode = billingMode;
       }
       if (appliedCoupon) {
         body.discountCode = appliedCoupon.code;
@@ -266,6 +277,31 @@ function CheckoutContent() {
                   />
                 </div>
 
+                {/* Billing mode toggle — try_a_month only */}
+                {isTryAMonth && (
+                  <div>
+                    <label className="block text-xs font-medium text-moss uppercase tracking-wide mb-2">
+                      Billing
+                    </label>
+                    <div className="flex rounded-xl border border-linen overflow-hidden text-sm">
+                      <button
+                        type="button"
+                        onClick={() => setBillingMode("one_time")}
+                        className={`flex-1 py-2.5 px-4 text-center transition-colors ${billingMode === "one_time" ? "bg-soil text-cream font-medium" : "text-charcoal/60 hover:bg-linen"}`}
+                      >
+                        One-time · $150
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillingMode("recurring")}
+                        className={`flex-1 py-2.5 px-4 text-center transition-colors ${billingMode === "recurring" ? "bg-soil text-cream font-medium" : "text-charcoal/60 hover:bg-linen"}`}
+                      >
+                        Monthly · $140/mo
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Coupon code — season pass only */}
                 {tier === "season_pass" && (
                   <div>
@@ -337,6 +373,11 @@ function CheckoutContent() {
                   {tier === "season_pass" && (
                     <p className="text-charcoal/50 text-xs mt-1">
                       One-time · Valid through December 31, 2026
+                    </p>
+                  )}
+                  {isTryAMonth && (
+                    <p className="text-charcoal/50 text-xs mt-1">
+                      {billingMode === "recurring" ? "Billed monthly · Cancel anytime" : "One-time · 30 days of full membership access"}
                     </p>
                   )}
                 </div>
