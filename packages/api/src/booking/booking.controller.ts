@@ -12,14 +12,17 @@ import {
   HttpCode,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { createClient } from "@supabase/supabase-js";
 import { BookingService } from "./booking.service";
+import { SupabaseService } from "../supabase/supabase.service";
 import { CreateBookingDto } from "./dto/create-booking.dto";
 
 @Controller()
 export class BookingController {
   constructor(
     private bookingService: BookingService,
-    private config: ConfigService
+    private config: ConfigService,
+    private supabase: SupabaseService
   ) {}
 
   // ── Public endpoints ──────────────────────────────────────────────────────
@@ -51,130 +54,150 @@ export class BookingController {
     return this.bookingService.cancelByToken(token);
   }
 
-  // ── Admin endpoints (bearer token) ────────────────────────────────────────
+  // ── Admin endpoints (admin secret OR superadmin Supabase JWT) ─────────────
 
   @Get("booking/admin/profiles")
-  adminListProfiles(@Headers("authorization") auth: string) {
-    this.requireAdmin(auth);
+  async adminListProfiles(@Headers("authorization") auth: string) {
+    await this.requireAdmin(auth);
     return this.bookingService.adminListProfiles();
   }
 
   @Post("booking/admin/profile")
-  adminUpsertProfile(
+  async adminUpsertProfile(
     @Headers("authorization") auth: string,
     @Body() dto: Record<string, unknown>
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminUpsertProfile(dto);
   }
 
   @Get("booking/admin/profile/:profileId/session-types")
-  adminGetSessionTypes(
+  async adminGetSessionTypes(
     @Headers("authorization") auth: string,
     @Param("profileId") profileId: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminGetSessionTypes(profileId);
   }
 
   @Post("booking/admin/profile/:profileId/session-types")
-  adminUpsertSessionType(
+  async adminUpsertSessionType(
     @Headers("authorization") auth: string,
     @Param("profileId") profileId: string,
     @Body() dto: Record<string, unknown>
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminUpsertSessionType(profileId, dto);
   }
 
   @Delete("booking/admin/session-types/:id")
   @HttpCode(200)
-  adminDeleteSessionType(
+  async adminDeleteSessionType(
     @Headers("authorization") auth: string,
     @Param("id") id: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminDeleteSessionType(id);
   }
 
   @Get("booking/admin/profile/:profileId/schedules")
-  adminGetSchedules(
+  async adminGetSchedules(
     @Headers("authorization") auth: string,
     @Param("profileId") profileId: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminGetSchedules(profileId);
   }
 
   @Post("booking/admin/profile/:profileId/schedules")
-  adminCreateSchedule(
+  async adminCreateSchedule(
     @Headers("authorization") auth: string,
     @Param("profileId") profileId: string,
     @Body() dto: Record<string, unknown>
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminUpsertSchedule(profileId, dto);
   }
 
   @Delete("booking/admin/schedules/:id")
   @HttpCode(200)
-  adminDeleteSchedule(
+  async adminDeleteSchedule(
     @Headers("authorization") auth: string,
     @Param("id") id: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminDeleteSchedule(id);
   }
 
   @Get("booking/admin/profile/:profileId/overrides")
-  adminGetOverrides(
+  async adminGetOverrides(
     @Headers("authorization") auth: string,
     @Param("profileId") profileId: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminGetOverrides(profileId);
   }
 
   @Post("booking/admin/profile/:profileId/overrides")
-  adminCreateOverride(
+  async adminCreateOverride(
     @Headers("authorization") auth: string,
     @Param("profileId") profileId: string,
     @Body() dto: Record<string, unknown>
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminUpsertOverride(profileId, dto);
   }
 
   @Delete("booking/admin/overrides/:id")
   @HttpCode(200)
-  adminDeleteOverride(
+  async adminDeleteOverride(
     @Headers("authorization") auth: string,
     @Param("id") id: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminDeleteOverride(id);
   }
 
   @Get("booking/admin/bookings")
-  adminListBookings(
+  async adminListBookings(
     @Headers("authorization") auth: string,
     @Query("profileId") profileId?: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminListBookings(profileId);
   }
 
   @Patch("booking/admin/bookings/:id/cancel")
-  adminCancelBooking(
+  async adminCancelBooking(
     @Headers("authorization") auth: string,
     @Param("id") id: string
   ) {
-    this.requireAdmin(auth);
+    await this.requireAdmin(auth);
     return this.bookingService.adminCancelBooking(id);
   }
 
-  private requireAdmin(auth: string | undefined): void {
-    const expected = `Bearer ${this.config.get<string>("ADMIN_SECRET")}`;
-    if (auth !== expected) throw new UnauthorizedException();
+  private async requireAdmin(auth: string | undefined): Promise<void> {
+    if (!auth?.startsWith("Bearer ")) throw new UnauthorizedException();
+    const token = auth.slice(7);
+
+    // Allow admin secret (used by the admin app)
+    const adminSecret = this.config.get<string>("ADMIN_SECRET");
+    if (token === adminSecret) return;
+
+    // Also allow a Supabase JWT if the user has role=superadmin
+    const anonClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data: { user }, error } = await anonClient.auth.getUser(token);
+    if (error || !user) throw new UnauthorizedException();
+
+    const { data: profile } = await this.supabase.client
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if ((profile as any)?.role !== "superadmin") throw new UnauthorizedException();
   }
 }

@@ -79,6 +79,7 @@ const navItems = [
 export function MemberSidebar() {
   const pathname = usePathname();
   const [username, setUsername] = useState<string | null>(null);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -86,10 +87,11 @@ export function MemberSidebar() {
       if (!session?.user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("username")
+        .select("username, role")
         .eq("id", session.user.id)
         .single();
       if ((data as any)?.username) setUsername((data as any).username);
+      if ((data as any)?.role === "superadmin") setIsSuperadmin(true);
     });
   }, []);
 
@@ -138,6 +140,25 @@ export function MemberSidebar() {
             </Link>
           );
         })}
+
+        {isSuperadmin && (
+          <Link
+            href="/members/settings"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
+              pathname === "/members/settings" || pathname.startsWith("/members/settings/")
+                ? "bg-clay/10 text-clay font-medium"
+                : "text-charcoal/60 hover:bg-linen hover:text-soil"
+            }`}
+          >
+            <span className={`shrink-0 ${pathname.startsWith("/members/settings") ? "text-clay" : ""}`}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </span>
+            <span className="text-sm">Settings</span>
+          </Link>
+        )}
       </nav>
     </aside>
   );
