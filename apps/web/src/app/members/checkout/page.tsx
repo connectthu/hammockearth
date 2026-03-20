@@ -34,7 +34,7 @@ const TIER_LABELS: Record<string, string> = {
 const TIER_PRICES: Record<string, number> = {
   founding: 80000,
   early_bird: 108000,
-  regular: 135000,
+  regular: 120000,
 };
 
 function formatPrice(cents: number) {
