@@ -104,7 +104,7 @@ export function TeamMosaicSection() {
                   src={person.img}
                   alt={person.name}
                   className={`w-full object-cover ${person.objPos ?? "object-center"}`}
-                  style={{ height: "270px", filter: "grayscale(100%)" }}
+                  style={{ height: "270px", filter: "grayscale(60%) sepia(40%) brightness(0.95)" }}
                 />
               </div>
               <p className="font-serif italic text-soil text-base leading-tight mb-1">
