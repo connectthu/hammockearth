@@ -158,7 +158,7 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
         </div>
 
         {/* Farm Friend + Try a Month */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-6">
           <div className="bg-linen rounded-2xl p-8 border border-linen">
             <div className="text-2xl mb-3">🌻</div>
             <h3 className="font-serif text-xl text-soil mb-2">Farm Friend</h3>
@@ -195,6 +195,69 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
             >
               Try a Month
             </a>
+          </div>
+        </div>
+        {/* Community Partner */}
+        <div
+          className="rounded-2xl shadow-md p-8 max-w-3xl mx-auto"
+          style={{ backgroundColor: "#2D3D2A" }}
+        >
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Left */}
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#B5C9A8", fontVariant: "small-caps" }}>
+                For Organizations
+              </p>
+              <h3 className="font-serif text-2xl sm:text-3xl text-cream mb-4">
+                Community Partner
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#D4E8CB" }}>
+                5 member seats for your team, organization, or collective. Bring
+                your whole community into the work of ecological belonging.
+              </p>
+            </div>
+
+            {/* Middle */}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="flex items-baseline justify-between pb-4 border-b" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#B5C9A8", fontVariant: "small-caps" }}>
+                  Early Bird (until June 21)
+                </span>
+                <span className="font-serif text-2xl text-cream ml-4">$5,000</span>
+              </div>
+              <div className="flex items-baseline justify-between pt-4 mb-5">
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#B5C9A8", fontVariant: "small-caps" }}>
+                  Regular Rate
+                </span>
+                <span className="font-serif text-2xl text-cream ml-4">$9,000</span>
+              </div>
+              <p className="text-xs mb-3" style={{ color: "#8FAF84" }}>
+                Annual · 5 seats included
+              </p>
+              <ul className="space-y-1.5">
+                {[
+                  "All individual member perks for 5 people",
+                  "Logo on the Hammock Earth website",
+                  "Co-branding opportunities",
+                ].map((perk) => (
+                  <li key={perk} className="flex items-start gap-2 text-xs" style={{ color: "#D4E8CB" }}>
+                    <span style={{ color: "#8FAF84" }}>✓</span>
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right */}
+            <div className="flex md:items-center">
+              <a
+                href="mailto:hello@hammock.earth?subject=Community Partner Membership"
+                className="block text-center px-8 py-3 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors hover:bg-cream/10"
+                style={{ border: "1px solid rgba(255,255,255,0.4)", color: "#F5EFE6" }}
+              >
+                Get in Touch
+              </a>
+            </div>
           </div>
         </div>
       </div>
