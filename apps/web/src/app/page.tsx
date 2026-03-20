@@ -23,8 +23,8 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <AboutSection />
-        <VisionSection />
         <TeamMosaicSection />
+        <VisionSection />
         <EventsSection />
         <OnlineProgramsSection />
         <MembershipSection checkoutLinks />
