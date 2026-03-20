@@ -38,6 +38,7 @@ const team = [
     desc: "Strategist, facilitator & care advocate",
     img: "/images/team/terrence.png",
     span: "lg:col-span-2",
+    objPos: "object-top",
   },
   {
     name: "Bela Shah",
@@ -56,6 +57,7 @@ const team = [
     desc: "Arts community builder, expressive arts & ancestral healing",
     img: "/images/team/anto.jpg",
     span: "lg:col-span-2",
+    objPos: "object-top",
   },
   {
     name: "Jasjit Sangha",
@@ -80,6 +82,7 @@ const team = [
     desc: "Creator, culture builder & architect of belonging",
     img: "/images/team/erin.jpg",
     span: "lg:col-span-2",
+    objPos: "object-top",
   },
 ];
 
@@ -105,7 +108,7 @@ export function TeamMosaicSection() {
           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3"
           style={{ gridAutoRows: "220px", gridAutoFlow: "row dense" }}
         >
-          {team.map((person) => (
+          {team.map((person: { name: string; desc: string; img: string; span: string; objPos?: string }) => (
             <div
               key={person.name}
               className={`relative overflow-hidden rounded-xl cursor-pointer group ${person.span}`}
@@ -116,7 +119,7 @@ export function TeamMosaicSection() {
               <img
                 src={person.img}
                 alt={person.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${person.objPos ?? "object-center"}`}
               />
               {/* Overlay — CSS hover on desktop, tap-toggle on mobile */}
               <div
