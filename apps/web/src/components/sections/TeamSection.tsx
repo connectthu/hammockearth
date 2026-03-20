@@ -11,68 +11,14 @@ export function TeamSection() {
             "How do we care for the Heart and the Earth at the same time?"
           </blockquote>
           <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto">
-            This question sparked a shared calling between Thu Nguyen and
-            Anahita Belanger, to weave together their paths in community and land.
-	    Thu brings her work in cultivating heart-centered communities and
-            spaces for inner transformation. Anahita brings her stewardship of
-            land and regenerative approaches to growing and tending.
+            This question became a meeting place — where paths of healing, community, and land began to weave together.
           </p>
           <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto mt-4">
-            Hammock Earth is the result: a living space where people can
-            reconnect with themselves, each other, and the earth, and grow into
-            the dreams and gifts they&apos;re here to bring forward.
+            Hammock Earth is a living response to that question: a space where people can slow down, reconnect with themselves, each other, and the earth, and remember what they are here to grow and offer.
           </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* Thu */}
-          <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <img
-              src="/images/thu.jpg"
-              alt="Thu Nguyen"
-              className="w-48 h-48 rounded-full object-cover mb-6 ring-4 ring-linen shadow-lg"
-            />
-            <h3 className="font-serif text-xl text-soil mb-1">Thu Nguyen</h3>
-            <p className="text-moss text-sm font-medium mb-4">
-              Somatic Leadership Coach & Community Builder
-            </p>
-            <p className="text-charcoal/70 text-sm leading-relaxed">
-              Thu Nguyen is an entrepreneur, somatic leadership coach, and
-              community builder dedicated to cultivating spaces where people
-              can reconnect with themselves, one another, and the living earth.
-              After two decades working in technology and startups, a series of
-              life-altering health experiences led Thu to step away from the
-              tech world and explore a deeper path of healing, embodiment, and
-              nature connection. Today, with Hammock Earth, Thu focuses on
-              creating experiences that cultivate ecological belonging.
-            </p>
-          </div>
-
-          {/* Anahita */}
-          <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <img
-              src="/images/anahita.jpg"
-              alt="Anahita Belanger"
-              className="w-48 h-48 rounded-full object-cover mb-6 ring-4 ring-linen shadow-lg"
-            />
-            <h3 className="font-serif text-xl text-soil mb-1">
-              Anahita Belanger
-            </h3>
-            <p className="text-moss text-sm font-medium mb-4">
-              Regenerative Leader & Organic Grower
-            </p>
-            <p className="text-charcoal/70 text-sm leading-relaxed">
-              Anahita Belanger is a regenerative leader and organic grower
-              rooted in ecological connection and conscious food systems. She
-              pasture-raises heritage hogs and hens and grows vegetables and
-              medicinal plants on her certified organic farm, blending her
-              reverence for nature with a commitment to nourish both people and
-              planet. Combining her experience in ecological agriculture,
-              hospitality, and start-up operations, she creates immersive
-              experiences where people reconnect with nature and rediscover
-              ecological belonging.
-            </p>
-          </div>
+          <p className="text-charcoal/70 leading-relaxed max-w-3xl mx-auto mt-4 italic">
+            Rooted in both inner and outer tending, it invites a way of being where transformation is not separate from the land — but held by it.
+          </p>
         </div>
       </div>
     </section>
