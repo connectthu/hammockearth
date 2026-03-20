@@ -16,6 +16,7 @@ import { MembershipsModule } from "./memberships/memberships.module";
 import { CommunicationsModule } from "./communications/communications.module";
 import { ContentLibraryModule } from "./content-library/content-library.module";
 import { CommunityModule } from "./community/community.module";
+import { BookingModule } from "./booking/booking.module";
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CommunityModule } from "./community/community.module";
     CommunicationsModule,
     ContentLibraryModule,
     CommunityModule,
+    BookingModule,
   ],
 })
 export class AppModule {}
