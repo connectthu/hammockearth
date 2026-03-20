@@ -183,11 +183,9 @@ export async function MembershipSection({ checkoutLinks = false }: { checkoutLin
           <div className="bg-linen rounded-2xl p-8 border border-linen">
             <div className="text-2xl mb-3">🌱</div>
             <h3 className="font-serif text-xl text-soil mb-2">Try a Month</h3>
-            <div className="text-2xl font-serif text-soil mb-3">$150 <span className="text-base font-sans text-charcoal/50">or $140/mo</span></div>
+            <div className="text-2xl font-serif text-soil mb-3">$150</div>
             <p className="text-sm text-charcoal/70 mb-6 leading-relaxed">
-              Not sure yet? Experience full season pass membership for one
-              month. Your $150 is fully credited toward a season pass if you
-              decide to join.
+              Not sure yet? Experience a membership at Hammock Earth for a month.
             </p>
             <a
               href={checkoutLinks ? "/members/checkout?tier=try_a_month" : "/members#try-a-month"}
