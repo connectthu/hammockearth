@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Get,
+  Query,
   Param,
   Body,
   Headers,
@@ -25,6 +27,15 @@ export class RegistrationsController {
   ) {
     const token = authorization?.replace("Bearer ", "");
     return this.registrationsService.createRegistration(dto, token);
+  }
+
+  @Get("admin")
+  listForEvent(
+    @Headers("authorization") auth: string,
+    @Query("eventId") eventId: string,
+  ) {
+    this.requireAdmin(auth);
+    return this.registrationsService.listForEvent(eventId);
   }
 
   @Post(":id/cancel")

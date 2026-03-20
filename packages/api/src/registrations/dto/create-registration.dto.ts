@@ -44,4 +44,8 @@ export class CreateRegistrationDto {
   @IsBoolean()
   @IsOptional()
   useMemberPrice?: boolean;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

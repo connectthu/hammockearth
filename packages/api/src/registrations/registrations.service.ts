@@ -78,6 +78,7 @@ export class RegistrationsService {
           quantity: dto.quantity,
           status: "waitlisted",
           amount_paid_cents: 0,
+          notes: dto.notes ?? null,
         })
         .select()
         .single();
@@ -148,6 +149,7 @@ export class RegistrationsService {
           status: "confirmed",
           discount_code_id: discountCodeId,
           amount_paid_cents: 0,
+          notes: dto.notes ?? null,
         })
         .select()
         .single();
@@ -210,6 +212,7 @@ export class RegistrationsService {
         stripe_payment_intent_id: paymentIntent.id,
         discount_code_id: discountCodeId,
         amount_paid_cents: amountCents,
+        notes: dto.notes ?? null,
       })
       .select()
       .single();
@@ -233,6 +236,18 @@ export class RegistrationsService {
       registrationId: reg.id,
       amountCents,
     };
+  }
+
+  // ── admin: list registrations for an event ────────────────────────────────
+  async listForEvent(eventId: string) {
+    const { data, error } = await this.supabase.client
+      .from("event_registrations")
+      .select("id, guest_name, guest_email, quantity, status, amount_paid_cents, notes, created_at")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
   }
 
   // ── full_series registration ───────────────────────────────────────────────
@@ -322,6 +337,7 @@ export class RegistrationsService {
         stripe_payment_intent_id: paymentIntent.id,
         discount_code_id: discountCodeId,
         amount_paid_cents: amountCents,
+        notes: dto.notes ?? null,
       })
       .select()
       .single();

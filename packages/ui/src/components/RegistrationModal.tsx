@@ -133,6 +133,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
   } | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [applyingCode, setApplyingCode] = useState(false);
+  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -186,6 +187,7 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
         discountCode: discountCode?.code,
         registrationType,
         useMemberPrice,
+        notes: notes.trim() || undefined,
       };
       if (isSeries && seriesSlug) {
         body.seriesSlug = seriesSlug;
@@ -369,6 +371,19 @@ export function RegistrationModal({ event, spotsRemaining, onClose, seriesSlug, 
                 )}
               </div>
               )}
+
+              <div>
+                <label className="block text-xs font-medium text-moss uppercase tracking-wide mb-1">
+                  Anything we should know?
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  className="w-full border border-linen rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/30 resize-none"
+                  placeholder="Dietary restrictions, accessibility needs, etc."
+                />
+              </div>
 
               {/* Price breakdown */}
               <div className="bg-linen rounded-xl p-4 space-y-1 text-sm">
