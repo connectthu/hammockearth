@@ -128,20 +128,23 @@ async function apiFetch<T>(
 
 function ProfileTab({
   profile,
+  userId,
   token,
   onChange,
 }: {
   profile: BookableProfile | null;
+  userId: string;
   token: string;
   onChange: (p: BookableProfile) => void;
 }) {
   const [form, setForm] = useState<Partial<BookableProfile>>({
+    user_id: userId,
     slug: "",
     headline: "",
     subheading: "",
     about: "",
     avatar_url: "",
-    is_published: false,
+    is_published: true,
     buffer_minutes: 15,
     cancellation_notice_hours: 0,
   });
@@ -173,18 +176,7 @@ function ProfileTab({
 
   return (
     <div className="space-y-5 max-w-xl">
-      <div className="flex items-center justify-between">
-        <h2 className="font-serif text-lg text-soil">Booking Profile</h2>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <span className="text-sm text-soil/60">Published</span>
-          <div
-            onClick={() => set("is_published", !form.is_published)}
-            className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${form.is_published ? "bg-moss" : "bg-linen border border-soil/20"}`}
-          >
-            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_published ? "translate-x-5" : "translate-x-0.5"}`} />
-          </div>
-        </label>
-      </div>
+      <h2 className="font-serif text-lg text-soil">Booking Profile</h2>
 
       {profile && (
         <div className="text-xs text-soil/40 bg-linen/50 rounded-xl px-3 py-2">
@@ -754,7 +746,7 @@ function BookingsTab({ profileId, token }: { profileId: string; token: string })
 
 type Tab = "profile" | "sessions" | "availability" | "bookings";
 
-export function SettingsClient({ accessToken }: { accessToken: string }) {
+export function SettingsClient({ accessToken, userId }: { accessToken: string; userId: string }) {
   const [profile, setProfile] = useState<BookableProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("profile");
@@ -763,11 +755,13 @@ export function SettingsClient({ accessToken }: { accessToken: string }) {
     if (!accessToken) return;
     apiFetch<BookableProfile[]>("GET", "/booking/admin/profiles", accessToken)
       .then((data) => {
-        if (data.length > 0) setProfile(data[0] ?? null);
+        // Find the profile belonging to the current user
+        const mine = data.find((p) => p.user_id === userId) ?? null;
+        setProfile(mine);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [accessToken]);
+  }, [accessToken, userId]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "profile", label: "Booking Profile" },
@@ -800,7 +794,7 @@ export function SettingsClient({ accessToken }: { accessToken: string }) {
           </div>
 
           {tab === "profile" && (
-            <ProfileTab profile={profile} token={accessToken} onChange={setProfile} />
+            <ProfileTab profile={profile} userId={userId} token={accessToken} onChange={setProfile} />
           )}
 
           {tab === "sessions" && !profile && (

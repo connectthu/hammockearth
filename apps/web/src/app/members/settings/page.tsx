@@ -42,7 +42,7 @@ export default async function SettingsPage() {
         <main className="flex-1 min-w-0 pb-16 md:pb-0">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <h1 className="font-serif text-2xl text-soil mb-8">Settings</h1>
-            <SettingsClient accessToken={accessToken} />
+            <SettingsClient accessToken={accessToken} userId={user.id} />
           </div>
         </main>
       </div>
