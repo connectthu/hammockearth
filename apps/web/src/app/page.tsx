@@ -10,6 +10,7 @@ import { ValuesSection } from "@/components/sections/ValuesSection";
 import { EventsSection } from "@/components/sections/EventsSection";
 import { MembershipSection } from "@/components/sections/MembershipSection";
 import { OnlineProgramsSection } from "@/components/sections/OnlineProgramsSection";
+import { TeamMosaicSection } from "@/components/sections/TeamMosaicSection";
 import { TeamSection } from "@/components/sections/TeamSection";
 import { GallerySection } from "@/components/sections/GallerySection";
 import { VisitSection } from "@/components/sections/VisitSection";
@@ -27,6 +28,7 @@ export default function HomePage() {
         <OnlineProgramsSection />
         <MembershipSection checkoutLinks />
         <VisitSection />
+        <TeamMosaicSection />
         <TeamSection />
         <MissionSection />
         <ValuesSection />
