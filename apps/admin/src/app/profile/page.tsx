@@ -95,7 +95,10 @@ interface UserOption {
   id: string;
   email: string;
   full_name: string | null;
+  username: string | null;
   role: string;
+  avatar_url: string | null;
+  bio: string | null;
 }
 
 // ── Tab: Profile Details ──────────────────────────────────────────────────────
@@ -176,16 +179,32 @@ function ProfileTab({
         <Field label="Member">
           <select
             value={(form.user_id as string) ?? ""}
-            onChange={(e) => set("user_id", e.target.value)}
+            onChange={(e) => {
+              const u = users.find((x) => x.id === e.target.value);
+              if (!u) { set("user_id", ""); return; }
+              setForm((f) => ({
+                ...f,
+                user_id: u.id,
+                slug: u.username ?? f.slug ?? "",
+                avatar_url: u.avatar_url ?? f.avatar_url ?? "",
+                about: u.bio ?? f.about ?? "",
+              }));
+            }}
             className={inputCls}
           >
             <option value="">— Select a member —</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.full_name ?? u.email} ({u.email}) · {u.role}
+                {u.full_name ?? u.email}
+                {u.username ? ` (@${u.username})` : ""} · {u.role}
               </option>
             ))}
           </select>
+          {form.user_id && (
+            <p className="text-xs text-moss mt-1">
+              ✓ Slug, avatar, and bio pre-filled from profile — edit below if needed
+            </p>
+          )}
         </Field>
       )}
 

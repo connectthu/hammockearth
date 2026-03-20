@@ -352,7 +352,7 @@ export class MembershipsService {
 
     const { data: profilesData } = await this.supabase.client
       .from("profiles")
-      .select("id, full_name, username, role, membership_type, membership_status");
+      .select("id, full_name, username, role, membership_type, membership_status, avatar_url, bio");
     const profiles = profilesData ?? [];
     const profileMap = new Map((profiles as any[]).map((p) => [p.id, p]));
 
@@ -364,6 +364,8 @@ export class MembershipsService {
         full_name: profile?.full_name ?? null,
         username: profile?.username ?? null,
         role: profile?.role ?? "genpop",
+        avatar_url: profile?.avatar_url ?? null,
+        bio: profile?.bio ?? null,
         membership_type: profile?.membership_type ?? null,
         membership_status: profile?.membership_status ?? null,
         created_at: u.created_at,
