@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiUrl } from "@/lib/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.hammock.earth";
 
 interface User {
   id: string;
@@ -61,7 +61,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
-    fetch(apiUrl("/memberships/users"), {
+    fetch(`${API_URL}/memberships/users`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
