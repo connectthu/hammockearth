@@ -1,98 +1,81 @@
 "use client";
 
-import { useState } from "react";
-
 const team = [
   {
     name: "Thu",
-    desc: "Somatic leadership coach & community builder",
+    role: "Somatic Leadership Coach & Community Builder",
     img: "/images/team/thu.jpg",
-    span: "",
   },
   {
     name: "Anahita",
-    desc: "Regenerative leader & organic grower",
+    role: "Regenerative Leader & Organic Grower",
     img: "/images/team/anahita.jpg",
-    span: "lg:col-span-2",
   },
   {
     name: "Tyler",
-    desc: "Chef & culinary grower",
+    role: "Chef & Culinary Grower",
     img: "/images/team/tyler.jpg",
-    span: "lg:row-span-2",
   },
   {
     name: "Sophie",
-    desc: "Dancer, choreographer, trickster",
+    role: "Dancer, Choreographer, Trickster",
     img: "/images/team/sophie.jpg",
-    span: "",
   },
   {
     name: "Stephanie",
-    desc: "Yoga, meditation & breathwork teacher",
+    role: "Calm. Yoga, Meditation & Breathwork Teacher",
     img: "/images/team/steph.jpg",
-    span: "",
   },
   {
     name: "Terrence",
-    desc: "Strategist, facilitator & care advocate",
+    role: "Gratitude. Strategist, Facilitator & Care Advocate",
     img: "/images/team/terrence.png",
-    span: "lg:col-span-2",
     objPos: "object-top",
   },
   {
     name: "Bela",
-    desc: "Coach, self-compassion & authentic leadership",
+    role: "Self-Compassion. Authentic Leadership Coach",
     img: "/images/team/bela.jpg",
-    span: "",
   },
   {
     name: "Clarence",
-    desc: "Creative generalist, visual explorer",
+    role: "Perspective. Creative Generalist, Visual Explorer",
     img: "/images/team/clarence.png",
-    span: "lg:row-span-2",
   },
   {
     name: "Anto",
-    desc: "Arts community builder, expressive arts & ancestral healing",
+    role: "Expressive Arts Therapist & InnerGenerational Community Builder",
     img: "/images/team/anto.jpg",
-    span: "lg:col-span-2",
     objPos: "object-top",
   },
   {
     name: "Jasjit",
-    desc: "Mindfulness teacher & community cultivator",
+    role: "Mindfulness Teacher & Community Cultivator",
     img: "/images/team/jasjit.jpg",
-    span: "",
   },
   {
     name: "Chenny",
-    desc: "Entrepreneur & health and gender equity advocate",
+    role: "Courage. Entrepreneur & Health and Gender Equity Advocate",
     img: "/images/team/chenny.jpg",
-    span: "lg:row-span-2",
   },
   {
     name: "Mirka",
-    desc: "Artist, arts educator & champion of creative play",
+    role: "Artist, Arts Educator & Champion of Creative Play",
     img: "/images/team/mirka.jpeg",
-    span: "",
   },
   {
     name: "Erin",
-    desc: "Creator, culture builder & architect of belonging",
+    role: "Creator, Culture Builder & Architect of Belonging",
     img: "/images/team/erin.jpg",
-    span: "lg:col-span-2",
     objPos: "object-top",
   },
 ];
 
 export function TeamMosaicSection() {
-  const [active, setActive] = useState<string | null>(null);
-
   return (
-    <section className="py-24 bg-linen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+    <section className="py-24 bg-linen overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <div className="text-center">
           <p className="text-clay text-xs font-semibold uppercase tracking-widest mb-4">
             Our Community
           </p>
@@ -103,43 +86,45 @@ export function TeamMosaicSection() {
             A living tapestry of the souls who breathe life into our mission.
           </p>
         </div>
+      </div>
 
+      <div className="relative">
         <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3"
-          style={{ gridAutoRows: "220px", gridAutoFlow: "row dense" }}
+          className="flex gap-5 overflow-x-auto px-8 sm:px-12 lg:px-16 pb-16 [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
         >
-          {team.map((person: { name: string; desc: string; img: string; span: string; objPos?: string }) => (
+          {team.map((person, i) => (
             <div
               key={person.name}
-              className={`relative overflow-hidden rounded-xl cursor-pointer group ${person.span}`}
-              onClick={() =>
-                setActive(active === person.name ? null : person.name)
-              }
+              className="flex-shrink-0"
+              style={{ width: "210px", marginTop: i % 2 === 1 ? "48px" : "0" }}
             >
-              <img
-                src={person.img}
-                alt={person.name}
-                className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${person.objPos ?? "object-center"}`}
-              />
-              {/* Overlay — CSS hover on desktop, tap-toggle on mobile */}
-              <div
-                className={`absolute inset-0 flex flex-col justify-end p-4 transition-opacity duration-300 ${
-                  active === person.name
-                    ? "opacity-100"
-                    : "opacity-0 group-hover:opacity-100"
-                }`}
-                style={{ background: "rgba(59, 47, 47, 0.78)" }}
-              >
-                <p className="font-serif text-white font-bold text-sm leading-snug">
-                  {person.name}
-                </p>
-                <p className="text-white/80 text-xs mt-1 leading-snug font-sans">
-                  {person.desc}
-                </p>
+              <div className="rounded-2xl overflow-hidden shadow-md mb-4" style={{ background: "#FBF7F0" }}>
+                <img
+                  src={person.img}
+                  alt={person.name}
+                  className={`w-full object-cover ${person.objPos ?? "object-center"}`}
+                  style={{ height: "270px", filter: "grayscale(100%)" }}
+                />
               </div>
+              <p className="font-serif italic text-soil text-base leading-tight mb-1">
+                {person.name}
+              </p>
+              <p
+                className="text-xs leading-snug"
+                style={{ color: "#4A4A4A", fontVariant: "small-caps" }}
+              >
+                {person.role}
+              </p>
             </div>
           ))}
         </div>
+
+        {/* Right fade hint */}
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-32"
+          style={{ background: "linear-gradient(to left, #F5EFE6, transparent)" }}
+        />
       </div>
     </section>
   );
