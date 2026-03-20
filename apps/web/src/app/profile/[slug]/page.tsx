@@ -15,20 +15,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: `Book a session — Hammock Earth` };
 }
 
-const MEMBERSHIP_LABELS: Record<string, string> = {
-  season_pass: "Season Pass",
-  farm_friend: "Farm Friend",
-  try_a_month: "Try a Month",
-  community_partner: "Community Partner",
-};
-
 export default async function ProfilePage({ params }: PageProps) {
   const db = createServerClient();
 
   // Fetch bookable profile
   const { data: bpData } = await db
     .from("bookable_profiles" as any)
-    .select("id, user_id, slug, headline, subheading, about, is_published, buffer_minutes, cancellation_notice_hours")
+    .select("id, user_id, slug, headline, subheading, is_published, buffer_minutes, cancellation_notice_hours")
     .eq("slug", params.slug)
     .eq("is_published", true)
     .maybeSingle();
@@ -39,7 +32,7 @@ export default async function ProfilePage({ params }: PageProps) {
   // Fetch linked member profile
   const { data: profileData } = await db
     .from("profiles")
-    .select("id, full_name, avatar_url, bio, username, location, social_links, membership_type, role")
+    .select("full_name, avatar_url, username, location")
     .eq("id", bp.user_id)
     .maybeSingle();
 
@@ -64,10 +57,6 @@ export default async function ProfilePage({ params }: PageProps) {
   const availabilityDays = [
     ...new Set(((schedulesData ?? []) as any[]).map((s) => s.day_of_week as number)),
   ];
-
-  const membershipLabel = profile.membership_type && profile.membership_type !== "none"
-    ? (MEMBERSHIP_LABELS[profile.membership_type as string] ?? profile.membership_type)
-    : null;
 
   return (
     <>
@@ -102,18 +91,11 @@ export default async function ProfilePage({ params }: PageProps) {
                 {bp.headline && (
                   <p className="text-charcoal/70 text-sm italic mb-3 leading-relaxed">{bp.headline}</p>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  {membershipLabel && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-clay/10 text-clay border border-clay/20">
-                      {membershipLabel as string}
-                    </span>
-                  )}
-                  {profile.location && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-charcoal/50 border border-linen">
-                      📍 {profile.location as string}
-                    </span>
-                  )}
-                </div>
+                {profile.location && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-charcoal/50 border border-linen">
+                    📍 {profile.location as string}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -123,16 +105,6 @@ export default async function ProfilePage({ params }: PageProps) {
               </p>
             )}
           </div>
-
-          {/* ── About ──────────────────────────────────────────────────────── */}
-          {(profile.bio || bp.about) && (
-            <div className="bg-white rounded-3xl border border-linen p-8 mb-6">
-              <h2 className="font-serif text-xl text-soil mb-4">About</h2>
-              <p className="text-charcoal/70 leading-relaxed whitespace-pre-wrap">
-                {profile.bio ?? bp.about}
-              </p>
-            </div>
-          )}
 
           {/* ── Book a session ─────────────────────────────────────────────── */}
           <div className="bg-white rounded-3xl border border-linen p-8 mb-6">
