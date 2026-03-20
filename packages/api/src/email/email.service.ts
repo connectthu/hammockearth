@@ -340,7 +340,7 @@ export class EmailService {
   async membershipWelcome(opts: {
     to: string;
     name: string;
-    membershipType: "season_pass" | "farm_friend";
+    membershipType: "season_pass" | "farm_friend" | "try_a_month";
     validUntil?: string;
   }): Promise<void> {
     const { to, name, membershipType, validUntil } = opts;
