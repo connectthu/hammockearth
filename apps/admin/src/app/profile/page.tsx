@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { AdminShell } from "@/components/AdminShell";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -831,6 +832,7 @@ export default function AdminProfilePage() {
   ];
 
   return (
+    <AdminShell>
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl text-soil">Booking Profile</h1>
@@ -898,5 +900,6 @@ export default function AdminProfilePage() {
         </>
       )}
     </div>
+    </AdminShell>
   );
 }

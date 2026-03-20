@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AdminShell } from "@/components/AdminShell";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.hammock.earth";
 
 interface User {
@@ -86,6 +87,7 @@ export default function UsersPage() {
   });
 
   return (
+    <AdminShell>
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl text-soil">Users</h1>
@@ -153,5 +155,6 @@ export default function UsersPage() {
         </div>
       )}
     </div>
+    </AdminShell>
   );
 }
