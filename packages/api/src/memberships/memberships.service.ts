@@ -343,6 +343,38 @@ export class MembershipsService {
     return data ?? [];
   }
 
+  async findAllUsers() {
+    const { data: listData } = await this.supabase.client.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    const authUsers = listData?.users ?? [];
+
+    const { data: profilesData } = await this.supabase.client
+      .from("profiles")
+      .select("id, full_name, username, role, membership_type, membership_status");
+    const profiles = profilesData ?? [];
+    const profileMap = new Map((profiles as any[]).map((p) => [p.id, p]));
+
+    const users = authUsers.map((u: any) => {
+      const profile = profileMap.get(u.id) as any;
+      return {
+        id: u.id,
+        email: u.email,
+        full_name: profile?.full_name ?? null,
+        username: profile?.username ?? null,
+        role: profile?.role ?? "genpop",
+        membership_type: profile?.membership_type ?? null,
+        membership_status: profile?.membership_status ?? null,
+        created_at: u.created_at,
+      };
+    });
+
+    return users.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }
+
   async updateStatus(id: string, status: string) {
     const { data, error } = await this.supabase.client
       .from("memberships")

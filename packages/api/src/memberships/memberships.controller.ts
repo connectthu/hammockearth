@@ -62,6 +62,12 @@ export class MembershipsController {
     return this.membershipsService.findAll();
   }
 
+  @Get("users")
+  findAllUsers(@Headers("authorization") auth: string) {
+    this.requireAdmin(auth);
+    return this.membershipsService.findAllUsers();
+  }
+
   @Patch(":id")
   updateStatus(
     @Headers("authorization") auth: string,
