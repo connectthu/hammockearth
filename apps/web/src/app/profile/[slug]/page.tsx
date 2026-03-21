@@ -95,10 +95,10 @@ export default async function ProfilePage({ params }: PageProps) {
               <img
                 src={profile.avatar_url as string}
                 alt={profile.full_name ?? bp.slug}
-                className="w-full max-w-sm rounded-3xl object-cover aspect-[3/4]"
+                className="w-full max-w-[200px] md:max-w-sm rounded-3xl object-cover aspect-[3/4]"
               />
             ) : (
-              <div className="w-full max-w-sm aspect-[3/4] rounded-3xl bg-linen flex items-center justify-center text-9xl">
+              <div className="w-full max-w-[200px] md:max-w-sm aspect-[3/4] rounded-3xl bg-linen flex items-center justify-center text-9xl">
                 🌿
               </div>
             )}
