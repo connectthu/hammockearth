@@ -254,7 +254,7 @@ export function ProfileSections({
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 items-start">
 
           {/* ── Left: scrollable content ─────────────────────────────────── */}
-          <div>
+          <div className="order-2 lg:order-1">
             <ServicesGrid
               services={services}
               commitmentPackages={commitmentPackages}
@@ -267,7 +267,7 @@ export function ProfileSections({
           </div>
 
           {/* ── Right: sticky booking sidebar ────────────────────────────── */}
-          <div id="book" className="sticky top-20 self-start bg-white rounded-2xl shadow-sm p-6">
+          <div id="book" className="order-1 lg:order-2 sticky top-20 self-start bg-white rounded-2xl shadow-sm p-6">
             <h2 className="font-serif text-lg text-soil mb-5">Book a Session</h2>
             <BookingFlow
               slug={slug}
