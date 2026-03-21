@@ -78,8 +78,8 @@ export default async function ProfilePage({ params }: PageProps) {
       {/* ── Hero / About ──────────────────────────────────────────────────── */}
       <section id="about" className="bg-cream">
         <div className="max-w-6xl mx-auto px-8 pt-24 pb-20 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-soil/40 mb-6">The Practice</p>
+          <div className="order-2 md:order-1">
+            <p className="text-xs uppercase tracking-[0.2em] text-soil/40 mb-6">The Work</p>
             <h1 className="font-serif italic text-5xl lg:text-6xl text-soil leading-[1.1] mb-8">
               {bp.headline ?? profile.full_name ?? bp.slug}
             </h1>
@@ -90,7 +90,7 @@ export default async function ProfilePage({ params }: PageProps) {
               <p className="text-soil/55 text-sm leading-relaxed">{bp.about}</p>
             )}
           </div>
-          <div className="flex justify-center md:justify-end">
+          <div className="order-1 md:order-2 flex justify-center md:justify-end">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url as string}
