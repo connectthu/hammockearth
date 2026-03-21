@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { RichTextEditor } from "@/components/RichTextEditor";
+import dynamic from "next/dynamic";
+const RichTextEditor = dynamic(
+  () => import("@/components/RichTextEditor").then((m) => ({ default: m.RichTextEditor })),
+  { ssr: false }
+);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
