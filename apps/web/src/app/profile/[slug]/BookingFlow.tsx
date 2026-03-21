@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.hammock.earth";
 
@@ -23,6 +23,7 @@ interface BookingResult {
   durationMinutes: number;
   locationType: string;
   locationDetail: string | null;
+  zoomLink: string | null;
   bookerName: string;
   bookerEmail: string;
   timezone: string;
@@ -213,13 +214,16 @@ export function BookingFlow({
   sessionTypes,
   availabilityDays,
   cancellationNoticeHours,
+  selectedPlanNote,
 }: {
   slug: string;
   sessionTypes: SessionType[];
   availabilityDays: number[];
   cancellationNoticeHours: number;
+  selectedPlanNote?: string;
 }) {
   const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [step, setStep] = useState<1 | 2 | 3 | "confirmed">(1);
   const [selectedType, setSelectedType] = useState<SessionType | null>(null);
@@ -233,6 +237,14 @@ export function BookingFlow({
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Sync pre-filled note from commitment plan selector and scroll into view
+  useEffect(() => {
+    if (selectedPlanNote !== undefined) {
+      setNotes(selectedPlanNote);
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedPlanNote]);
   const [submitError, setSubmitError] = useState("");
   const [booking, setBooking] = useState<BookingResult | null>(null);
 
@@ -331,14 +343,29 @@ export function BookingFlow({
           <div className="flex justify-between">
             <span className="text-soil/50">Location</span>
             <span className="text-soil">
-              {booking.locationType === "zoom"
-                ? "Zoom (link to follow)"
-                : booking.locationType === "phone"
-                  ? "Phone call"
-                  : booking.locationDetail ?? "TBD"}
+              {booking.locationType === "zoom" ? (
+                booking.zoomLink ? (
+                  <a href={booking.zoomLink} target="_blank" rel="noopener noreferrer" className="text-clay hover:underline">
+                    Join Zoom meeting
+                  </a>
+                ) : "Zoom (link to follow)"
+              ) : booking.locationType === "phone"
+                ? "Phone call"
+                : booking.locationDetail ?? "TBD"}
             </span>
           </div>
         </div>
+
+        {booking.zoomLink && (
+          <a
+            href={booking.zoomLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 py-3 rounded-full bg-clay text-white text-sm font-medium hover:bg-clay/90 transition-colors"
+          >
+            🎥 Join Zoom Meeting
+          </a>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <a
@@ -370,7 +397,7 @@ export function BookingFlow({
   // ── Steps ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={rootRef}>
       <StepIndicator current={step as 1 | 2 | 3} />
 
       {/* Step 1 — Select session type */}

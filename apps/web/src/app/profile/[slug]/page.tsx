@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { createServerClient } from "@hammock/database";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { BookingFlow } from "./BookingFlow";
+import { ProfileSections } from "./ProfileSections";
 
 export const revalidate = 60;
 
@@ -38,25 +38,38 @@ export default async function ProfilePage({ params }: PageProps) {
 
   const profile = (profileData as any) ?? {};
 
-  // Fetch session types
-  const { data: sessionTypesData } = await db
-    .from("session_types" as any)
-    .select("id, name, description, duration_minutes, location_type, location_detail, price_cents, is_free")
-    .eq("profile_id", bp.id)
-    .eq("is_active", true)
-    .order("display_order", { ascending: true });
+  // Fetch session types, schedules, services, commitment packages in parallel
+  const [sessionTypesRes, schedulesRes, servicesRes, packagesRes] = await Promise.all([
+    db
+      .from("session_types" as any)
+      .select("id, name, description, duration_minutes, location_type, location_detail, price_cents, is_free")
+      .eq("profile_id", bp.id)
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
+    db
+      .from("availability_schedules" as any)
+      .select("day_of_week")
+      .eq("profile_id", bp.id),
+    db
+      .from("services" as any)
+      .select("id, icon, name, description")
+      .eq("profile_id", bp.id)
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
+    db
+      .from("commitment_packages" as any)
+      .select("*")
+      .eq("profile_id", bp.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true }),
+  ]);
 
-  const sessionTypes = (sessionTypesData ?? []) as any[];
-
-  // Fetch available days of week for calendar highlighting
-  const { data: schedulesData } = await db
-    .from("availability_schedules" as any)
-    .select("day_of_week")
-    .eq("profile_id", bp.id);
-
+  const sessionTypes = (sessionTypesRes.data ?? []) as any[];
   const availabilityDays = [
-    ...new Set(((schedulesData ?? []) as any[]).map((s) => s.day_of_week as number)),
+    ...new Set(((schedulesRes.data ?? []) as any[]).map((s) => s.day_of_week as number)),
   ];
+  const services = (servicesRes.data ?? []) as any[];
+  const commitmentPackages = (packagesRes.data ?? []) as any[];
 
   return (
     <>
@@ -106,16 +119,15 @@ export default async function ProfilePage({ params }: PageProps) {
             )}
           </div>
 
-          {/* ── Book a session ─────────────────────────────────────────────── */}
-          <div className="bg-white rounded-3xl border border-linen p-8 mb-6">
-            <h2 className="font-serif text-xl text-soil mb-6">Book a Session</h2>
-            <BookingFlow
-              slug={bp.slug}
-              sessionTypes={sessionTypes}
-              availabilityDays={availabilityDays}
-              cancellationNoticeHours={bp.cancellation_notice_hours}
-            />
-          </div>
+          {/* ── Services, Commitment Slider, Booking ───────────────────────── */}
+          <ProfileSections
+            services={services}
+            commitmentPackages={commitmentPackages}
+            slug={bp.slug}
+            sessionTypes={sessionTypes}
+            availabilityDays={availabilityDays}
+            cancellationNoticeHours={bp.cancellation_notice_hours}
+          />
 
         </main>
       </div>

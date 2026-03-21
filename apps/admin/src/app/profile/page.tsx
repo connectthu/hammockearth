@@ -681,6 +681,384 @@ function AvailabilityTab({ profileId }: { profileId: string }) {
   );
 }
 
+// ── Tab: Services ─────────────────────────────────────────────────────────────
+
+interface Service {
+  id: string;
+  icon: string | null;
+  name: string;
+  description: string;
+  display_order: number;
+  is_active: boolean;
+}
+
+function ServicesTab({ profileId }: { profileId: string }) {
+  const [services, setServices] = useState<Service[]>([]);
+  const [editing, setEditing] = useState<Partial<Service> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiGet<Service[]>(`/booking/admin/profile/${profileId}/services`);
+      setServices(data);
+    } finally {
+      setLoading(false);
+    }
+  }, [profileId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const blankService = (): Partial<Service> => ({
+    icon: "",
+    name: "",
+    description: "",
+    display_order: services.length,
+    is_active: true,
+  });
+
+  const handleSave = async () => {
+    if (!editing) return;
+    try {
+      await apiPost(`/booking/admin/profile/${profileId}/services`, editing);
+      setEditing(null);
+      load();
+    } catch { alert("Failed to save service"); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this service?")) return;
+    try {
+      await apiDelete(`/booking/admin/services/${id}`);
+      load();
+    } catch { alert("Failed to delete"); }
+  };
+
+  if (loading) return <p className="text-sm text-soil/50">Loading…</p>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-lg text-soil">Services</h2>
+          <p className="text-xs text-soil/40 mt-0.5">Shown as &ldquo;Signature Modalities&rdquo; on the public profile</p>
+        </div>
+        <button
+          onClick={() => setEditing(blankService())}
+          className="px-4 py-2 rounded-full bg-clay text-white text-sm font-medium hover:bg-clay/90 transition-colors"
+        >
+          + Add service
+        </button>
+      </div>
+
+      {services.length === 0 && !editing && (
+        <p className="text-sm text-soil/40">No services yet.</p>
+      )}
+
+      <div className="space-y-3">
+        {services.map((s) => (
+          <div key={s.id} className="bg-white rounded-xl border border-linen p-4 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              {s.icon && <span className="text-2xl leading-none mt-0.5">{s.icon}</span>}
+              <div className="space-y-0.5">
+                <p className="font-medium text-soil text-sm">{s.name}</p>
+                {s.description && <p className="text-xs text-soil/50">{s.description}</p>}
+                <p className="text-xs text-soil/30">Order: {s.display_order}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => setEditing(s)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-linen hover:bg-linen text-soil/60 hover:text-soil transition-colors"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(s.id)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {editing && (
+        <div className="bg-white rounded-xl border border-moss/20 p-5 space-y-4 max-w-lg">
+          <h3 className="font-medium text-soil text-sm">{editing.id ? "Edit service" : "New service"}</h3>
+
+          <div className="grid grid-cols-4 gap-3">
+            <Field label="Icon (emoji)">
+              <input type="text" value={editing.icon ?? ""} onChange={(e) => setEditing({ ...editing, icon: e.target.value })} className={inputCls} placeholder="🌿" />
+            </Field>
+            <div className="col-span-3">
+              <Field label="Name">
+                <input type="text" value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className={inputCls} placeholder="Mindful Movement" />
+              </Field>
+            </div>
+          </div>
+
+          <Field label="Description">
+            <textarea rows={2} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className={`${inputCls} resize-none`} placeholder="Brief description shown on the profile page" />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Display order">
+              <input type="number" min={0} value={editing.display_order ?? 0} onChange={(e) => setEditing({ ...editing, display_order: parseInt(e.target.value) })} className={inputCls} />
+            </Field>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={editing.is_active ?? true} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} className="rounded" />
+            <span className="text-sm text-soil">Active (visible on profile)</span>
+          </label>
+
+          <div className="flex gap-3 pt-2">
+            <button onClick={handleSave} className="px-4 py-2 rounded-full bg-clay text-white text-sm font-medium hover:bg-clay/90">Save</button>
+            <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-full border border-linen text-soil text-sm hover:bg-linen">Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tab: Commitment Package ───────────────────────────────────────────────────
+
+interface CommitmentLevel {
+  label: string;
+  months: number;
+  discount_percent: number;
+}
+
+interface CommitmentPlan {
+  name: string;
+  sessions_per_month: number;
+  duration_minutes: number;
+  monthly_price_cents: number;
+  per_session_cents: number;
+}
+
+interface CommitmentPackage {
+  id?: string;
+  heading: string;
+  subheading: string;
+  billing_note: string;
+  commitment_levels: CommitmentLevel[];
+  plans: CommitmentPlan[];
+  is_active: boolean;
+}
+
+function fmtDollars(cents: number): string {
+  return `$${Math.round(cents / 100)}`;
+}
+
+function CommitmentTab({ profileId }: { profileId: string }) {
+  const blank: CommitmentPackage = {
+    heading: "Deep Coaching Commitment",
+    subheading: "",
+    billing_note: "",
+    commitment_levels: [
+      { label: "Monthly", months: 1, discount_percent: 0 },
+      { label: "3 Months", months: 3, discount_percent: 7 },
+      { label: "6 Months", months: 6, discount_percent: 10 },
+      { label: "12 Months", months: 12, discount_percent: 20 },
+    ],
+    plans: [],
+    is_active: true,
+  };
+
+  const [pkg, setPkg] = useState<CommitmentPackage>(blank);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [previewLevel, setPreviewLevel] = useState(0);
+
+  useEffect(() => {
+    apiGet<CommitmentPackage[]>(`/booking/admin/profile/${profileId}/commitment-packages`)
+      .then((data) => { if (data[0]) setPkg(data[0] as CommitmentPackage); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [profileId]);
+
+  const setLevel = (i: number, key: keyof CommitmentLevel, val: string | number) =>
+    setPkg((p) => {
+      const levels = [...p.commitment_levels];
+      levels[i] = { ...levels[i]!, [key]: val };
+      return { ...p, commitment_levels: levels };
+    });
+
+  const setPlan = (i: number, key: keyof CommitmentPlan, val: string | number) =>
+    setPkg((p) => {
+      const plans = [...p.plans];
+      plans[i] = { ...plans[i]!, [key]: val };
+      return { ...p, plans };
+    });
+
+  const addPlan = () =>
+    setPkg((p) => ({
+      ...p,
+      plans: [
+        ...p.plans,
+        { name: "", sessions_per_month: 1, duration_minutes: 60, monthly_price_cents: 0, per_session_cents: 0 },
+      ],
+    }));
+
+  const removePlan = (i: number) =>
+    setPkg((p) => ({ ...p, plans: p.plans.filter((_, idx) => idx !== i) }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const saved_pkg = await apiPost<CommitmentPackage>(
+        `/booking/admin/profile/${profileId}/commitment-packages`,
+        pkg
+      );
+      setPkg(saved_pkg as CommitmentPackage);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch { alert("Failed to save"); }
+    finally { setSaving(false); }
+  };
+
+  if (loading) return <p className="text-sm text-soil/50">Loading…</p>;
+
+  const currentLevel = pkg.commitment_levels[previewLevel];
+
+  return (
+    <div className="space-y-8 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <h2 className="font-serif text-lg text-soil">Commitment Package</h2>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2.5 rounded-full bg-clay text-white text-sm font-medium hover:bg-clay/90 transition-colors disabled:opacity-50"
+        >
+          {saved ? "Saved ✓" : saving ? "Saving…" : "Save Changes"}
+        </button>
+      </div>
+
+      {/* Meta fields */}
+      <div className="space-y-4 bg-white rounded-xl border border-linen p-5">
+        <Field label="Heading">
+          <input type="text" value={pkg.heading} onChange={(e) => setPkg({ ...pkg, heading: e.target.value })} className={inputCls} />
+        </Field>
+        <Field label="Subheading">
+          <textarea rows={2} value={pkg.subheading} onChange={(e) => setPkg({ ...pkg, subheading: e.target.value })} className={`${inputCls} resize-none`} />
+        </Field>
+        <Field label="Billing note">
+          <input type="text" value={pkg.billing_note} onChange={(e) => setPkg({ ...pkg, billing_note: e.target.value })} className={inputCls} placeholder="Invoiced monthly · Prices in CAD" />
+        </Field>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={pkg.is_active} onChange={(e) => setPkg({ ...pkg, is_active: e.target.checked })} className="rounded" />
+          <span className="text-sm text-soil">Active (visible on profile)</span>
+        </label>
+      </div>
+
+      {/* Commitment levels */}
+      <div className="space-y-3 bg-white rounded-xl border border-linen p-5">
+        <h3 className="font-medium text-soil text-sm">Commitment Levels</h3>
+        <div className="space-y-2">
+          {pkg.commitment_levels.map((lvl, i) => (
+            <div key={i} className="grid grid-cols-3 gap-3 items-end">
+              <Field label={i === 0 ? "Label" : ""}>
+                <input type="text" value={lvl.label} onChange={(e) => setLevel(i, "label", e.target.value)} className={inputCls} placeholder="Monthly" />
+              </Field>
+              <Field label={i === 0 ? "Months" : ""}>
+                <input type="number" min={1} value={lvl.months} onChange={(e) => setLevel(i, "months", parseInt(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label={i === 0 ? "Discount %" : ""}>
+                <input type="number" min={0} max={100} value={lvl.discount_percent} onChange={(e) => setLevel(i, "discount_percent", parseInt(e.target.value))} className={inputCls} />
+              </Field>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Plans */}
+      <div className="space-y-3 bg-white rounded-xl border border-linen p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-soil text-sm">Plans</h3>
+          <button onClick={addPlan} className="text-xs px-3 py-1.5 rounded-full bg-moss/10 text-moss hover:bg-moss/20 transition-colors">+ Add plan</button>
+        </div>
+        {pkg.plans.length === 0 && <p className="text-xs text-soil/40">No plans yet.</p>}
+        {pkg.plans.map((plan, i) => (
+          <div key={i} className="border border-linen rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-soil/60">Plan {i + 1}</span>
+              <button onClick={() => removePlan(i)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
+            </div>
+            <Field label="Name">
+              <input type="text" value={plan.name} onChange={(e) => setPlan(i, "name", e.target.value)} className={inputCls} placeholder="Core Coaching" />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Sessions/month">
+                <input type="number" min={1} value={plan.sessions_per_month} onChange={(e) => setPlan(i, "sessions_per_month", parseInt(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Duration (min)">
+                <input type="number" min={15} value={plan.duration_minutes} onChange={(e) => setPlan(i, "duration_minutes", parseInt(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Monthly price (cents)">
+                <input type="number" min={0} value={plan.monthly_price_cents} onChange={(e) => setPlan(i, "monthly_price_cents", parseInt(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Per session (cents)">
+                <input type="number" min={0} value={plan.per_session_cents} onChange={(e) => setPlan(i, "per_session_cents", parseInt(e.target.value))} className={inputCls} />
+              </Field>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Live preview */}
+      {pkg.plans.length > 0 && (
+        <div className="bg-linen/40 rounded-xl border border-linen p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-soil text-sm">Preview</h3>
+            <div className="flex gap-1">
+              {pkg.commitment_levels.map((lvl, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPreviewLevel(i)}
+                  className={`text-xs px-3 py-1 rounded-full transition-colors ${previewLevel === i ? "bg-moss text-white" : "bg-white border border-linen text-soil/60 hover:text-soil"}`}
+                >
+                  {lvl.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-linen/60">
+                <th className="text-left py-1.5 text-xs text-soil/50 font-medium">Plan</th>
+                <th className="text-left py-1.5 text-xs text-soil/50 font-medium">Sessions</th>
+                <th className="text-right py-1.5 text-xs text-soil/50 font-medium">Monthly</th>
+                <th className="text-right py-1.5 text-xs text-soil/50 font-medium">Per Session</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pkg.plans.map((plan, i) => {
+                const disc = currentLevel?.discount_percent ?? 0;
+                const monthly = Math.round(plan.monthly_price_cents * (1 - disc / 100));
+                const perSess = Math.round(plan.per_session_cents * (1 - disc / 100));
+                return (
+                  <tr key={i} className="border-b border-linen/40 last:border-0">
+                    <td className="py-2 font-medium text-soil text-xs">{plan.name || "—"}</td>
+                    <td className="py-2 text-soil/60 text-xs">{plan.sessions_per_month} × {plan.duration_minutes} min</td>
+                    <td className="py-2 text-right text-xs text-soil">{fmtDollars(monthly)}</td>
+                    <td className="py-2 text-right text-xs text-soil/70">{fmtDollars(perSess)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {pkg.billing_note && <p className="text-xs text-soil/40">{pkg.billing_note}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Tab: Bookings ─────────────────────────────────────────────────────────────
 
 function BookingsTab({ profileId }: { profileId: string }) {
@@ -802,7 +1180,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type Tab = "profile" | "sessions" | "availability" | "bookings";
+type Tab = "profile" | "sessions" | "availability" | "services" | "commitment" | "bookings";
 
 export default function AdminProfilePage() {
   const [profile, setProfile] = useState<BookableProfile | null>(null);
@@ -827,6 +1205,8 @@ export default function AdminProfilePage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: "profile", label: "Profile" },
     { key: "sessions", label: "Session Types" },
+    { key: "services", label: "Services" },
+    { key: "commitment", label: "Commitment" },
     { key: "availability", label: "Availability" },
     { key: "bookings", label: "Bookings" },
   ];
@@ -882,6 +1262,20 @@ export default function AdminProfilePage() {
           )}
           {tab === "sessions" && profile && (
             <SessionTypesTab profileId={profile.id} />
+          )}
+
+          {tab === "services" && !profile && (
+            <p className="text-sm text-soil/50">Save a profile first to manage services.</p>
+          )}
+          {tab === "services" && profile && (
+            <ServicesTab profileId={profile.id} />
+          )}
+
+          {tab === "commitment" && !profile && (
+            <p className="text-sm text-soil/50">Save a profile first to manage commitment packages.</p>
+          )}
+          {tab === "commitment" && profile && (
+            <CommitmentTab profileId={profile.id} />
           )}
 
           {tab === "availability" && !profile && (

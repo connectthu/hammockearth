@@ -17,6 +17,8 @@ interface BookableProfile {
   is_published: boolean;
   buffer_minutes: number;
   cancellation_notice_hours: number;
+  google_calendar_id: string | null;
+  google_account_email: string | null;
 }
 
 interface SessionType {
@@ -432,7 +434,14 @@ function SessionTypesTab({ profileId, token }: { profileId: string; token: strin
 
 // ── Tab: Availability ─────────────────────────────────────────────────────────
 
-function AvailabilityTab({ profileId, token }: { profileId: string; token: string }) {
+function AvailabilityTab({
+  profile,
+  token,
+}: {
+  profile: BookableProfile;
+  token: string;
+}) {
+  const profileId = profile.id;
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [loading, setLoading] = useState(true);
@@ -451,6 +460,55 @@ function AvailabilityTab({ profileId, token }: { profileId: string; token: strin
   });
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showOverrideForm, setShowOverrideForm] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState<string | null>(profile.google_account_email ?? null);
+  const [googleConnecting, setGoogleConnecting] = useState(false);
+  const [googleMsg, setGoogleMsg] = useState<string | null>(null);
+
+  // Handle redirect back from Google OAuth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("google");
+    if (status === "connected") {
+      setGoogleMsg("Google Calendar connected!");
+      // Reload profile to get updated email
+      apiFetch<BookableProfile[]>("GET", "/booking/admin/profiles", token)
+        .then((data) => {
+          const mine = data.find((p) => p.id === profileId);
+          if (mine?.google_account_email) setGoogleEmail(mine.google_account_email);
+        })
+        .catch(() => {});
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (status === "error") {
+      setGoogleMsg("Google Calendar connection failed. Please try again.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleConnectGoogle = async () => {
+    setGoogleConnecting(true);
+    try {
+      const { url } = await apiFetch<{ url: string }>(
+        "GET",
+        `/booking/auth/google/url?profileId=${profileId}`,
+        token
+      );
+      window.location.href = url;
+    } catch {
+      setGoogleMsg("Failed to start Google Calendar connection.");
+      setGoogleConnecting(false);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!confirm("Disconnect Google Calendar?")) return;
+    try {
+      await apiFetch("DELETE", `/booking/admin/profile/${profileId}/google`, token);
+      setGoogleEmail(null);
+      setGoogleMsg("Google Calendar disconnected.");
+    } catch {
+      setGoogleMsg("Failed to disconnect.");
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -507,6 +565,43 @@ function AvailabilityTab({ profileId, token }: { profileId: string; token: strin
 
   return (
     <div className="space-y-8">
+      {/* Google Calendar */}
+      <div className="bg-white rounded-xl border border-linen p-5 space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-serif text-lg text-soil">Google Calendar</h2>
+            <p className="text-xs text-soil/40 mt-0.5">
+              Sync your Google Calendar so booked sessions appear automatically and your busy times are blocked.
+            </p>
+          </div>
+          {googleEmail ? (
+            <button
+              onClick={handleDisconnectGoogle}
+              className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 transition-colors"
+            >
+              Disconnect
+            </button>
+          ) : (
+            <button
+              onClick={handleConnectGoogle}
+              disabled={googleConnecting}
+              className="shrink-0 px-4 py-2 rounded-full bg-moss text-white text-sm font-medium hover:bg-moss/90 transition-colors disabled:opacity-50"
+            >
+              {googleConnecting ? "Connecting…" : "Connect Google Calendar"}
+            </button>
+          )}
+        </div>
+        {googleEmail && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-2 h-2 rounded-full bg-moss shrink-0" />
+            <span className="text-soil/70">Connected as <span className="font-medium text-soil">{googleEmail}</span></span>
+          </div>
+        )}
+        {googleMsg && (
+          <p className="text-xs text-moss">{googleMsg}</p>
+        )}
+      </div>
+
       {/* Weekly schedules */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -808,7 +903,7 @@ export function SettingsClient({ accessToken, userId }: { accessToken: string; u
             <p className="text-sm text-soil/50">Save a booking profile first to set availability.</p>
           )}
           {tab === "availability" && profile && (
-            <AvailabilityTab profileId={profile.id} token={accessToken} />
+            <AvailabilityTab profile={profile} token={accessToken} />
           )}
 
           {tab === "bookings" && !profile && (

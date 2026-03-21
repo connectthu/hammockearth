@@ -8,6 +8,8 @@ import { ConfigService } from "@nestjs/config";
 import { randomBytes } from "crypto";
 import { SupabaseService } from "../supabase/supabase.service";
 import { EmailService } from "../email/email.service";
+import { GoogleCalendarService } from "./google-calendar.service";
+import { ZoomService } from "./zoom.service";
 import type { CreateBookingDto } from "./dto/create-booking.dto";
 
 @Injectable()
@@ -17,21 +19,15 @@ export class BookingService {
   constructor(
     private supabase: SupabaseService,
     private email: EmailService,
-    private config: ConfigService
+    private config: ConfigService,
+    private googleCalendar: GoogleCalendarService,
+    private zoom: ZoomService
   ) {}
 
-  // ── Timezone helper (no external deps, uses built-in Intl API) ────────────
+  // ── Timezone helper ───────────────────────────────────────────────────────
 
-  /**
-   * Convert a local date + time string in a named timezone to a UTC Date.
-   * Uses the Intl API available in Node 18+.
-   * e.g. localToUTC("2026-03-25", "09:00", "America/Toronto") → Date(2026-03-25T13:00:00Z)
-   */
   private localToUTC(dateStr: string, timeStr: string, timezone: string): Date {
-    // naive: treat the input as if it were UTC (a reference point)
     const naive = new Date(`${dateStr}T${timeStr}:00Z`);
-
-    // Find what local time the naive UTC moment represents in the target timezone
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
       year: "numeric",
@@ -48,17 +44,12 @@ export class BookingService {
       if (part.type !== "literal") p[part.type] = part.value ?? "";
     }
 
-    // Handle the "24:00" edge case (midnight represented as hour 24)
     const hour = p["hour"] === "24" ? "00" : (p["hour"] ?? "00");
     const dayAdj = p["hour"] === "24" ? 1 : 0;
-
-    // Parse the local time back as a UTC moment
     const localAsUTC = new Date(
       `${p["year"]}-${p["month"]}-${p["day"]}T${hour}:${p["minute"] ?? "00"}:${p["second"] ?? "00"}Z`
     );
     if (dayAdj) localAsUTC.setUTCDate(localAsUTC.getUTCDate() + 1);
-
-    // offset = how many ms ahead UTC is relative to local time
     const offsetMs = naive.getTime() - localAsUTC.getTime();
     return new Date(naive.getTime() + offsetMs);
   }
@@ -83,7 +74,6 @@ export class BookingService {
       .eq("is_active", true)
       .order("display_order", { ascending: true });
 
-    // Fetch day_of_week values so the frontend can highlight available calendar days
     const { data: schedulesData } = await this.supabase.client
       .from("availability_schedules" as any)
       .select("day_of_week")
@@ -93,10 +83,26 @@ export class BookingService {
       ...new Set(((schedulesData ?? []) as any[]).map((s) => s.day_of_week as number)),
     ];
 
+    const { data: servicesData } = await this.supabase.client
+      .from("services" as any)
+      .select("id, icon, name, description, display_order")
+      .eq("profile_id", profile.id)
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+
+    const { data: packagesData } = await this.supabase.client
+      .from("commitment_packages" as any)
+      .select("*")
+      .eq("profile_id", profile.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
+
     return {
       profile,
       sessionTypes: (sessionTypesData ?? []) as any[],
       availabilityDays,
+      services: (servicesData ?? []) as any[],
+      commitmentPackages: (packagesData ?? []) as any[],
     };
   }
 
@@ -105,10 +111,9 @@ export class BookingService {
     date: string,
     sessionTypeId: string
   ): Promise<string[]> {
-    // Load profile (buffer_minutes)
     const { data: profileData } = await this.supabase.client
       .from("bookable_profiles" as any)
-      .select("id, buffer_minutes")
+      .select("id, buffer_minutes, google_refresh_token, google_calendar_id")
       .eq("slug", slug)
       .eq("is_published", true)
       .single();
@@ -116,7 +121,6 @@ export class BookingService {
     if (!profileData) return [];
     const profile = profileData as any;
 
-    // Load session type (duration)
     const { data: sessionTypeData } = await this.supabase.client
       .from("session_types" as any)
       .select("duration_minutes")
@@ -128,12 +132,10 @@ export class BookingService {
     if (!sessionTypeData) return [];
     const durationMinutes = (sessionTypeData as any).duration_minutes as number;
 
-    // Parse the date and get day_of_week in UTC (dates are stored as YYYY-MM-DD)
     const [year, month, day] = date.split("-").map(Number);
     const dateObj = new Date(Date.UTC(year!, month! - 1, day!));
     const dayOfWeek = dateObj.getUTCDay();
 
-    // Check for a date override
     const { data: overrideData } = await this.supabase.client
       .from("availability_overrides" as any)
       .select("is_unavailable, start_time, end_time")
@@ -144,7 +146,6 @@ export class BookingService {
     const override = overrideData as any;
     if (override?.is_unavailable) return [];
 
-    // Load weekly schedules for this day_of_week
     const { data: schedulesData } = await this.supabase.client
       .from("availability_schedules" as any)
       .select("start_time, end_time, timezone")
@@ -153,11 +154,8 @@ export class BookingService {
 
     const schedules = (schedulesData ?? []) as any[];
 
-    // Determine effective availability windows for this date
     let windows: Array<{ start: string; end: string; timezone: string }>;
-
     if (override && !override.is_unavailable && override.start_time && override.end_time) {
-      // Override adds custom hours for this date; use the schedule's timezone as fallback
       const tz = schedules[0]?.timezone ?? "America/Toronto";
       windows = [{ start: override.start_time, end: override.end_time, timezone: tz }];
     } else {
@@ -169,7 +167,6 @@ export class BookingService {
       }));
     }
 
-    // Load confirmed bookings for this day (±2h buffer to catch edge cases)
     const dayStartMs = dateObj.getTime() - 2 * 60 * 60 * 1000;
     const dayEndMs = dateObj.getTime() + 26 * 60 * 60 * 1000;
 
@@ -181,44 +178,49 @@ export class BookingService {
       .gte("start_at", new Date(dayStartMs).toISOString())
       .lte("start_at", new Date(dayEndMs).toISOString());
 
-    const bookings = (existingBookings ?? []) as any[];
+    // Merge hammock.earth bookings + Google Calendar busy times
+    const busyPeriods: Array<{ start_at: string; end_at: string }> = (existingBookings ?? []) as any[];
+
+    if (profile.google_refresh_token && profile.google_calendar_id) {
+      try {
+        const gcalBusy = await this.googleCalendar.getBusyTimes(
+          profile.google_refresh_token as string,
+          profile.google_calendar_id as string,
+          new Date(dayStartMs),
+          new Date(dayEndMs)
+        );
+        for (const period of gcalBusy) {
+          busyPeriods.push({ start_at: period.start, end_at: period.end });
+        }
+      } catch (err) {
+        this.logger.warn("Failed to fetch Google Calendar busy times", err);
+      }
+    }
+
     const bufferMs = (profile.buffer_minutes as number) * 60 * 1000;
     const durationMs = durationMinutes * 60 * 1000;
-    const slotIntervalMs = 30 * 60 * 1000; // generate slots every 30 minutes
+    const slotIntervalMs = 30 * 60 * 1000;
     const now = Date.now();
-
     const slots: string[] = [];
 
     for (const window of windows) {
-      // Strip seconds if present: "09:00:00" → "09:00"
       const startStr = (window.start as string).slice(0, 5);
       const endStr = (window.end as string).slice(0, 5);
-
       const windowStart = this.localToUTC(date, startStr, window.timezone);
       const windowEnd = this.localToUTC(date, endStr, window.timezone);
-
       let current = windowStart.getTime();
 
       while (current + durationMs <= windowEnd.getTime()) {
         const slotEnd = current + durationMs;
+        if (slotEnd <= now) { current += slotIntervalMs; continue; }
 
-        // Skip past slots
-        if (slotEnd <= now) {
-          current += slotIntervalMs;
-          continue;
-        }
-
-        // Check conflicts with existing bookings (including buffer on both sides)
-        const hasConflict = bookings.some((b) => {
+        const hasConflict = busyPeriods.some((b) => {
           const bStart = new Date(b.start_at as string).getTime() - bufferMs;
           const bEnd = new Date(b.end_at as string).getTime() + bufferMs;
           return current < bEnd && slotEnd > bStart;
         });
 
-        if (!hasConflict) {
-          slots.push(new Date(current).toISOString());
-        }
-
+        if (!hasConflict) slots.push(new Date(current).toISOString());
         current += slotIntervalMs;
       }
     }
@@ -227,10 +229,9 @@ export class BookingService {
   }
 
   async createBooking(slug: string, dto: CreateBookingDto) {
-    // Load profile
     const { data: profileData } = await this.supabase.client
       .from("bookable_profiles" as any)
-      .select("id, buffer_minutes, headline")
+      .select("id, buffer_minutes, headline, google_refresh_token, google_calendar_id")
       .eq("slug", slug)
       .eq("is_published", true)
       .single();
@@ -238,7 +239,6 @@ export class BookingService {
     if (!profileData) throw new NotFoundException("Profile not found");
     const profile = profileData as any;
 
-    // Load session type
     const { data: sessionTypeData } = await this.supabase.client
       .from("session_types" as any)
       .select("id, name, duration_minutes, location_type, location_detail, price_cents, is_free")
@@ -255,7 +255,6 @@ export class BookingService {
     const endAt = new Date(startAt.getTime() + (sessionType.duration_minutes as number) * 60 * 1000);
     const bufferMs = (profile.buffer_minutes as number) * 60 * 1000;
 
-    // Verify the slot is still available (race condition guard)
     const { data: conflicts } = await this.supabase.client
       .from("bookings" as any)
       .select("id")
@@ -295,7 +294,59 @@ export class BookingService {
     }
 
     const b = booking as any;
-    const icsContent = this.generateBookingIcs(b, sessionType);
+    let zoomLink: string | null = null;
+    let zoomMeetingId: string | null = null;
+    let googleEventId: string | null = null;
+
+    // ── Zoom meeting ──────────────────────────────────────────────────────
+    if (sessionType.location_type === "zoom" && this.zoom.isConfigured()) {
+      try {
+        const meeting = await this.zoom.createMeeting(
+          `${dto.bookerName} — ${sessionType.name as string}`,
+          startAt.toISOString(),
+          sessionType.duration_minutes as number
+        );
+        zoomLink = meeting.joinUrl;
+        zoomMeetingId = meeting.id;
+      } catch (err) {
+        this.logger.error("Failed to create Zoom meeting", err);
+      }
+    }
+
+    // ── Google Calendar event ─────────────────────────────────────────────
+    if (profile.google_refresh_token && profile.google_calendar_id) {
+      try {
+        const location = zoomLink ?? (sessionType.location_detail as string | null) ?? undefined;
+        const descParts: string[] = [];
+        if (dto.bookerNotes) descParts.push(`Notes from booker: ${dto.bookerNotes}`);
+        if (zoomLink) descParts.push(`Join Zoom: ${zoomLink}`);
+
+        googleEventId = await this.googleCalendar.createEvent(
+          profile.google_refresh_token as string,
+          profile.google_calendar_id as string,
+          {
+            summary: `${dto.bookerName} — ${sessionType.name as string}`,
+            description: descParts.join("\n\n") || undefined,
+            start: startAt.toISOString(),
+            end: endAt.toISOString(),
+            location,
+          }
+        );
+      } catch (err) {
+        this.logger.error("Failed to create Google Calendar event", err);
+      }
+    }
+
+    // ── Update row with integration IDs ───────────────────────────────────
+    if (zoomLink || googleEventId) {
+      await this.supabase.client
+        .from("bookings" as any)
+        .update({ zoom_link: zoomLink, zoom_meeting_id: zoomMeetingId, google_event_id: googleEventId })
+        .eq("id", b.id);
+    }
+
+    // ── Emails ────────────────────────────────────────────────────────────
+    const icsContent = this.generateBookingIcs({ ...b, zoom_link: zoomLink }, sessionType);
     const icsBase64 = Buffer.from(icsContent).toString("base64");
 
     const appUrl = this.config.get<string>("NEXT_PUBLIC_APP_URL") ?? "https://hammock.earth";
@@ -313,12 +364,18 @@ export class BookingService {
 
     const locationDisplay =
       sessionType.location_type === "zoom"
-        ? "Zoom (link to follow)"
+        ? "Zoom"
         : sessionType.location_type === "phone"
           ? "Phone call"
           : (sessionType.location_detail as string) ?? "TBD";
 
-    // Confirmation email to booker
+    const zoomRow = zoomLink
+      ? `<tr style="border-bottom:1px solid #F5EFE6">
+           <td style="padding:10px 0;font-weight:600;color:#6B7C5C;width:140px">Zoom Link</td>
+           <td style="padding:10px 0"><a href="${zoomLink}" style="color:#C4845A;font-weight:600">${zoomLink}</a></td>
+         </tr>`
+      : "";
+
     this.email
       .send({
         to: dto.bookerEmail,
@@ -344,17 +401,15 @@ export class BookingService {
               <td style="padding:10px 0;font-weight:600;color:#6B7C5C">Location</td>
               <td style="padding:10px 0;color:#3B2F2F">${locationDisplay}</td>
             </tr>
+            ${zoomRow}
             ${dto.bookerNotes ? `<tr><td style="padding:10px 0;font-weight:600;color:#6B7C5C">Your notes</td><td style="padding:10px 0;color:#3B2F2F">${dto.bookerNotes}</td></tr>` : ""}
           </table>
-          <p style="margin-top:24px;font-size:13px;color:#6B7C5C">
-            Need to cancel? <a href="${cancelUrl}" style="color:#C4845A">Cancel this booking</a>
-          </p>
+          <p style="font-size:13px;color:#6B7C5C">Need to cancel? <a href="${cancelUrl}" style="color:#C4845A">Cancel this booking</a></p>
         `),
         attachments: [{ filename: "session.ics", content: icsBase64 }],
       })
       .catch((err: unknown) => this.logger.error("Failed to send booker confirmation email", err));
 
-    // Notification email to host
     const hostEmail = this.config.get<string>("EMAIL_FROM") ?? "hello@hammock.earth";
     this.email
       .send({
@@ -380,6 +435,7 @@ export class BookingService {
               <td style="padding:10px 0;font-weight:600;color:#6B7C5C">Duration</td>
               <td style="padding:10px 0;color:#3B2F2F">${sessionType.duration_minutes as number} minutes</td>
             </tr>
+            ${zoomRow}
             ${dto.bookerNotes ? `<tr><td style="padding:10px 0;font-weight:600;color:#6B7C5C">Notes</td><td style="padding:10px 0;color:#3B2F2F">${dto.bookerNotes}</td></tr>` : ""}
           </table>
         `),
@@ -398,6 +454,7 @@ export class BookingService {
       bookerName: dto.bookerName,
       bookerEmail: dto.bookerEmail,
       timezone: dto.timezone,
+      zoomLink,
       cancellationToken,
     };
   }
@@ -405,7 +462,7 @@ export class BookingService {
   async cancelByToken(token: string) {
     const { data: bookingData } = await this.supabase.client
       .from("bookings" as any)
-      .select("id, profile_id, booker_name, booker_email, start_at, timezone, session_types(name)")
+      .select("id, profile_id, booker_name, booker_email, start_at, timezone, zoom_meeting_id, google_event_id, session_types(name)")
       .eq("cancellation_token", token)
       .eq("status", "confirmed")
       .single();
@@ -417,6 +474,8 @@ export class BookingService {
       .from("bookings" as any)
       .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
       .eq("id", booking.id);
+
+    await this.cleanupIntegrations(booking);
 
     const startFormatted = new Date(booking.start_at as string).toLocaleString("en-CA", {
       timeZone: booking.timezone as string,
@@ -460,24 +519,49 @@ export class BookingService {
     return { cancelled: true };
   }
 
-  // ── Admin endpoints ───────────────────────────────────────────────────────
+  // ── Google Calendar admin methods ─────────────────────────────────────────
+
+  async storeGoogleCalendarCredentials(
+    profileId: string,
+    refreshToken: string,
+    calendarId: string,
+    email: string
+  ) {
+    const { error } = await this.supabase.client
+      .from("bookable_profiles" as any)
+      .update({ google_refresh_token: refreshToken, google_calendar_id: calendarId, google_account_email: email })
+      .eq("id", profileId);
+    if (error) throw error;
+  }
+
+  async disconnectGoogleCalendar(profileId: string) {
+    const { error } = await this.supabase.client
+      .from("bookable_profiles" as any)
+      .update({ google_refresh_token: null, google_calendar_id: null, google_account_email: null })
+      .eq("id", profileId);
+    if (error) throw error;
+    return { disconnected: true };
+  }
+
+  // ── Admin CRUD ────────────────────────────────────────────────────────────
 
   async adminListProfiles() {
     const { data } = await this.supabase.client
       .from("bookable_profiles" as any)
-      .select("*")
+      .select("id, user_id, slug, headline, subheading, about, avatar_url, is_published, buffer_minutes, cancellation_notice_hours, google_calendar_id, google_account_email")
       .order("created_at", { ascending: true });
     return (data ?? []) as any[];
   }
 
   async adminUpsertProfile(dto: Record<string, unknown>) {
+    const selectCols = "id, user_id, slug, headline, subheading, about, avatar_url, is_published, buffer_minutes, cancellation_notice_hours, google_calendar_id, google_account_email";
     if (dto["id"]) {
       const { id, ...rest } = dto;
       const { data, error } = await this.supabase.client
         .from("bookable_profiles" as any)
         .update(rest)
         .eq("id", id)
-        .select()
+        .select(selectCols)
         .single();
       if (error) throw error;
       return data as any;
@@ -485,7 +569,7 @@ export class BookingService {
     const { data, error } = await this.supabase.client
       .from("bookable_profiles" as any)
       .insert(dto)
-      .select()
+      .select(selectCols)
       .single();
     if (error) throw error;
     return data as any;
@@ -522,10 +606,7 @@ export class BookingService {
   }
 
   async adminDeleteSessionType(id: string) {
-    const { error } = await this.supabase.client
-      .from("session_types" as any)
-      .delete()
-      .eq("id", id);
+    const { error } = await this.supabase.client.from("session_types" as any).delete().eq("id", id);
     if (error) throw error;
     return { deleted: true };
   }
@@ -550,10 +631,7 @@ export class BookingService {
   }
 
   async adminDeleteSchedule(id: string) {
-    const { error } = await this.supabase.client
-      .from("availability_schedules" as any)
-      .delete()
-      .eq("id", id);
+    const { error } = await this.supabase.client.from("availability_schedules" as any).delete().eq("id", id);
     if (error) throw error;
     return { deleted: true };
   }
@@ -580,10 +658,7 @@ export class BookingService {
   }
 
   async adminDeleteOverride(id: string) {
-    const { error } = await this.supabase.client
-      .from("availability_overrides" as any)
-      .delete()
-      .eq("id", id);
+    const { error } = await this.supabase.client.from("availability_overrides" as any).delete().eq("id", id);
     if (error) throw error;
     return { deleted: true };
   }
@@ -593,11 +668,7 @@ export class BookingService {
       .from("bookings" as any)
       .select("*, session_types(name, duration_minutes)")
       .order("start_at", { ascending: false });
-
-    if (profileId) {
-      query = query.eq("profile_id", profileId);
-    }
-
+    if (profileId) query = query.eq("profile_id", profileId);
     const { data } = await query;
     return (data ?? []) as any[];
   }
@@ -605,7 +676,7 @@ export class BookingService {
   async adminCancelBooking(id: string) {
     const { data: bookingData } = await this.supabase.client
       .from("bookings" as any)
-      .select("id, booker_name, booker_email, start_at, timezone, session_types(name)")
+      .select("id, profile_id, booker_name, booker_email, start_at, timezone, zoom_meeting_id, google_event_id, session_types(name)")
       .eq("id", id)
       .eq("status", "confirmed")
       .single();
@@ -618,8 +689,9 @@ export class BookingService {
       .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
       .eq("id", id);
 
-    const sessionName = (booking.session_types as any)?.name ?? "Session";
+    await this.cleanupIntegrations(booking);
 
+    const sessionName = (booking.session_types as any)?.name ?? "Session";
     this.email
       .send({
         to: booking.booker_email as string,
@@ -636,12 +708,119 @@ export class BookingService {
     return { cancelled: true };
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Services ──────────────────────────────────────────────────────────────
+
+  async adminGetServices(profileId: string) {
+    const { data } = await this.supabase.client
+      .from("services" as any)
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("display_order", { ascending: true });
+    return (data ?? []) as any[];
+  }
+
+  async adminUpsertService(profileId: string, dto: Record<string, unknown>) {
+    if (dto["id"]) {
+      const { id, ...rest } = dto;
+      const { data, error } = await this.supabase.client
+        .from("services" as any)
+        .update({ ...rest, profile_id: profileId })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as any;
+    }
+    const { data, error } = await this.supabase.client
+      .from("services" as any)
+      .insert({ ...dto, profile_id: profileId })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as any;
+  }
+
+  async adminDeleteService(id: string) {
+    const { error } = await this.supabase.client.from("services" as any).delete().eq("id", id);
+    if (error) throw error;
+    return { deleted: true };
+  }
+
+  // ── Commitment Packages ───────────────────────────────────────────────────
+
+  async adminGetCommitmentPackages(profileId: string) {
+    const { data } = await this.supabase.client
+      .from("commitment_packages" as any)
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: true });
+    return (data ?? []) as any[];
+  }
+
+  async adminUpsertCommitmentPackage(profileId: string, dto: Record<string, unknown>) {
+    if (dto["id"]) {
+      const { id, ...rest } = dto;
+      const { data, error } = await this.supabase.client
+        .from("commitment_packages" as any)
+        .update({ ...rest, profile_id: profileId })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as any;
+    }
+    const { data, error } = await this.supabase.client
+      .from("commitment_packages" as any)
+      .insert({ ...dto, profile_id: profileId })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as any;
+  }
+
+  async adminDeleteCommitmentPackage(id: string) {
+    const { error } = await this.supabase.client
+      .from("commitment_packages" as any)
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return { deleted: true };
+  }
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  private async cleanupIntegrations(booking: Record<string, unknown>): Promise<void> {
+    if (booking["zoom_meeting_id"]) {
+      try {
+        await this.zoom.deleteMeeting(booking["zoom_meeting_id"] as string);
+      } catch (err) {
+        this.logger.warn("Failed to delete Zoom meeting on cancellation", err);
+      }
+    }
+
+    if (booking["google_event_id"] && booking["profile_id"]) {
+      try {
+        const { data: profileData } = await this.supabase.client
+          .from("bookable_profiles" as any)
+          .select("google_refresh_token, google_calendar_id")
+          .eq("id", booking["profile_id"])
+          .single();
+        const p = profileData as any;
+        if (p?.google_refresh_token && p?.google_calendar_id) {
+          await this.googleCalendar.deleteEvent(
+            p.google_refresh_token as string,
+            p.google_calendar_id as string,
+            booking["google_event_id"] as string
+          );
+        }
+      } catch (err) {
+        this.logger.warn("Failed to delete Google Calendar event on cancellation", err);
+      }
+    }
+  }
 
   private generateBookingIcs(booking: Record<string, unknown>, sessionType: Record<string, unknown>): string {
-    const formatDate = (d: Date): string =>
-      d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-
+    const fmt = (d: Date): string => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     const location =
       sessionType["location_type"] === "zoom" && booking["zoom_link"]
         ? (booking["zoom_link"] as string)
@@ -653,9 +832,9 @@ export class BookingService {
       "PRODID:-//Hammock Earth//Booking//EN",
       "BEGIN:VEVENT",
       `UID:booking-${booking["id"] as string}@hammock.earth`,
-      `DTSTAMP:${formatDate(new Date())}`,
-      `DTSTART:${formatDate(new Date(booking["start_at"] as string))}`,
-      `DTEND:${formatDate(new Date(booking["end_at"] as string))}`,
+      `DTSTAMP:${fmt(new Date())}`,
+      `DTSTART:${fmt(new Date(booking["start_at"] as string))}`,
+      `DTEND:${fmt(new Date(booking["end_at"] as string))}`,
       `SUMMARY:${sessionType["name"] as string}`,
       `LOCATION:${location}`,
       "END:VEVENT",
