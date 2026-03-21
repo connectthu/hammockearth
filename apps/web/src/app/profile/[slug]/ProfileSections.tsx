@@ -76,7 +76,7 @@ function ServicesGrid({
   return (
     <section id="offering" className="bg-linen/50 py-20">
       <div className="max-w-6xl mx-auto px-8">
-        <h2 className="font-serif italic text-3xl text-soil mb-2">Signature Modalities</h2>
+        <h2 className="font-serif italic text-3xl text-soil mb-2">Ways to Work Together</h2>
         {lowestPriceCents != null && (
           <p className="text-xs uppercase tracking-[0.15em] text-soil/40 mb-10">
             Integrated Sessions · From {fmtDollars(lowestPriceCents)}/Session
