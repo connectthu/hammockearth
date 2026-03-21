@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 import { AdminShell } from "@/components/AdminShell";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -245,15 +246,10 @@ function ProfileTab({
         />
       </Field>
 
-      <Field label="About (short bio)">
-        <textarea
-          rows={3}
-          value={(form.about as string) ?? ""}
-          onChange={(e) => set("about", e.target.value)}
-          placeholder="A short paragraph shown on the booking page"
-          className={`${inputCls} resize-none`}
-        />
-      </Field>
+      <div>
+        <label className="block text-xs font-medium text-charcoal/60 mb-1.5">About (short bio)</label>
+        <RichTextEditor value={(form.about as string) ?? ""} onChange={(html) => set("about", html)} />
+      </div>
 
       <Field label="Avatar URL">
         <input
@@ -722,7 +718,7 @@ function ServicesTab({ profileId }: { profileId: string }) {
     try {
       await apiPost(`/booking/admin/profile/${profileId}/services`, editing);
       setEditing(null);
-      load();
+      await load();
     } catch { alert("Failed to save service"); }
   };
 
@@ -730,8 +726,15 @@ function ServicesTab({ profileId }: { profileId: string }) {
     if (!confirm("Delete this service?")) return;
     try {
       await apiDelete(`/booking/admin/services/${id}`);
-      load();
-    } catch { alert("Failed to delete"); }
+      await load();
+    } catch (e: any) { alert(`Failed to delete: ${e?.message ?? e}`); }
+  };
+
+  const handleToggleActive = async (s: Service) => {
+    try {
+      await apiPost(`/booking/admin/profile/${profileId}/services`, { ...s, is_active: !s.is_active });
+      await load();
+    } catch { alert("Failed to update service"); }
   };
 
   if (loading) return <p className="text-sm text-soil/50">Loading…</p>;
@@ -741,7 +744,7 @@ function ServicesTab({ profileId }: { profileId: string }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif text-lg text-soil">Services</h2>
-          <p className="text-xs text-soil/40 mt-0.5">Shown as &ldquo;Signature Modalities&rdquo; on the public profile</p>
+          <p className="text-xs text-soil/40 mt-0.5">Shown as &ldquo;Ways to Work Together&rdquo; on the public profile</p>
         </div>
         <button
           onClick={() => setEditing(blankService())}
@@ -757,16 +760,25 @@ function ServicesTab({ profileId }: { profileId: string }) {
 
       <div className="space-y-3">
         {services.map((s) => (
-          <div key={s.id} className="bg-white rounded-xl border border-linen p-4 flex items-start justify-between gap-4">
+          <div key={s.id} className={`bg-white rounded-xl border p-4 flex items-start justify-between gap-4 ${s.is_active ? "border-linen" : "border-linen opacity-50"}`}>
             <div className="flex items-start gap-3 flex-1">
               {s.icon && <span className="text-2xl leading-none mt-0.5">{s.icon}</span>}
               <div className="space-y-0.5">
-                <p className="font-medium text-soil text-sm">{s.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-soil text-sm">{s.name}</p>
+                  {!s.is_active && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-soil/10 text-soil/40">Hidden</span>}
+                </div>
                 {s.description && <p className="text-xs text-soil/50">{s.description}</p>}
                 <p className="text-xs text-soil/30">Order: {s.display_order}</p>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => handleToggleActive(s)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${s.is_active ? "border-moss/30 text-moss hover:bg-moss/10" : "border-linen text-soil/40 hover:bg-linen"}`}
+              >
+                {s.is_active ? "Visible" : "Hidden"}
+              </button>
               <button
                 onClick={() => setEditing(s)}
                 className="text-xs px-3 py-1.5 rounded-lg border border-linen hover:bg-linen text-soil/60 hover:text-soil transition-colors"

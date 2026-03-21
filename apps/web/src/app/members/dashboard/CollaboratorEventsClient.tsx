@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -164,15 +165,10 @@ export default function CollaboratorEventsClient({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-charcoal/60 mb-1">
+                    <label className="block text-xs font-medium text-charcoal/60 mb-1.5">
                       Description
                     </label>
-                    <textarea
-                      rows={4}
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      className="w-full rounded-lg border border-linen bg-cream px-3 py-2 text-sm text-soil focus:outline-none focus:ring-2 focus:ring-clay/30 resize-none"
-                    />
+                    <RichTextEditor value={editDescription} onChange={setEditDescription} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-charcoal/60 mb-1">
@@ -181,12 +177,7 @@ export default function CollaboratorEventsClient({
                     <p className="text-xs text-charcoal/40 mb-1.5">
                       Included in the booking confirmation email (e.g. Zoom link, what to bring, etc.)
                     </p>
-                    <textarea
-                      rows={4}
-                      value={editConfirmationDetails}
-                      onChange={(e) => setEditConfirmationDetails(e.target.value)}
-                      className="w-full rounded-lg border border-linen bg-cream px-3 py-2 text-sm text-soil focus:outline-none focus:ring-2 focus:ring-clay/30 resize-none"
-                    />
+                    <RichTextEditor value={editConfirmationDetails} onChange={setEditConfirmationDetails} />
                   </div>
                   {error && (
                     <p className="text-xs text-red-600">{error}</p>

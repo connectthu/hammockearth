@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import sanitizeHtml from "sanitize-html";
 import { createServerClient } from "@hammock/database";
 import { Footer } from "@/components/Footer";
 import { ProfileNav } from "./ProfileNav";
@@ -87,7 +88,15 @@ export default async function ProfilePage({ params }: PageProps) {
               <p className="text-soil/70 text-base leading-relaxed mb-4">{bp.subheading}</p>
             )}
             {bp.about && (
-              <p className="text-soil/55 text-sm leading-relaxed">{bp.about}</p>
+              <div
+                className="prose prose-sm prose-stone max-w-none text-soil/55 prose-headings:text-soil prose-a:text-clay"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(bp.about, {
+                    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["h2", "h3"]),
+                    allowedAttributes: { a: ["href", "rel", "target"] },
+                  }),
+                }}
+              />
             )}
           </div>
           <div className="order-1 md:order-2 flex justify-center md:justify-end">
