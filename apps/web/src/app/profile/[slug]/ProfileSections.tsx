@@ -58,29 +58,12 @@ function discounted(cents: number, pct: number): number {
 
 // ── Services Grid ──────────────────────────────────────────────────────────────
 
-function ServicesGrid({
-  services,
-  commitmentPackages,
-  sessionTypes,
-}: {
-  services: Service[];
-  commitmentPackages: CommitmentPackage[];
-  sessionTypes: SessionType[];
-}) {
+function ServicesGrid({ services }: { services: Service[] }) {
   if (services.length === 0) return null;
-
-  const lowestPriceCents =
-    commitmentPackages[0]?.plans[0]?.per_session_cents ??
-    sessionTypes[0]?.price_cents;
 
   return (
     <div id="offering" className="mb-10">
-      <h2 className="font-serif italic text-2xl text-soil mb-1">Ways to Work Together</h2>
-      {lowestPriceCents != null && (
-        <p className="text-xs uppercase tracking-[0.15em] text-soil/40 mb-6">
-          Integrated Sessions · From {fmtDollars(lowestPriceCents)}/Session
-        </p>
-      )}
+      <h2 className="font-serif italic text-2xl text-soil mb-6">Ways to Work Together</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {services.map((s) => (
           <div key={s.id} className="bg-white rounded-2xl shadow-sm p-6">
@@ -255,11 +238,7 @@ export function ProfileSections({
 
           {/* ── Left: scrollable content ─────────────────────────────────── */}
           <div className="order-2 lg:order-1">
-            <ServicesGrid
-              services={services}
-              commitmentPackages={commitmentPackages}
-              sessionTypes={sessionTypes}
-            />
+            <ServicesGrid services={services} />
 
             {commitmentPackages.map((pkg) => (
               <CommitmentSlider key={pkg.id} pkg={pkg} onSelectPlan={setSelectedPlanNote} />
