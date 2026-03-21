@@ -39,10 +39,10 @@ SELECT
     {"label":"12 Months","months":12,"discount_percent":20}
   ]'::jsonb,
   '[
-    {"name":"Light Support","sessions_per_month":1,"duration_minutes":60,"monthly_price_cents":25000,"per_session_cents":20000},
-    {"name":"Core Coaching","sessions_per_month":2,"duration_minutes":45,"monthly_price_cents":45000,"per_session_cents":18000},
-    {"name":"Weekly Coaching","sessions_per_month":4,"duration_minutes":30,"monthly_price_cents":48000,"per_session_cents":9600},
-    {"name":"Deep Coaching","sessions_per_month":4,"duration_minutes":60,"monthly_price_cents":80000,"per_session_cents":16000}
+    {"name":"Light Support","sessions_per_month":1,"duration_minutes":60,"monthly_price_cents":25000,"per_session_cents":25000},
+    {"name":"Core Coaching","sessions_per_month":2,"duration_minutes":45,"monthly_price_cents":45000,"per_session_cents":22500},
+    {"name":"Weekly Coaching","sessions_per_month":4,"duration_minutes":30,"monthly_price_cents":48000,"per_session_cents":12000},
+    {"name":"Deep Coaching","sessions_per_month":4,"duration_minutes":60,"monthly_price_cents":80000,"per_session_cents":20000}
   ]'::jsonb
 FROM bookable_profiles bp
 WHERE bp.slug = 'thu'
