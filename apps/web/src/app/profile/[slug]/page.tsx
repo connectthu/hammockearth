@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerClient } from "@hammock/database";
-import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { ProfileNav } from "./ProfileNav";
 import { ProfileSections } from "./ProfileSections";
 
 export const revalidate = 60;
@@ -21,7 +21,7 @@ export default async function ProfilePage({ params }: PageProps) {
   // Fetch bookable profile
   const { data: bpData } = await db
     .from("bookable_profiles" as any)
-    .select("id, user_id, slug, headline, subheading, is_published, buffer_minutes, cancellation_notice_hours")
+    .select("id, user_id, slug, headline, subheading, about, is_published, buffer_minutes, cancellation_notice_hours")
     .eq("slug", params.slug)
     .eq("is_published", true)
     .maybeSingle();
@@ -73,64 +73,49 @@ export default async function ProfilePage({ params }: PageProps) {
 
   return (
     <>
-      <Nav />
-      <div className="pt-16 min-h-screen bg-cream">
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <ProfileNav name={profile.full_name ?? bp.slug} />
 
-          {/* ── Profile header ─────────────────────────────────────────────── */}
-          <div className="bg-white rounded-3xl border border-linen p-8 mb-6">
-            <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <div className="flex-shrink-0">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url as string}
-                    alt={profile.full_name ?? bp.slug}
-                    className="w-36 h-36 rounded-2xl object-cover"
-                  />
-                ) : (
-                  <div className="w-36 h-36 rounded-2xl bg-linen flex items-center justify-center text-5xl">
-                    🌿
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h1 className="font-serif text-3xl text-soil leading-tight mb-1">
-                  {profile.full_name ?? bp.slug}
-                </h1>
-                {profile.username && (
-                  <p className="text-charcoal/50 text-sm mb-2">@{profile.username as string}</p>
-                )}
-                {bp.headline && (
-                  <p className="text-charcoal/70 text-sm italic mb-3 leading-relaxed">{bp.headline}</p>
-                )}
-                {profile.location && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-charcoal/50 border border-linen">
-                    📍 {profile.location as string}
-                  </span>
-                )}
-              </div>
-            </div>
-
+      {/* ── Hero / About ──────────────────────────────────────────────────── */}
+      <section id="about" className="bg-cream">
+        <div className="max-w-6xl mx-auto px-8 pt-24 pb-20 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-soil/40 mb-6">The Practice</p>
+            <h1 className="font-serif italic text-5xl lg:text-6xl text-soil leading-[1.1] mb-8">
+              {bp.headline ?? profile.full_name ?? bp.slug}
+            </h1>
             {bp.subheading && (
-              <p className="text-charcoal/60 text-sm mt-5 pt-5 border-t border-linen leading-relaxed">
-                {bp.subheading}
-              </p>
+              <p className="text-soil/70 text-base leading-relaxed mb-4">{bp.subheading}</p>
+            )}
+            {bp.about && (
+              <p className="text-soil/55 text-sm leading-relaxed">{bp.about}</p>
             )}
           </div>
+          <div className="flex justify-center md:justify-end">
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url as string}
+                alt={profile.full_name ?? bp.slug}
+                className="w-full max-w-sm rounded-3xl object-cover aspect-[3/4]"
+              />
+            ) : (
+              <div className="w-full max-w-sm aspect-[3/4] rounded-3xl bg-linen flex items-center justify-center text-9xl">
+                🌿
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
-          {/* ── Services, Commitment Slider, Booking ───────────────────────── */}
-          <ProfileSections
-            services={services}
-            commitmentPackages={commitmentPackages}
-            slug={bp.slug}
-            sessionTypes={sessionTypes}
-            availabilityDays={availabilityDays}
-            cancellationNoticeHours={bp.cancellation_notice_hours}
-          />
+      {/* ── Services, Commitment Slider, Booking ──────────────────────────── */}
+      <ProfileSections
+        services={services}
+        commitmentPackages={commitmentPackages}
+        slug={bp.slug}
+        sessionTypes={sessionTypes}
+        availabilityDays={availabilityDays}
+        cancellationNoticeHours={bp.cancellation_notice_hours}
+      />
 
-        </main>
-      </div>
       <Footer />
     </>
   );
