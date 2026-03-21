@@ -251,7 +251,7 @@ export function ProfileSections({
   return (
     <section className="bg-cream py-16">
       <div className="max-w-6xl mx-auto px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 
           {/* ── Left: scrollable content ─────────────────────────────────── */}
           <div className="order-2 lg:order-1">
