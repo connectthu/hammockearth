@@ -246,7 +246,7 @@ export function ProfileSections({
           </div>
 
           {/* ── Right: sticky booking sidebar ────────────────────────────── */}
-          <div id="book" className="order-1 lg:order-2 sticky top-20 self-start bg-white rounded-2xl shadow-sm p-6">
+          <div id="book" className="order-1 lg:order-2 lg:sticky lg:top-20 lg:self-start bg-white rounded-2xl shadow-sm p-6">
             <h2 className="font-serif text-lg text-soil mb-5">Book a Session</h2>
             <BookingFlow
               slug={slug}
